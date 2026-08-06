@@ -1,0 +1,130 @@
+version: "3"
+
+vars:
+  BUILD_DIR: build
+  RELEASE_BUILD_DIR: build-release
+  HOLONIGHT_QT_PREFIX: /tmp/holonight-qt-prefix
+  HOLONIGHT_QT_DIR: /tmp/holonight-qt-prefix/lib/cmake/HolonightQt
+  NPROC:
+    sh: nproc
+
+tasks:
+  build:qt-dependency:
+    desc: Build and install the sibling holonight-qt dependency
+    cmds:
+      - cmake -S ../holonight-qt -B ../holonight-qt/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build ../holonight-qt/build -j{{.NPROC}}
+      - cmake --install ../holonight-qt/build --prefix {{.HOLONIGHT_QT_PREFIX}}
+
+  configure:
+    desc: Configure CMake (debug, no tests)
+    deps: [build:qt-dependency]
+    cmds:
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH={{.HOLONIGHT_QT_PREFIX}} -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+
+  configure:release:
+    desc: Configure CMake (release, no tests)
+    deps: [build:qt-dependency]
+    cmds:
+      - cmake -S . -B {{.RELEASE_BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH={{.HOLONIGHT_QT_PREFIX}} -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+
+  configure-tests:
+    desc: Configure CMake with tests enabled
+    deps: [build:qt-dependency]
+    cmds:
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=ON -DCMAKE_PREFIX_PATH={{.HOLONIGHT_QT_PREFIX}} -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+
+  build:
+    desc: Build the Settings application
+    deps: [configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} -j{{.NPROC}}
+
+  build:release:
+    desc: Build the Settings application (release)
+    deps: [configure:release]
+    cmds:
+      - cmake --build {{.RELEASE_BUILD_DIR}} -j{{.NPROC}}
+
+  install:
+    desc: Build and install to ~/.local
+    deps: [build]
+    cmds:
+      - cmake --install {{.BUILD_DIR}} --prefix "$HOME/.local"
+
+  install:system:
+    desc: Build and install the release build to /usr (requires sudo)
+    deps: [build:release]
+    cmds:
+      - sudo cmake --install {{.RELEASE_BUILD_DIR}} --prefix /usr
+
+  uninstall:
+    desc: Uninstall the debug build from ~/.local
+    cmds:
+      - |
+        test -f "{{.BUILD_DIR}}/install_manifest.txt"
+        while IFS= read -r installed_file; do
+          rm -f -- "$installed_file"
+        done < "{{.BUILD_DIR}}/install_manifest.txt"
+
+  uninstall:system:
+    desc: Uninstall the release build from /usr (requires sudo)
+    cmds:
+      - |
+        test -f "{{.RELEASE_BUILD_DIR}}/install_manifest.txt"
+        sudo xargs -r -d '\n' rm -f -- < "{{.RELEASE_BUILD_DIR}}/install_manifest.txt"
+
+  run:
+    desc: Build and run the Settings application
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/apps/settings/holonight-settings
+
+  test:
+    desc: Build and run all tests
+    deps: [configure-tests]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} -j{{.NPROC}}
+      - dbus-run-session -- ctest --test-dir {{.BUILD_DIR}} --output-on-failure --no-tests=error
+
+  format:
+    desc: Format C++ source files
+    deps: [configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --target format
+
+  format-check:
+    desc: Check C++ source formatting
+    deps: [configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --target format-check
+
+  tidy:
+    desc: Run clang-tidy checks
+    deps: [configure-tests]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --target tidy
+
+  qml-lint:
+    desc: Run QML lint checks
+    deps: [configure]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --target qml-lint
+
+  qmltypes-check:
+    desc: Check generated QML type metadata
+    deps: [build]
+    cmds:
+      - bash scripts/check-qmltypes.sh {{.BUILD_DIR}}
+
+  coverage:
+    desc: Generate the test coverage report
+    deps: [configure-tests]
+    cmds:
+      - cmake --build {{.BUILD_DIR}} --target coverage
+
+  clean:
+    desc: Remove the build directory
+    prompt: Remove {{.BUILD_DIR}}/ entirely?
+    cmds:
+      - rm -rf {{.BUILD_DIR}}

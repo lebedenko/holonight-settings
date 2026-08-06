@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    container: ghcr.io/lebedenko/holonight-settings-ci:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout holonight-qt
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-qt
+          path: holonight-qt-dep
+      - name: Install holonight-qt
+        run: |
+          cmake -S holonight-qt-dep -B holonight-qt-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build holonight-qt-dep/build --parallel
+          cmake --install holonight-qt-dep/build --prefix /usr
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: dbus-run-session -- ctest --test-dir build --output-on-failure --no-tests=error
+      - name: QML checks
+        run: |
+          bash scripts/check-qmltypes.sh build
+          cmake --build build --target qml-lint
+      - name: Config-only install
+        run: |
+          cmake -S . -B build-config -G Ninja -DBUILD_APP=OFF -DBUILD_TESTS=OFF
+          cmake --build build-config --parallel
+          cmake --install build-config --prefix /tmp/holonight-settings-prefix
+
+  static-checks:
+    runs-on: ubuntu-24.04
+    container: ghcr.io/lebedenko/holonight-settings-ci:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout holonight-qt
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-qt
+          path: holonight-qt-dep
+      - name: Install holonight-qt
+        run: |
+          cmake -S holonight-qt-dep -B holonight-qt-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build holonight-qt-dep/build --parallel
+          cmake --install holonight-qt-dep/build --prefix /usr
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+      - run: cmake --build build --target format-check
+      - run: cmake --build build --target tidy

@@ -1,0 +1,15 @@
+ExtraArgsBefore:
+  - -Wno-error=unknown-argument
+Checks: >
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-owning-memory
+WarningsAsErrors: '*'
+HeaderFilterRegex: '(apps|libs)/.*\.h$'

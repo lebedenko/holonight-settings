@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=HoloNight Settings
+Comment=Configure HoloNight shell features and appearance
+Exec=holonight-settings
+Icon=holonight-settings
+Categories=Settings;DesktopSettings;Qt;
+Terminal=false
+DBusActivatable=true

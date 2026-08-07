@@ -4,11 +4,13 @@
 
 #include <QString>
 
+#include <cstdint>
+
 class AppearanceEditModel;
 
 class AppearanceFileService {
  public:
-  enum class SaveResult { Success, Conflict, Error };
+  enum class SaveResult : std::uint8_t { Success, Conflict, Error };
   explicit AppearanceFileService(AppearanceEditModel* model, QString path = {});
   [[nodiscard]] bool load();
   [[nodiscard]] SaveResult save(bool overwrite = false);

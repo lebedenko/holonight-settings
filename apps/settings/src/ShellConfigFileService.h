@@ -4,11 +4,13 @@
 
 #include <QString>
 
+#include <cstdint>
+
 class ShellSettingsEditModel;
 
 class ShellConfigFileService {
  public:
-  enum class SaveResult { Success, Conflict, Error };
+  enum class SaveResult : std::uint8_t { Success, Conflict, Error };
   explicit ShellConfigFileService(ShellSettingsEditModel* model, QString path = {});
   [[nodiscard]] bool load();
   [[nodiscard]] SaveResult save(bool overwrite = false);

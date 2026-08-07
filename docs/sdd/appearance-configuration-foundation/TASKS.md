@@ -24,7 +24,7 @@ Shell product provider revisions are published and pinned.
 Record exact commands, versions, automated results, manual observations, redaction checks, and the published commit
 before requesting ACF-005 `Done`. A local or unpublished commit is not a handoff.
 
-- 2026-08-08: provider-backed build passed; 12/12 CTest entries passed with one environment-dependent D-Bus skip;
-  format check, QML lint, and QML type metadata passed. Clang-tidy remains blocked by the repository toolchain's
-  unsupported `-mno-direct-extern-access` compile flag and also reports pre-existing activation-service findings.
+- 2026-08-08: provider-backed build passed; 13/13 CTest entries passed with one environment-dependent D-Bus skip;
+  format check, QML lint, and QML type metadata passed. The tidy workflow now filters GCC's unsupported
+  `-mno-direct-extern-access` argument and the complete clang-tidy target passes, including activation-service checks.
   Hyprland manual verification and the complete ACF5-09 matrix remain open.

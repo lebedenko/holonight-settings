@@ -57,7 +57,10 @@ endif()
 
 if(CLANG_TIDY)
   if(RUN_CLANG_TIDY)
-    add_custom_target(tidy COMMAND ${RUN_CLANG_TIDY} -quiet -p ${CMAKE_BINARY_DIR} ${ALL_CXX_FILES} VERBATIM)
+    add_custom_target(tidy
+      COMMAND ${RUN_CLANG_TIDY} -quiet -p ${CMAKE_BINARY_DIR}
+        -removed-arg=-mno-direct-extern-access ${ALL_CXX_FILES}
+      VERBATIM)
   else()
     add_custom_target(tidy COMMAND ${CLANG_TIDY} --quiet -p ${CMAKE_BINARY_DIR} ${ALL_CXX_FILES} VERBATIM)
   endif()

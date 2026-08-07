@@ -25,6 +25,11 @@ class ScopedEnvironmentValue {
     }
   }
 
+  ScopedEnvironmentValue(const ScopedEnvironmentValue&) = delete;
+  ScopedEnvironmentValue& operator=(const ScopedEnvironmentValue&) = delete;
+  ScopedEnvironmentValue(ScopedEnvironmentValue&&) = delete;
+  ScopedEnvironmentValue& operator=(ScopedEnvironmentValue&&) = delete;
+
  private:
   const char* name_;
   QByteArray previous_;
@@ -92,6 +97,8 @@ TEST(SettingsActivationServiceTest, DesktopAndServiceMetadataShareTheStableIdent
   EXPECT_TRUE(service.contains("/holonight-settings"));
 }
 
+// GoogleTest assertion macros inflate this integration test's measured complexity.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
 TEST(SettingsActivationServiceTest, ArbitratesOwnershipAndForwardsSecondaryActivation) {
   if (!QDBusConnection::sessionBus().isConnected()) {
     GTEST_SKIP() << "No session D-Bus is available";

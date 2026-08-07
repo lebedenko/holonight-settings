@@ -48,6 +48,11 @@ class ScopedEnvironmentValue {
     }
   }
 
+  ScopedEnvironmentValue(const ScopedEnvironmentValue&) = delete;
+  ScopedEnvironmentValue& operator=(const ScopedEnvironmentValue&) = delete;
+  ScopedEnvironmentValue(ScopedEnvironmentValue&&) = delete;
+  ScopedEnvironmentValue& operator=(ScopedEnvironmentValue&&) = delete;
+
  private:
   const char* name_;
   QByteArray previous_;
@@ -59,8 +64,8 @@ class ScopedEnvironmentValue {
 SettingsActivationService::SettingsActivationService(QObject* parent)
     : SettingsActivationService(QDBusConnection::sessionBus(), parent) {}
 
-SettingsActivationService::SettingsActivationService(const QDBusConnection& connection, QObject* parent)
-    : QObject(parent), connection_(connection) {}
+SettingsActivationService::SettingsActivationService(QDBusConnection connection, QObject* parent)
+    : QObject(parent), connection_(std::move(connection)) {}
 
 SettingsActivationService::~SettingsActivationService() {
   if (owns_service_) {

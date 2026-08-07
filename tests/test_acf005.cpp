@@ -6,6 +6,7 @@
 #include "ShellSettingsEditModel.h"
 
 #include <QFile>
+#include <QSignalSpy>
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
@@ -27,13 +28,26 @@ TEST(AppearanceEditModelTest, UsesCanonicalDefaultsAndRanges) {
 
 TEST(AppearanceEditModelTest, OptionalShapeOverridesRoundTrip) {
   AppearanceEditModel model;
+  QSignalSpy radius_enabled_spy(&model, &AppearanceEditModel::baseRadiusEnabledChanged);
   EXPECT_FALSE(model.baseRadiusEnabled());
   model.setBaseRadiusEnabled(true);
   model.setBaseRadius(200.0);
   EXPECT_TRUE(model.value().shape.base_radius.has_value());
   EXPECT_DOUBLE_EQ(*model.value().shape.base_radius, 128.0);
+  EXPECT_EQ(radius_enabled_spy.count(), 1);
   model.setBaseRadiusEnabled(false);
   EXPECT_FALSE(model.value().shape.base_radius.has_value());
+}
+
+TEST(AppearanceEditModelTest, SettingOptionalExtentEnablesItAndNotifies) {
+  AppearanceEditModel model;
+  QSignalSpy chamfer_enabled_spy(&model, &AppearanceEditModel::baseChamferEnabledChanged);
+
+  model.setBaseChamfer(12.0);
+
+  EXPECT_TRUE(model.baseChamferEnabled());
+  EXPECT_DOUBLE_EQ(model.baseChamfer(), 12.0);
+  EXPECT_EQ(chamfer_enabled_spy.count(), 1);
 }
 
 TEST(FontListModelTest, RetainsUnavailableConfiguredFamily) {

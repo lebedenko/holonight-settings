@@ -17,7 +17,9 @@ AppearanceFileService::AppearanceFileService(AppearanceEditModel* model, QString
     : model_(model), path_(std::move(path)) {
   if (path_.isEmpty()) {
     const auto resolved = HoloNight::Config::resolveAppearancePath();
-    if (resolved) path_ = QString::fromStdString(resolved.value->string());
+    if (resolved) {
+      path_ = QString::fromStdString(resolved.value->string());
+    }
   }
 }
 
@@ -30,8 +32,12 @@ bool AppearanceFileService::load() {
   revision_ = readFileRevision(path_);
   if (!loaded) {
     error_ = diagnosticText(loaded.diagnostics);
-    if (!revision_.exists) return false;
-    if (!initialized_) model_->load(HoloNight::Config::defaults());
+    if (!revision_.exists) {
+      return false;
+    }
+    if (!initialized_) {
+      model_->load(HoloNight::Config::defaults());
+    }
     model_->setValidationError(error_);
     initialized_ = true;
     return false;

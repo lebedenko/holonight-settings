@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVariantMap>
 
+#include <cstdint>
 #include <optional>
 
 class QQuickWindow;
@@ -13,10 +14,10 @@ class SettingsActivationService : public QObject {
   Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Application")
 
  public:
-  enum class StartupRole { Primary, Secondary, Error };
+  enum class StartupRole : std::uint8_t { Primary, Secondary, Error };
 
   explicit SettingsActivationService(QObject* parent = nullptr);
-  explicit SettingsActivationService(const QDBusConnection& connection, QObject* parent = nullptr);
+  explicit SettingsActivationService(QDBusConnection connection, QObject* parent = nullptr);
   ~SettingsActivationService() override;
 
   SettingsActivationService(const SettingsActivationService&) = delete;
@@ -30,12 +31,11 @@ class SettingsActivationService : public QObject {
   [[nodiscard]] QString errorString() const;
   [[nodiscard]] static QVariantMap platformDataFromEnvironment();
 
- public slots:
-  Q_SCRIPTABLE void Activate(const QVariantMap& platform_data);  // NOLINT(readability-identifier-naming)
-  Q_SCRIPTABLE void Open(const QStringList& uris,                // NOLINT(readability-identifier-naming)
-                         const QVariantMap& platform_data);
-  Q_SCRIPTABLE void ActivateAction(const QString& action_name,  // NOLINT(readability-identifier-naming)
-                                   const QVariantList& parameter, const QVariantMap& platform_data);
+  Q_SLOT Q_SCRIPTABLE void Activate(const QVariantMap& platform_data);  // NOLINT(readability-identifier-naming)
+  Q_SLOT Q_SCRIPTABLE void Open(const QStringList& uris,                // NOLINT(readability-identifier-naming)
+                                const QVariantMap& platform_data);
+  Q_SLOT Q_SCRIPTABLE void ActivateAction(const QString& action_name,  // NOLINT(readability-identifier-naming)
+                                          const QVariantList& parameter, const QVariantMap& platform_data);
 
  private:
   void requestActivation(const QVariantMap& platform_data);

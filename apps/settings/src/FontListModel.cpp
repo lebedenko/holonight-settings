@@ -16,7 +16,9 @@ void FontListModel::setFixedPitchOnly(bool value) {
 }
 
 void FontListModel::setRetainedFamily(const QString& value) {
-  if (retained_family_ == value) return;
+  if (retained_family_ == value) {
+    return;
+  }
   retained_family_ = value;
   emit retainedFamilyChanged();
   rebuild();

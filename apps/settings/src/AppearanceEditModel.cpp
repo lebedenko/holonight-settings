@@ -36,9 +36,13 @@ qreal AppearanceEditModel::baseChamfer() const { return current_.shape.base_cham
 
 QString AppearanceEditModel::sibling(const QString& mode) const {
   const auto* selected = Holonight::themeVariantForSchemeId(themeScheme());
-  if (selected == nullptr) return {};
+  if (selected == nullptr) {
+    return {};
+  }
   for (const auto& variant : Holonight::themeVariants()) {
-    if (variant.family_id == selected->family_id && Holonight::modeNameForScheme(variant.id) == mode) return variant.id;
+    if (variant.family_id == selected->family_id && Holonight::modeNameForScheme(variant.id) == mode) {
+      return variant.id;
+    }
   }
   return {};
 }
@@ -47,13 +51,17 @@ bool AppearanceEditModel::darkModeAvailable() const { return !sibling(QStringLit
 
 void AppearanceEditModel::changed(void (AppearanceEditModel::*signal)(), bool was_dirty) {
   emit(this->*signal)();
-  if (was_dirty != isDirty()) emit isDirtyChanged();
+  if (was_dirty != isDirty()) {
+    emit isDirtyChanged();
+  }
   setValidationError({});
 }
 #define STRING_SETTER(method, member, signal)              \
   void AppearanceEditModel::method(const QString& value) { \
     const bool dirty = isDirty();                          \
-    if (member == toStd(value)) return;                    \
+    if (member == toStd(value)) {                          \
+      return;                                              \
+    }                                                      \
     member = toStd(value);                                 \
     changed(&AppearanceEditModel::signal##Changed, dirty); \
   }
@@ -69,22 +77,30 @@ STRING_SETTER(setCursorTheme, current_.icons.cursor, cursorTheme)
 
 void AppearanceEditModel::setThemeScheme(const QString& value) {
   const bool dirty = isDirty();
-  if (current_.theme.scheme == toStd(value)) return;
+  if (current_.theme.scheme == toStd(value)) {
+    return;
+  }
   current_.theme.scheme = toStd(value);
   emit themeSchemeChanged();
   emit themeModeChanged();
-  if (dirty != isDirty()) emit isDirtyChanged();
+  if (dirty != isDirty()) {
+    emit isDirtyChanged();
+  }
   setValidationError({});
 }
 void AppearanceEditModel::setThemeMode(const QString& value) {
   const QString target = sibling(value);
-  if (!target.isEmpty()) setThemeScheme(target);
+  if (!target.isEmpty()) {
+    setThemeScheme(target);
+  }
 }
 #define INT_SETTER(method, member, signal)                 \
   void AppearanceEditModel::method(int value) {            \
     const bool dirty = isDirty();                          \
     value = std::clamp(value, 6, 48);                      \
-    if (member == value) return;                           \
+    if (member == value) {                                 \
+      return;                                              \
+    }                                                      \
     member = value;                                        \
     changed(&AppearanceEditModel::signal##Changed, dirty); \
   }
@@ -97,13 +113,17 @@ INT_SETTER(setDisplayFontSize, current_.typography.display_size, displayFontSize
 void AppearanceEditModel::setLayoutScale(qreal value) {
   const bool dirty = isDirty();
   value = std::clamp(value, 0.5, 3.0);
-  if (current_.layout.scale == value) return;
+  if (current_.layout.scale == value) {
+    return;
+  }
   current_.layout.scale = value;
   changed(&AppearanceEditModel::layoutScaleChanged, dirty);
 }
 void AppearanceEditModel::setShapeStyle(const QString& value) {
   const auto style = HoloNight::Config::shapeStyleFromName(value.toStdString());
-  if (!style || current_.shape.style == *style) return;
+  if (!style || current_.shape.style == *style) {
+    return;
+  }
   const bool dirty = isDirty();
   current_.shape.style = *style;
   changed(&AppearanceEditModel::shapeStyleChanged, dirty);
@@ -111,12 +131,16 @@ void AppearanceEditModel::setShapeStyle(const QString& value) {
 void AppearanceEditModel::setShapeScale(qreal value) {
   const bool dirty = isDirty();
   value = std::clamp(value, 0.25, 4.0);
-  if (current_.shape.scale == value) return;
+  if (current_.shape.scale == value) {
+    return;
+  }
   current_.shape.scale = value;
   changed(&AppearanceEditModel::shapeScaleChanged, dirty);
 }
 void AppearanceEditModel::setBaseRadiusEnabled(bool value) {
-  if (baseRadiusEnabled() == value) return;
+  if (baseRadiusEnabled() == value) {
+    return;
+  }
   const bool dirty = isDirty();
   current_.shape.base_radius = value ? std::optional<double>(0.0) : std::nullopt;
   emit baseRadiusEnabledChanged();
@@ -124,14 +148,21 @@ void AppearanceEditModel::setBaseRadiusEnabled(bool value) {
 }
 void AppearanceEditModel::setBaseRadius(qreal value) {
   const bool dirty = isDirty();
+  const bool was_enabled = baseRadiusEnabled();
   value = std::clamp(value, 0.0, 128.0);
-  if (current_.shape.base_radius == value) return;
+  if (current_.shape.base_radius == value) {
+    return;
+  }
   current_.shape.base_radius = value;
-  if (!baseRadiusEnabled()) emit baseRadiusEnabledChanged();
+  if (!was_enabled) {
+    emit baseRadiusEnabledChanged();
+  }
   changed(&AppearanceEditModel::baseRadiusChanged, dirty);
 }
 void AppearanceEditModel::setBaseChamferEnabled(bool value) {
-  if (baseChamferEnabled() == value) return;
+  if (baseChamferEnabled() == value) {
+    return;
+  }
   const bool dirty = isDirty();
   current_.shape.base_chamfer = value ? std::optional<double>(0.0) : std::nullopt;
   emit baseChamferEnabledChanged();
@@ -139,10 +170,15 @@ void AppearanceEditModel::setBaseChamferEnabled(bool value) {
 }
 void AppearanceEditModel::setBaseChamfer(qreal value) {
   const bool dirty = isDirty();
+  const bool was_enabled = baseChamferEnabled();
   value = std::clamp(value, 0.0, 128.0);
-  if (current_.shape.base_chamfer == value) return;
+  if (current_.shape.base_chamfer == value) {
+    return;
+  }
   current_.shape.base_chamfer = value;
-  if (!baseChamferEnabled()) emit baseChamferEnabledChanged();
+  if (!was_enabled) {
+    emit baseChamferEnabledChanged();
+  }
   changed(&AppearanceEditModel::baseChamferChanged, dirty);
 }
 
@@ -171,16 +207,22 @@ void AppearanceEditModel::load(const HoloNight::Config::Appearance& value) {
   emit baseRadiusChanged();
   emit baseChamferEnabledChanged();
   emit baseChamferChanged();
-  if (was_dirty) emit isDirtyChanged();
+  if (was_dirty) {
+    emit isDirtyChanged();
+  }
   setValidationError({});
 }
 void AppearanceEditModel::markSaved() {
   const bool dirty = isDirty();
   snapshot_ = current_;
-  if (dirty) emit isDirtyChanged();
+  if (dirty) {
+    emit isDirtyChanged();
+  }
 }
 void AppearanceEditModel::setValidationError(const QString& value) {
-  if (validation_error_ == value) return;
+  if (validation_error_ == value) {
+    return;
+  }
   validation_error_ = value;
   emit validationErrorChanged();
 }

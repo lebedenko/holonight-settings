@@ -5,8 +5,11 @@
 #include <memory>
 
 class QQmlApplicationEngine;
-class SettingsEditModel;
-class ConfigFileService;
+class AppearanceEditModel;
+class AppearanceFileService;
+class ShellSettingsEditModel;
+class ShellConfigFileService;
+class SettingsSaveCoordinator;
 class ShellStatusService;
 class SettingsActivationService;
 
@@ -27,8 +30,11 @@ class SettingsApplication : public QGuiApplication {
 
  private:
   std::unique_ptr<SettingsActivationService> activation_service_;
-  std::unique_ptr<SettingsEditModel> edit_model_;
-  std::unique_ptr<ConfigFileService> file_service_;
+  std::unique_ptr<AppearanceEditModel> appearance_model_;
+  std::unique_ptr<ShellSettingsEditModel> shell_model_;
+  std::unique_ptr<AppearanceFileService> appearance_files_;
+  std::unique_ptr<ShellConfigFileService> shell_files_;
+  std::unique_ptr<SettingsSaveCoordinator> save_coordinator_;
   std::unique_ptr<ShellStatusService> shell_status_;
   std::unique_ptr<QQmlApplicationEngine> engine_;
   bool should_run_ = false;

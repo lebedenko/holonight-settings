@@ -8,7 +8,8 @@ import Holonight.Controls
 Item {
     id: root
 
-    required property SettingsEditModel editModel
+    required property AppearanceEditModel appearanceModel
+    required property ShellSettingsEditModel shellModel
     required property string currentPage
     required property string currentPageTitle
     property bool ready: false
@@ -39,8 +40,10 @@ Item {
         const properties = {
             "objectName": "contentPage-" + pageKey
         };
-        if (pageKey === "appearance" || pageKey === "bar" || pageKey === "weather")
-            properties.editModel = root.editModel;
+        if (pageKey === "appearance")
+            properties.editModel = root.appearanceModel;
+        else if (pageKey === "bar" || pageKey === "weather")
+            properties.editModel = root.shellModel;
 
         return properties;
     }

@@ -2,12 +2,12 @@
 
 **Initiative:** ACF-005
 **Date:** 2026-08-07
-**Status:** Proposed
-**Repository baseline:** `9f244dcf06adcf8254fc0c6e42310173f728c73a`
-**Umbrella contract:** `1b242c97d441067bca939bdf1e00e7f7444e8de3`
-**Appearance provider:** `holonight-config` `c0e4aa2dd38906684848fde0ba9eef325eb47b8b`
-**Qt provider design:** `holonight-qt` `767cf3d1640e6957455b0146d28f6ce233ff5f51`
-**Shell product provider design:** `holonight-shell` `4fe75168632c43476ed862c70c63b95f63e4f292`
+**Status:** In Progress
+**Repository baseline:** `73f3d15033d48be637c6a6411fb76259c29b3b1a`
+**Umbrella contract:** `3ac1306`
+**Appearance provider:** `holonight-config` `81b01d3`
+**Qt provider:** `holonight-qt` `6f591cb`
+**Shell product provider:** `holonight-shell` `93e1faf`
 
 ## Goal
 

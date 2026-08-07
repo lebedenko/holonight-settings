@@ -13,7 +13,7 @@ if [[ ! -s "${qmltypes_file}" ]]; then
   exit 1
 fi
 
-for type_name in SettingsEditModel ConfigFileService ThemeSwatchTokens FontListModel ShellStatusService; do
+for type_name in AppearanceEditModel ShellSettingsEditModel SettingsSaveCoordinator ThemeSwatchTokens FontListModel ShellStatusService; do
   grep -q "name: \"${type_name}\"" "${qmltypes_file}" || {
     echo "Missing QML type metadata for ${type_name}" >&2
     exit 1

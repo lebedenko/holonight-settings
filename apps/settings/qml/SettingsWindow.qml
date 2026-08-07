@@ -8,8 +8,9 @@ import "PreviewPanel"
 HnApplicationWindow {
     id: root
 
-    required property SettingsEditModel editModel
-    required property ConfigFileService fileService
+    required property AppearanceEditModel appearanceModel
+    required property ShellSettingsEditModel shellModel
+    required property SettingsSaveCoordinator saveCoordinator
     required property ShellStatusService shellStatus
     required property string appVersion
     property string currentPage: "appearance"
@@ -20,24 +21,6 @@ HnApplicationWindow {
     width: 1244
     height: 800
     title: qsTr("HoloNight Settings")
-    Component.onCompleted: {
-        HolonightTheme.reload()
-        HoloniightPalette.reload()
-        HnAppearance.reload()
-    }
-
-    Connections {
-        function onSaveFinished(success) {
-            if (success) {
-                HolonightTheme.reload();
-                HoloniightPalette.reload();
-                HnAppearance.reload();
-            }
-
-        }
-
-        target: root.fileService
-    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -91,7 +74,8 @@ HnApplicationWindow {
 
                 ContentStack {
                     anchors.fill: parent
-                    editModel: root.editModel
+                    appearanceModel: root.appearanceModel
+                    shellModel: root.shellModel
                     currentPage: root.currentPage
                     currentPageTitle: navPanel.currentPageTitle
                 }
@@ -118,8 +102,7 @@ HnApplicationWindow {
         }
 
         FooterBar {
-            editModel: root.editModel
-            fileService: root.fileService
+            saveCoordinator: root.saveCoordinator
             shellStatus: root.shellStatus
             appVersion: root.appVersion
             Layout.fillWidth: true

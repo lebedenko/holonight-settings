@@ -38,12 +38,18 @@ qt_add_qml_module(holonight-settings
     NO_IMPORT_SCAN
     QML_FILES ${SETTINGS_QML_FILES}
     SOURCES
-        src/SettingsEditModel.h
-        src/SettingsEditModel.cpp
-        src/ConfigFileService.h
-        src/ConfigFileService.cpp
-        src/ThemeConfigFile.h
-        src/ThemeConfigFile.cpp
+        src/AppearanceEditModel.h
+        src/AppearanceEditModel.cpp
+        src/ShellSettingsEditModel.h
+        src/ShellSettingsEditModel.cpp
+        src/AppearanceFileService.h
+        src/AppearanceFileService.cpp
+        src/ShellConfigFileService.h
+        src/ShellConfigFileService.cpp
+        src/SettingsSaveCoordinator.h
+        src/SettingsSaveCoordinator.cpp
+        src/FileRevision.h
+        src/FileRevision.cpp
         src/theme_swatch_tokens.h
         src/theme_swatch_tokens.cpp
         src/FontListModel.h
@@ -64,8 +70,9 @@ qt6_add_resources(holonight-settings "settings_navigation_icons"
 )
 
 target_link_libraries(holonight-settings PRIVATE
-    HolonightConfig::Config
-    HolonightQt::Config
+    HoloNight::Config
+    HoloNightShellConfig::Config
+    HolonightQt::Appearance
     HolonightQt::Theme
     Qt6::Core
     Qt6::Gui

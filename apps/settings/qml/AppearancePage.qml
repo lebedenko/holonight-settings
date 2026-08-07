@@ -12,7 +12,7 @@ import HolonightSettings
 Flickable {
     id: root
 
-    required property SettingsEditModel editModel
+    required property AppearanceEditModel editModel
 
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
@@ -210,86 +210,12 @@ Flickable {
                             sizeRole: HnControlSize.Large
                             objectName: "darkModeSwitch"
                             checked: editModel.themeMode === "dark"
+                            enabled: checked ? editModel.lightModeAvailable : editModel.darkModeAvailable
                             onToggled: editModel.themeMode = checked ? "dark" : "light"
                         }
                     }
                 }
 
-                HnSettingsRow {
-                    objectName: "transparencyRow"
-                    titleText: qsTr("Transparency")
-                    descriptionText: qsTr("Control the transparency of shell components")
-                    sizeRole: HnControlSize.Hero
-                    stacked: false
-                    dividerVisible: true
-                    contentHorizontalPadding: root.rowHorizontalPadding
-                    Layout.fillWidth: true
-
-                    control: Component {
-                        RowLayout {
-                            objectName: "transparencyControls"
-                            implicitWidth: root.inlineControlWidth
-                            spacing: 8
-
-                            Slider {
-                                objectName: "transparencySlider"
-                                from: 0
-                                to: 100
-                                stepSize: 1
-                                value: editModel.transparency
-                                onMoved: editModel.transparency = Math.round(value)
-                                Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-                            HnLabel {
-                                objectName: "transparencyValue"
-                                role: HnTypographyRole.Body
-                                rawText: qsTr("%1%").arg(editModel.transparency)
-                                horizontalAlignment: Text.AlignRight
-                                Layout.preferredWidth: 40
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-                        }
-                    }
-                }
-
-                HnSettingsRow {
-                    objectName: "blurStrengthRow"
-                    titleText: qsTr("Blur strength")
-                    descriptionText: qsTr("Adjust background blur intensity")
-                    sizeRole: HnControlSize.Hero
-                    stacked: false
-                    dividerVisible: false
-                    contentHorizontalPadding: root.rowHorizontalPadding
-                    Layout.fillWidth: true
-
-                    control: Component {
-                        RowLayout {
-                            objectName: "blurStrengthControls"
-                            implicitWidth: root.inlineControlWidth
-                            spacing: 8
-
-                            Slider {
-                                objectName: "blurStrengthSlider"
-                                from: 0
-                                to: 64
-                                stepSize: 1
-                                value: editModel.blurStrength
-                                onMoved: editModel.blurStrength = Math.round(value)
-                                Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-                            HnLabel {
-                                objectName: "blurStrengthValue"
-                                role: HnTypographyRole.Body
-                                rawText: qsTr("%1 px").arg(editModel.blurStrength)
-                                horizontalAlignment: Text.AlignRight
-                                Layout.preferredWidth: 40
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-                        }
-                    }
-                }
             }
 
             SectionGroup {
@@ -316,6 +242,7 @@ Flickable {
                             model: FontListModel {
                                 id: uiFontModel
                                 fixedPitchOnly: false
+                                retainedFamily: editModel.uiFont
                             }
                             textRole: "display"
                             currentIndex: uiFontModel.indexOf(editModel.uiFont)
@@ -344,8 +271,8 @@ Flickable {
 
                             Slider {
                                 objectName: "uiFontSizeSlider"
-                                from: 8
-                                to: 18
+                                from: 6
+                                to: 48
                                 stepSize: 1
                                 value: editModel.uiFontSize
                                 activeFocusOnTab: true
@@ -366,7 +293,7 @@ Flickable {
                 }
 
                 HnSettingsRow {
-                    objectName: "fixedFontRow"
+                    objectName: "monospaceFontRow"
                     titleText: qsTr("Monospace font")
                     descriptionText: qsTr("Used for fixed-width text and technical content")
                     sizeRole: HnControlSize.Hero
@@ -377,25 +304,26 @@ Flickable {
 
                     control: Component {
                         HnIconComboBox {
-                            id: fixedFontCombo
+                            id: monospaceFontCombo
 
-                            objectName: "fixedFontCombo"
+                            objectName: "monospaceFontCombo"
                             implicitWidth: root.inlineControlWidth
                             model: FontListModel {
-                                id: fixedFontModel
+                                id: monospaceFontModel
                                 fixedPitchOnly: true
+                                retainedFamily: editModel.monospaceFont
                             }
                             textRole: "display"
-                            currentIndex: fixedFontModel.indexOf(editModel.fixedFont)
-                            onActivated: editModel.fixedFont = currentText
+                            currentIndex: monospaceFontModel.indexOf(editModel.monospaceFont)
+                            onActivated: editModel.monospaceFont = currentText
                         }
                     }
                 }
 
                 HnSettingsRow {
-                    id: fixedFontSizeRow
+                    id: monospaceFontSizeRow
 
-                    objectName: "fixedFontSizeRow"
+                    objectName: "monospaceFontSizeRow"
                     titleText: qsTr("Monospace font size")
                     descriptionText: qsTr("Adjust the size of monospace text")
                     sizeRole: HnControlSize.Hero
@@ -406,31 +334,122 @@ Flickable {
 
                     control: Component {
                         RowLayout {
-                            objectName: "fixedFontSizeControls"
+                            objectName: "monospaceFontSizeControls"
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
                             Slider {
-                                objectName: "fixedFontSizeSlider"
-                                from: 8
-                                to: 18
+                                objectName: "monospaceFontSizeSlider"
+                                from: 6
+                                to: 48
                                 stepSize: 1
-                                value: editModel.fixedFontSize
+                                value: editModel.monospaceFontSize
                                 activeFocusOnTab: true
-                                onMoved: editModel.fixedFontSize = Math.round(value)
+                                onMoved: editModel.monospaceFontSize = Math.round(value)
                                 Layout.fillWidth: true
                                 Layout.alignment: Qt.AlignVCenter
                             }
                             HnLabel {
-                                objectName: "fixedFontSizeValue"
+                                objectName: "monospaceFontSizeValue"
                                 role: HnTypographyRole.Body
-                                rawText: qsTr("%1 pt").arg(editModel.fixedFontSize)
+                                rawText: qsTr("%1 pt").arg(editModel.monospaceFontSize)
                                 horizontalAlignment: Text.AlignRight
                                 Layout.preferredWidth: 40
                                 Layout.alignment: Qt.AlignVCenter
                             }
                         }
                     }
+                }
+
+                HnSettingsRow {
+                    objectName: "titleFontRow"
+                    titleText: qsTr("Title font")
+                    descriptionText: qsTr("Used for application and panel titles")
+                    sizeRole: HnControlSize.Hero
+                    dividerVisible: true
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component {
+                        HnIconComboBox {
+                            implicitWidth: root.inlineControlWidth
+                            model: FontListModel { id: titleFontModel; retainedFamily: editModel.titleFont }
+                            textRole: "display"
+                            currentIndex: titleFontModel.indexOf(editModel.titleFont)
+                            onActivated: editModel.titleFont = currentText
+                        }
+                    }
+                }
+
+                HnSettingsRow {
+                    objectName: "titleFontSizeRow"
+                    titleText: qsTr("Title font size")
+                    sizeRole: HnControlSize.Hero
+                    dividerVisible: true
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component { Slider { from: 6; to: 48; stepSize: 1; value: editModel.titleFontSize; onMoved: editModel.titleFontSize = Math.round(value); implicitWidth: root.inlineControlWidth } }
+                }
+
+                HnSettingsRow {
+                    objectName: "displayFontRow"
+                    titleText: qsTr("Display font")
+                    descriptionText: qsTr("Used for clocks and prominent display text")
+                    sizeRole: HnControlSize.Hero
+                    dividerVisible: true
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component {
+                        HnIconComboBox {
+                            implicitWidth: root.inlineControlWidth
+                            model: FontListModel { id: displayFontModel; retainedFamily: editModel.displayFont }
+                            textRole: "display"
+                            currentIndex: displayFontModel.indexOf(editModel.displayFont)
+                            onActivated: editModel.displayFont = currentText
+                        }
+                    }
+                }
+
+                HnSettingsRow {
+                    objectName: "displayFontSizeRow"
+                    titleText: qsTr("Display font size")
+                    sizeRole: HnControlSize.Hero
+                    dividerVisible: false
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component { Slider { from: 6; to: 48; stepSize: 1; value: editModel.displayFontSize; onMoved: editModel.displayFontSize = Math.round(value); implicitWidth: root.inlineControlWidth } }
+                }
+            }
+
+            SectionGroup {
+                frameObjectName: "iconsSectionFrame"
+                label: qsTr("Icons and Cursor")
+                Layout.fillWidth: true
+
+                HnSettingsRow {
+                    objectName: "iconThemeRow"; titleText: qsTr("Icon theme"); sizeRole: HnControlSize.Hero; dividerVisible: true
+                    contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
+                    control: Component { TextField { implicitWidth: root.inlineControlWidth; text: editModel.iconTheme; onTextEdited: editModel.iconTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
+                }
+                HnSettingsRow {
+                    objectName: "fallbackIconThemeRow"; titleText: qsTr("Fallback icon theme"); sizeRole: HnControlSize.Hero; dividerVisible: true
+                    contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
+                    control: Component { TextField { implicitWidth: root.inlineControlWidth; text: editModel.fallbackIconTheme; onTextEdited: editModel.fallbackIconTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
+                }
+                HnSettingsRow {
+                    objectName: "cursorThemeRow"; titleText: qsTr("Cursor theme"); sizeRole: HnControlSize.Hero; dividerVisible: false
+                    contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
+                    control: Component { TextField { implicitWidth: root.inlineControlWidth; text: editModel.cursorTheme; onTextEdited: editModel.cursorTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
+                }
+            }
+
+            SectionGroup {
+                frameObjectName: "layoutSectionFrame"
+                label: qsTr("Layout")
+                Layout.fillWidth: true
+                HnSettingsRow {
+                    objectName: "layoutScaleRow"; titleText: qsTr("Layout scale"); descriptionText: qsTr("Scale shared spacing and sizing"); sizeRole: HnControlSize.Hero; dividerVisible: false
+                    contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
+                    control: Component { Slider { implicitWidth: root.inlineControlWidth; from: 0.5; to: 3.0; stepSize: 0.05; value: editModel.layoutScale; onMoved: editModel.layoutScale = value } }
                 }
             }
 
@@ -461,8 +480,8 @@ Flickable {
                                 { value: "rounded", text: qsTr("Rounded") },
                                 { value: "chamfered", text: qsTr("Chamfered") }
                             ]
-                            Component.onCompleted: currentIndex = indexForValue(editModel.shapeCornerStyle)
-                            onActivated: (_, value) => editModel.shapeCornerStyle = String(value)
+                            Component.onCompleted: currentIndex = indexForValue(editModel.shapeStyle)
+                            onActivated: (_, value) => editModel.shapeStyle = String(value)
 
                             function indexForValue(value: string): int {
                                 for (let index = 0; index < model.length; ++index) {
@@ -475,9 +494,9 @@ Flickable {
                             Connections {
                                 target: editModel
 
-                                function onShapeCornerStyleChanged(): void {
+                                function onShapeStyleChanged(): void {
                                     shapeStyleControl.currentIndex =
-                                        shapeStyleControl.indexForValue(editModel.shapeCornerStyle)
+                                        shapeStyleControl.indexForValue(editModel.shapeStyle)
                                 }
                             }
                         }

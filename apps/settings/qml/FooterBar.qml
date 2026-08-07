@@ -11,8 +11,7 @@ import QtQuick.Layouts
 Rectangle {
     id: root
 
-    required property SettingsEditModel editModel
-    required property ConfigFileService fileService
+    required property SettingsSaveCoordinator saveCoordinator
     required property ShellStatusService shellStatus
     required property string appVersion
 
@@ -41,6 +40,12 @@ Rectangle {
                 rawText: qsTr("v%1").arg(root.appVersion)
             }
 
+            HnLabel {
+                objectName: "saveResultText"
+                role: HnTypographyRole.Caption
+                rawText: root.saveCoordinator.resultText
+            }
+
         }
 
         trailingContent: RowLayout {
@@ -49,27 +54,18 @@ Rectangle {
             HnStyle.Button {
                 objectName: "discardChangesButton"
                 text: qsTr("Discard Changes")
-                enabled: root.editModel.isDirty && !root.fileService.isSaving
+                enabled: root.saveCoordinator.isDirty && !root.saveCoordinator.isBusy
                 Layout.preferredHeight: 36
-                onClicked: root.fileService.load()
+                onClicked: root.saveCoordinator.discard()
             }
 
             HnStyle.Button {
-                objectName: "applyButton"
-                text: qsTr("Apply")
-                enabled: root.editModel.isDirty && !root.fileService.isSaving
+                objectName: "saveButton"
+                text: qsTr("Save")
+                enabled: root.saveCoordinator.isDirty && !root.saveCoordinator.isBusy
                 highlighted: true
                 Layout.preferredHeight: 36
-                onClicked: root.fileService.save()
-            }
-
-            HnStyle.Button {
-                objectName: "saveAndApplyButton"
-                text: qsTr("Save & Apply")
-                enabled: root.editModel.isDirty && !root.fileService.isSaving
-                highlighted: true
-                Layout.preferredHeight: 36
-                onClicked: root.fileService.save()
+                onClicked: root.saveCoordinator.save()
             }
 
         }
@@ -81,27 +77,34 @@ Rectangle {
 
         property string errorMessage: ""
 
-        title: qsTr("Save Failed")
+        title: qsTr("External Change Detected")
         modal: true
         anchors.centerIn: Overlay.overlay
 
         HnLabel {
             role: HnTypographyRole.Body
-            rawText: errorDialog.errorMessage
+            rawText: qsTr("%1 changed outside Settings.").arg(root.saveCoordinator.conflictDomain)
             wrapMode: Text.WordWrap
             width: 360
         }
 
         footer: DialogButtonBox {
             HnStyle.Button {
-                text: qsTr("Retry")
+                text: qsTr("Reload")
                 DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                onClicked: root.fileService.save()
+                onClicked: root.saveCoordinator.reloadConflict()
+            }
+
+            HnStyle.Button {
+                text: qsTr("Overwrite")
+                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                onClicked: root.saveCoordinator.overwriteConflict()
             }
 
             HnStyle.Button {
                 text: qsTr("Cancel")
                 DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                onClicked: root.saveCoordinator.cancelConflict()
             }
 
         }
@@ -109,12 +112,12 @@ Rectangle {
     }
 
     Connections {
-        function onSaveError(message) {
-            errorDialog.errorMessage = message;
-            errorDialog.open();
+        function onConflictDomainChanged() {
+            if (root.saveCoordinator.conflictDomain !== "")
+                errorDialog.open();
         }
 
-        target: root.fileService
+        target: root.saveCoordinator
     }
 
 }

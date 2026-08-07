@@ -10,22 +10,17 @@ function(holonight_add_test_exe name)
     PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QML_IMPORT_PATH=/tmp/holonight-qt-prefix/lib/qt6/qml;QML2_IMPORT_PATH=/tmp/holonight-qt-prefix/lib/qt6/qml")
 endfunction()
 
-holonight_add_test_exe(test_holonight_config
-  main.cpp
-  test_config_parsers.cpp
-  test_configwriter_weather_preservation.cpp
-)
-target_link_libraries(test_holonight_config PRIVATE
-  HolonightConfig::Config GTest::gtest GTest::gmock Qt6::Gui Qt6::Test)
-
 if(BUILD_APP)
   holonight_add_test_exe(test_holonight_settings
     main.cpp
-    test_settings_app.cpp
+    test_acf005.cpp
     test_settings_activation.cpp
-    ../apps/settings/src/SettingsEditModel.cpp
-    ../apps/settings/src/ConfigFileService.cpp
-    ../apps/settings/src/ThemeConfigFile.cpp
+    ../apps/settings/src/AppearanceEditModel.cpp
+    ../apps/settings/src/ShellSettingsEditModel.cpp
+    ../apps/settings/src/AppearanceFileService.cpp
+    ../apps/settings/src/ShellConfigFileService.cpp
+    ../apps/settings/src/SettingsSaveCoordinator.cpp
+    ../apps/settings/src/FileRevision.cpp
     ../apps/settings/src/theme_swatch_tokens.cpp
     ../apps/settings/src/ShellStatusService.cpp
     ../apps/settings/src/FontListModel.cpp
@@ -33,13 +28,13 @@ if(BUILD_APP)
   )
   target_include_directories(test_holonight_settings PRIVATE ${CMAKE_SOURCE_DIR}/apps/settings/src)
   target_link_libraries(test_holonight_settings PRIVATE
-    HolonightConfig::Config HolonightQt::Config HolonightQt::Theme
+    HoloNight::Config HoloNightShellConfig::Config HolonightQt::Appearance HolonightQt::Theme
     GTest::gtest GTest::gmock Qt6::Gui Qt6::DBus
     Qt6::Qml Qt6::Quick Qt6::Test)
 endif()
 
 if(ENABLE_COVERAGE)
-  foreach(test_exe IN ITEMS test_holonight_config test_holonight_settings)
+  foreach(test_exe IN ITEMS test_holonight_settings)
     if(TARGET ${test_exe})
       target_compile_options(${test_exe} PRIVATE --coverage)
       target_link_options(${test_exe} PRIVATE --coverage)
@@ -55,5 +50,5 @@ if(ENABLE_COVERAGE)
       --html-details ${CMAKE_BINARY_DIR}/coverage/index.html
       --exclude-unreachable-branches --print-summary
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    DEPENDS test_holonight_config test_holonight_settings)
+    DEPENDS test_holonight_settings)
 endif()

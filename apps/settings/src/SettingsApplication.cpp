@@ -1,8 +1,11 @@
 #include "SettingsApplication.h"
 
-#include "ConfigFileService.h"
+#include "AppearanceEditModel.h"
+#include "AppearanceFileService.h"
 #include "SettingsActivationService.h"
-#include "SettingsEditModel.h"
+#include "SettingsSaveCoordinator.h"
+#include "ShellConfigFileService.h"
+#include "ShellSettingsEditModel.h"
 #include "ShellStatusService.h"
 
 #include <QDebug>
@@ -29,16 +32,22 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
   }
   should_run_ = true;
 
-  edit_model_ = std::make_unique<SettingsEditModel>();
-  file_service_ = std::make_unique<ConfigFileService>(edit_model_.get());
+  appearance_model_ = std::make_unique<AppearanceEditModel>();
+  shell_model_ = std::make_unique<ShellSettingsEditModel>();
+  appearance_files_ = std::make_unique<AppearanceFileService>(appearance_model_.get());
+  shell_files_ = std::make_unique<ShellConfigFileService>(shell_model_.get());
+  save_coordinator_ = std::make_unique<SettingsSaveCoordinator>(appearance_model_.get(), appearance_files_.get(),
+                                                                shell_model_.get(), shell_files_.get());
   shell_status_ = std::make_unique<ShellStatusService>();
 
-  file_service_->load();
+  static_cast<void>(appearance_files_->load());
+  static_cast<void>(shell_files_->load());
 
   engine_ = std::make_unique<QQmlApplicationEngine>();
   engine_->setInitialProperties({
-      {QStringLiteral("editModel"), QVariant::fromValue(edit_model_.get())},
-      {QStringLiteral("fileService"), QVariant::fromValue(file_service_.get())},
+      {QStringLiteral("appearanceModel"), QVariant::fromValue(appearance_model_.get())},
+      {QStringLiteral("shellModel"), QVariant::fromValue(shell_model_.get())},
+      {QStringLiteral("saveCoordinator"), QVariant::fromValue(save_coordinator_.get())},
       {QStringLiteral("shellStatus"), QVariant::fromValue(shell_status_.get())},
       {QStringLiteral("appVersion"), applicationVersion()},
   });

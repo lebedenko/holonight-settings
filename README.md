@@ -13,13 +13,5 @@ task build
 task test
 ```
 
-To build and install only the shared configuration package:
-
-```sh
-cmake -S . -B build-config -G Ninja -DBUILD_APP=OFF
-cmake --build build-config
-cmake --install build-config --prefix /desired/prefix
-```
-
-Consumers use `find_package(HolonightConfig CONFIG REQUIRED)` and link `HolonightConfig::Config`. Existing includes
-such as `<holonight_config/config_structs.h>` remain supported.
+Appearance persistence is provided by `HoloNight::Config`, while Shell product settings use
+`HoloNightShellConfig::Config`. Settings owns only edit state and user-facing save coordination.

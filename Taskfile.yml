@@ -5,13 +5,20 @@ vars:
   RELEASE_BUILD_DIR: build-release
   HOLONIGHT_QT_PREFIX: /tmp/holonight-qt-prefix
   HOLONIGHT_QT_DIR: /tmp/holonight-qt-prefix/lib/cmake/HolonightQt
+  HOLONIGHT_PROVIDER_PREFIX: /tmp/holonight-provider-prefix
   NPROC:
     sh: nproc
 
 tasks:
   build:qt-dependency:
-    desc: Build and install the sibling holonight-qt dependency
+    desc: Build and install exact sibling provider dependencies
     cmds:
+      - cmake -S ../holonight-config -B ../holonight-config/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build ../holonight-config/build -j{{.NPROC}}
+      - cmake --install ../holonight-config/build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake -S ../holonight-shell/libs/holonight-shell-config -B /tmp/holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build /tmp/holonight-shell-config-build -j{{.NPROC}}
+      - cmake --install /tmp/holonight-shell-config-build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
       - cmake -S ../holonight-qt -B ../holonight-qt/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - cmake --build ../holonight-qt/build -j{{.NPROC}}
       - cmake --install ../holonight-qt/build --prefix {{.HOLONIGHT_QT_PREFIX}}
@@ -20,19 +27,19 @@ tasks:
     desc: Configure CMake (debug, no tests)
     deps: [build:qt-dependency]
     cmds:
-      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH={{.HOLONIGHT_QT_PREFIX}} -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
 
   configure:release:
     desc: Configure CMake (release, no tests)
     deps: [build:qt-dependency]
     cmds:
-      - cmake -S . -B {{.RELEASE_BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH={{.HOLONIGHT_QT_PREFIX}} -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+      - cmake -S . -B {{.RELEASE_BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
 
   configure-tests:
     desc: Configure CMake with tests enabled
     deps: [build:qt-dependency]
     cmds:
-      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=ON -DCMAKE_PREFIX_PATH={{.HOLONIGHT_QT_PREFIX}} -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=ON -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
 
   build:
     desc: Build the Settings application

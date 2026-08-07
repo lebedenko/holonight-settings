@@ -14,10 +14,8 @@ option(BUILD_TESTS "Build unit and integration tests" OFF)
 option(ENABLE_COVERAGE "Instrument tests for gcov/gcovr coverage" OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(TOMLPLUSPLUS REQUIRED IMPORTED_TARGET tomlplusplus)
-
-add_subdirectory(libs/holonight-config)
+find_package(HoloNightConfig REQUIRED)
+find_package(HoloNightShellConfig REQUIRED)
 
 if(BUILD_APP)
   find_package(Qt6 REQUIRED COMPONENTS Gui Quick Qml DBus)
@@ -39,8 +37,6 @@ if(ENABLE_COVERAGE)
     message(FATAL_ERROR "ENABLE_COVERAGE requires BUILD_TESTS=ON")
   endif()
   find_program(GCOVR gcovr REQUIRED)
-  target_compile_options(holonight_config PRIVATE --coverage)
-  target_link_options(holonight_config PRIVATE --coverage)
 endif()
 
 find_program(CLANG_FORMAT clang-format)

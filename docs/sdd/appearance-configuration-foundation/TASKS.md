@@ -3,17 +3,17 @@
 All tasks remain unchecked until umbrella ACF-005 is `Ready`. Implement only after the exact appearance, Qt, and
 Shell product provider revisions are published and pinned.
 
-- [ ] ACF5-01: Adopt `HoloNight::Config` and `HoloNightShellConfig::Config` packages in CMake and Task workflows.
-- [ ] ACF5-02: Add `AppearanceEditModel` covering every canonical field, catalog projections, validation, snapshots,
+- [x] ACF5-01: Adopt `HoloNight::Config` and `HoloNightShellConfig::Config` packages in CMake and Task workflows.
+- [x] ACF5-02: Add `AppearanceEditModel` covering every canonical field, catalog projections, validation, snapshots,
   and dirty state.
-- [ ] ACF5-03: Add `AppearanceFileService` with missing/invalid load, atomic save, discard, diagnostics, and
+- [x] ACF5-03: Add `AppearanceFileService` with missing/invalid load, atomic save, discard, diagnostics, and
   external-change conflict handling.
-- [ ] ACF5-04: Convert the existing edit/file service to the Shell product domain using its published package.
-- [ ] ACF5-05: Add a save coordinator with isolated dirty-domain dispatch, partial-success reporting, and retry.
-- [ ] ACF5-06: Update the Appearance page for canonical typography, icons, cursor, layout, and optional shape values;
+- [x] ACF5-04: Convert the existing edit/file service to the Shell product domain using its published package.
+- [x] ACF5-05: Add a save coordinator with isolated dirty-domain dispatch, partial-success reporting, and retry.
+- [x] ACF5-06: Update the Appearance page for canonical typography, icons, cursor, layout, and optional shape values;
   remove transparency, blur, and persisted mode semantics.
-- [ ] ACF5-07: Consolidate duplicate Apply/Save behavior or define and test a real behavioral distinction.
-- [ ] ACF5-08: Delete `ThemeConfigFile`, legacy INI/JSON integration, the local exported config library, forwarding
+- [x] ACF5-07: Consolidate duplicate Apply/Save behavior or define and test a real behavioral distinction.
+- [x] ACF5-08: Delete `ThemeConfigFile`, legacy INI/JSON integration, the local exported config library, forwarding
   APIs, duplicated defaults, obsolete tests, and documentation.
 - [ ] ACF5-09: Add redacted domain-isolation, conflict, partial-failure, QML, package, and clean-break regression tests.
 - [ ] ACF5-10: Run format, tidy, QML lint/types, full CTest, and manual Settings-to-Qt/Shell Hyprland checks; publish
@@ -23,3 +23,8 @@ Shell product provider revisions are published and pinned.
 
 Record exact commands, versions, automated results, manual observations, redaction checks, and the published commit
 before requesting ACF-005 `Done`. A local or unpublished commit is not a handoff.
+
+- 2026-08-08: provider-backed build passed; 12/12 CTest entries passed with one environment-dependent D-Bus skip;
+  format check, QML lint, and QML type metadata passed. Clang-tidy remains blocked by the repository toolchain's
+  unsupported `-mno-direct-extern-access` compile flag and also reports pre-existing activation-service findings.
+  Hyprland manual verification and the complete ACF5-09 matrix remain open.

@@ -12,7 +12,7 @@ import HolonightSettings
 Flickable {
     id: root
 
-    required property SettingsEditModel editModel
+    required property ShellSettingsEditModel editModel
 
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
@@ -176,4 +176,3 @@ Flickable {
     }
 
 }
-

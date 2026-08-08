@@ -77,34 +77,72 @@ Rectangle {
 
         property string errorMessage: ""
 
-        title: qsTr("External Change Detected")
         modal: true
+        width: 440
+        padding: 20
         anchors.centerIn: Overlay.overlay
 
-        HnLabel {
+        background: HnSurfaceFrame {
+            surfaceRole: HnSurfaceRole.Popup
+            fillColor: HoloniightPalette.surfaceRaised
+            borderColor: HoloniightPalette.borderFocus
+        }
+
+        header: Item {
+            implicitHeight: 56
+
+            HnLabel {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                verticalAlignment: Text.AlignVCenter
+                role: HnTypographyRole.Title
+                rawText: qsTr("External Change Detected")
+            }
+        }
+
+        contentItem: HnLabel {
             role: HnTypographyRole.Body
             rawText: qsTr("%1 changed outside Settings.").arg(root.saveCoordinator.conflictDomain)
             wrapMode: Text.WordWrap
-            width: 360
         }
 
-        footer: DialogButtonBox {
-            HnStyle.Button {
-                text: qsTr("Reload")
-                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                onClicked: root.saveCoordinator.reloadConflict()
-            }
+        footer: Item {
+            implicitHeight: 64
 
-            HnStyle.Button {
-                text: qsTr("Overwrite")
-                DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
-                onClicked: root.saveCoordinator.overwriteConflict()
-            }
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                anchors.bottomMargin: 12
+                spacing: 8
 
-            HnStyle.Button {
-                text: qsTr("Cancel")
-                DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
-                onClicked: root.saveCoordinator.cancelConflict()
+                Item { Layout.fillWidth: true }
+
+                HnStyle.Button {
+                    text: qsTr("Reload")
+                    onClicked: {
+                        root.saveCoordinator.reloadConflict();
+                        errorDialog.close();
+                    }
+                }
+
+                HnStyle.Button {
+                    text: qsTr("Overwrite")
+                    highlighted: true
+                    onClicked: {
+                        root.saveCoordinator.overwriteConflict();
+                        errorDialog.close();
+                    }
+                }
+
+                HnStyle.Button {
+                    text: qsTr("Cancel")
+                    onClicked: {
+                        root.saveCoordinator.cancelConflict();
+                        errorDialog.close();
+                    }
+                }
             }
 
         }

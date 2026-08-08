@@ -47,7 +47,7 @@ T.CheckDelegate {
             surfaceRole: HnSurfaceRole.Card
             fillColor: root.down ? root.surfacePressedColor
                                  : (root.hovered ? root.surfaceHoverColor : root.surfaceColor)
-            borderWidth: HoloniightPalette.borderWidth
+            borderWidth: HnMetrics.borderWidth
             borderColor: root.checked ? root.selectionIndicatorColor : root.borderPassiveColor
 
             Rectangle {
@@ -104,7 +104,7 @@ T.CheckDelegate {
                 anchors.fill: parent
                 surfaceRole: HnSurfaceRole.Pill
                 fillColor: root.primaryColor
-                borderWidth: HoloniightPalette.borderWidth
+                borderWidth: HnMetrics.borderWidth
                 borderColor: root.selectionIndicatorColor
             }
 
@@ -114,7 +114,7 @@ T.CheckDelegate {
 
                 ShapePath {
                     strokeColor: root.onPrimaryColor
-                    strokeWidth: HoloniightPalette.borderWidth * 2
+                    strokeWidth: HnMetrics.borderWidth * 2
                     fillColor: "transparent"
                     capStyle: ShapePath.RoundCap
                     joinStyle: ShapePath.RoundJoin
@@ -132,7 +132,7 @@ T.CheckDelegate {
             visible: root.visualFocus
             surfaceRole: HnSurfaceRole.Card
             fillColor: "transparent"
-            borderWidth: HoloniightPalette.focusBorderWidth
+            borderWidth: HnMetrics.focusBorderWidth
             borderColor: HoloniightPalette.borderFocus
         }
 

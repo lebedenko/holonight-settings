@@ -89,7 +89,7 @@ Item {
                 leadingContent: Component {
                     HnIcon {
                         source: "qrc:/HolonightSettings/settings-navigation/" + navDelegate.modelData.icon + ".svg"
-                        size: HnControlMetrics.iconSize(navDelegate.resolvedSizeRole)
+                        size: HnMetrics.iconSize(navDelegate.resolvedSizeRole)
                         iconState: navDelegate.checked ? HnIcon.Active : HnIcon.Normal
                     }
                 }

@@ -16,19 +16,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-config
-          ref: 81b01d3
+          ref: 81b01d3ae8433f3a4b017db2feb588a1ee62b714
           path: holonight-config-dep
       - name: Checkout holonight-qt
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-qt
-          ref: 6f591cb
+          ref: 6f591cbdfb8c8e887e87e43a1c4e0c48c1f5f39d
           path: holonight-qt-dep
       - name: Checkout holonight-shell
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-shell
-          ref: 93e1faf
+          ref: 93e1faf3659d1aac0a506d173ac58839fe3b05b5
           path: holonight-shell-dep
       - name: Install holonight-config
         run: |
@@ -69,19 +69,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-config
-          ref: 81b01d3
+          ref: 81b01d3ae8433f3a4b017db2feb588a1ee62b714
           path: holonight-config-dep
       - name: Checkout holonight-qt
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-qt
-          ref: 6f591cb
+          ref: 6f591cbdfb8c8e887e87e43a1c4e0c48c1f5f39d
           path: holonight-qt-dep
       - name: Checkout holonight-shell
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-shell
-          ref: 93e1faf
+          ref: 93e1faf3659d1aac0a506d173ac58839fe3b05b5
           path: holonight-shell-dep
       - name: Install holonight-config
         run: |

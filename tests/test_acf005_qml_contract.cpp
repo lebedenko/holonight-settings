@@ -44,6 +44,8 @@ TEST(Acf005QmlContractTest, AppearancePageExposesEveryCanonicalControl) {
 TEST(Acf005QmlContractTest, LegacyControlsAndDuplicateActionsAreAbsent) {
   const QString appearance = readProjectFile("apps/settings/qml/AppearancePage.qml");
   const QString bar = readProjectFile("apps/settings/qml/BarPage.qml");
+  const QString navigation = readProjectFile("apps/settings/qml/NavPanel.qml");
+  const QString swatch = readProjectFile("apps/settings/qml/ColorSchemeSwatchCard.qml");
   const QString weather = readProjectFile("apps/settings/qml/WeatherPage.qml");
   const QString footer = readProjectFile("apps/settings/qml/FooterBar.qml");
 
@@ -52,6 +54,11 @@ TEST(Acf005QmlContractTest, LegacyControlsAndDuplicateActionsAreAbsent) {
   EXPECT_FALSE(weather.contains(QStringLiteral("import QtQuick.Controls.Basic")));
   EXPECT_FALSE(appearance.contains(QStringLiteral("transparency"), Qt::CaseInsensitive));
   EXPECT_FALSE(appearance.contains(QStringLiteral("blur"), Qt::CaseInsensitive));
+  EXPECT_FALSE(navigation.contains(QStringLiteral("HnControlMetrics")));
+  EXPECT_FALSE(swatch.contains(QStringLiteral("HoloniightPalette.borderWidth")));
+  EXPECT_FALSE(swatch.contains(QStringLiteral("HoloniightPalette.focusBorderWidth")));
+  EXPECT_TRUE(navigation.contains(QStringLiteral("HnMetrics.iconSize")));
+  EXPECT_TRUE(swatch.contains(QStringLiteral("HnMetrics.borderWidth")));
   EXPECT_FALSE(footer.contains(QStringLiteral("Save & Apply")));
   EXPECT_FALSE(footer.contains(QStringLiteral("objectName: \"applyButton\"")));
   EXPECT_TRUE(footer.contains(QStringLiteral("objectName: \"saveButton\"")));
@@ -60,6 +67,8 @@ TEST(Acf005QmlContractTest, LegacyControlsAndDuplicateActionsAreAbsent) {
   EXPECT_TRUE(footer.contains(QStringLiteral("Reload")));
   EXPECT_TRUE(footer.contains(QStringLiteral("Overwrite")));
   EXPECT_TRUE(footer.contains(QStringLiteral("Cancel")));
+  EXPECT_TRUE(footer.contains(QStringLiteral("surfaceRole: HnSurfaceRole.Popup")));
+  EXPECT_TRUE(footer.contains(QStringLiteral("fillColor: HoloniightPalette.surfaceRaised")));
 }
 
 TEST(Acf005QmlContractTest, PagesReceiveOnlyTheirOwningDomainModel) {

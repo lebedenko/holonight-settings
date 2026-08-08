@@ -12,16 +12,39 @@ jobs:
     container: ghcr.io/lebedenko/holonight-settings-ci:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout holonight-config
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-config
+          ref: 81b01d3
+          path: holonight-config-dep
       - name: Checkout holonight-qt
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-qt
+          ref: 6f591cb
           path: holonight-qt-dep
+      - name: Checkout holonight-shell
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-shell
+          ref: 93e1faf
+          path: holonight-shell-dep
+      - name: Install holonight-config
+        run: |
+          cmake -S holonight-config-dep -B holonight-config-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build holonight-config-dep/build --parallel
+          cmake --install holonight-config-dep/build --prefix /usr
       - name: Install holonight-qt
         run: |
           cmake -S holonight-qt-dep -B holonight-qt-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build holonight-qt-dep/build --parallel
           cmake --install holonight-qt-dep/build --prefix /usr
+      - name: Install holonight-shell config
+        run: |
+          cmake -S holonight-shell-dep/libs/holonight-shell-config -B holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build holonight-shell-config-build --parallel
+          cmake --install holonight-shell-config-build --prefix /usr
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
       - name: Build
@@ -32,27 +55,49 @@ jobs:
         run: |
           bash scripts/check-qmltypes.sh build
           cmake --build build --target qml-lint
-      - name: Config-only install
+      - name: Application install smoke
         run: |
-          cmake -S . -B build-config -G Ninja -DBUILD_APP=OFF -DBUILD_TESTS=OFF
-          cmake --build build-config --parallel
-          cmake --install build-config --prefix /tmp/holonight-settings-prefix
+          cmake --install build --prefix /tmp/holonight-settings-prefix
+          test -x /tmp/holonight-settings-prefix/bin/holonight-settings
 
   static-checks:
     runs-on: ubuntu-24.04
     container: ghcr.io/lebedenko/holonight-settings-ci:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout holonight-config
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-config
+          ref: 81b01d3
+          path: holonight-config-dep
       - name: Checkout holonight-qt
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-qt
+          ref: 6f591cb
           path: holonight-qt-dep
+      - name: Checkout holonight-shell
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-shell
+          ref: 93e1faf
+          path: holonight-shell-dep
+      - name: Install holonight-config
+        run: |
+          cmake -S holonight-config-dep -B holonight-config-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build holonight-config-dep/build --parallel
+          cmake --install holonight-config-dep/build --prefix /usr
       - name: Install holonight-qt
         run: |
           cmake -S holonight-qt-dep -B holonight-qt-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build holonight-qt-dep/build --parallel
           cmake --install holonight-qt-dep/build --prefix /usr
+      - name: Install holonight-shell config
+        run: |
+          cmake -S holonight-shell-dep/libs/holonight-shell-config -B holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build holonight-shell-config-build --parallel
+          cmake --install holonight-shell-config-build --prefix /usr
       - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
       - run: cmake --build build --target format-check
       - run: cmake --build build --target tidy

@@ -16,12 +16,12 @@ tasks:
       - cmake -S ../holonight-config -B ../holonight-config/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - cmake --build ../holonight-config/build -j{{.NPROC}}
       - cmake --install ../holonight-config/build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake -S ../holonight-qt -B ../holonight-qt/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH={{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake --build ../holonight-qt/build -j{{.NPROC}}
+      - cmake --install ../holonight-qt/build --prefix {{.HOLONIGHT_QT_PREFIX}}
       - cmake -S ../holonight-shell/libs/holonight-shell-config -B /tmp/holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - cmake --build /tmp/holonight-shell-config-build -j{{.NPROC}}
       - cmake --install /tmp/holonight-shell-config-build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
-      - cmake -S ../holonight-qt -B ../holonight-qt/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
-      - cmake --build ../holonight-qt/build -j{{.NPROC}}
-      - cmake --install ../holonight-qt/build --prefix {{.HOLONIGHT_QT_PREFIX}}
 
   configure:
     desc: Configure CMake (debug, no tests)

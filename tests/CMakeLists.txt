@@ -14,6 +14,7 @@ if(BUILD_APP)
   holonight_add_test_exe(test_holonight_settings
     main.cpp
     test_acf005.cpp
+    test_acf005_qml_contract.cpp
     test_settings_activation.cpp
     ../apps/settings/src/AppearanceEditModel.cpp
     ../apps/settings/src/ShellSettingsEditModel.cpp
@@ -32,6 +33,18 @@ if(BUILD_APP)
     GTest::gtest GTest::gmock Qt6::Gui Qt6::DBus
     Qt6::Qml Qt6::Quick Qt6::Test)
 endif()
+
+add_test(NAME acf005_package_consumer
+  COMMAND ${CMAKE_COMMAND}
+    -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/package-consumer
+    -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/package-consumer-build
+    -DPROVIDER_PREFIX=/tmp/holonight-provider-prefix
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/run_package_consumer.cmake)
+
+add_test(NAME acf005_clean_break
+  COMMAND ${CMAKE_COMMAND}
+    -DPROJECT_ROOT=${CMAKE_SOURCE_DIR}
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/check_acf005_clean_break.cmake)
 
 if(ENABLE_COVERAGE)
   foreach(test_exe IN ITEMS test_holonight_settings)

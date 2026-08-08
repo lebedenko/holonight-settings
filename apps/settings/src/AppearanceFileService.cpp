@@ -36,7 +36,7 @@ bool AppearanceFileService::load() {
       return false;
     }
     if (!initialized_) {
-      model_->load(HoloNight::Config::defaults());
+      model_->loadInvalidDefaults();
     }
     model_->setValidationError(error_);
     initialized_ = true;

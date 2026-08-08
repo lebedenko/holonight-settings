@@ -15,7 +15,7 @@ Shell product provider revisions are published and pinned.
 - [x] ACF5-07: Consolidate duplicate Apply/Save behavior or define and test a real behavioral distinction.
 - [x] ACF5-08: Delete `ThemeConfigFile`, legacy INI/JSON integration, the local exported config library, forwarding
   APIs, duplicated defaults, obsolete tests, and documentation.
-- [ ] ACF5-09: Add redacted domain-isolation, conflict, partial-failure, QML, package, and clean-break regression tests.
+- [x] ACF5-09: Add redacted domain-isolation, conflict, partial-failure, QML, package, and clean-break regression tests.
 - [ ] ACF5-10: Run format, tidy, QML lint/types, full CTest, and manual Settings-to-Qt/Shell Hyprland checks; publish
   the verified commit for umbrella handoff.
 
@@ -27,4 +27,14 @@ before requesting ACF-005 `Done`. A local or unpublished commit is not a handoff
 - 2026-08-08: provider-backed build passed; 13/13 CTest entries passed with one environment-dependent D-Bus skip;
   format check, QML lint, and QML type metadata passed. The tidy workflow now filters GCC's unsupported
   `-mno-direct-extern-access` argument and the complete clang-tidy target passes, including activation-service checks.
-  Hyprland manual verification and the complete ACF5-09 matrix remain open.
+  Hyprland manual verification remained open.
+- 2026-08-08: ACF5-09 regression coverage completed for canonical value conversion, redacted invalid startup,
+  missing/invalid/atomic-write and discard failures, file-identity conflicts with reload/overwrite/recheck,
+  isolated and partial multi-domain operations, retry and busy suppression, unavailable-font retention, QML control
+  and routing contracts, installed provider consumption, and clean-break searches. The provider-backed build and all
+  31 CTest entries passed (the existing environment-dependent D-Bus test skipped); format check, QML lint, QML type
+  metadata, and the complete clang-tidy target passed. ACF5-10 Hyprland verification and published handoff remain open.
+- 2026-08-08: live Hyprland review found and corrected a QML import collision that selected Basic controls and caused
+  Appearance component creation to fail. After rebuilding, the user confirmed Appearance, Bar, Weather, and
+  placeholder navigation render independently without console or styling issues. An isolated offscreen launch also
+  remained error-free. The save propagation, partial-failure, and external-conflict portions of ACF5-10 remain open.

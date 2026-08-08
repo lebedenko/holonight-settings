@@ -2,7 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls.Basic
+import QtQuick.Controls.Basic as QQC2
 import Holonight
 import Holonight.Core
 import Holonight.Controls
@@ -118,7 +118,7 @@ Flickable {
                                 boundsBehavior: Flickable.StopAtBounds
                                 clip: true
 
-                                ButtonGroup {
+                                QQC2.ButtonGroup {
                                     id: themeFamilyGroup
                                 }
 
@@ -139,7 +139,7 @@ Flickable {
                                             title: modelData.name
                                             schemeId: root.variantIdForFamilyAndMode(modelData, editModel.themeMode)
                                             checked: root.familyIdForScheme(editModel.themeScheme) === familyId
-                                            ButtonGroup.group: themeFamilyGroup
+                                            QQC2.ButtonGroup.group: themeFamilyGroup
                                             onClicked: {
                                                 editModel.themeScheme = root.variantIdForFamilyAndMode(
                                                     themeFamilyDelegate.modelData, editModel.themeMode)

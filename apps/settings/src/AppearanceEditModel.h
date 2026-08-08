@@ -66,7 +66,7 @@ class AppearanceEditModel : public QObject {
   [[nodiscard]] qreal baseChamfer() const;
   [[nodiscard]] bool lightModeAvailable() const;
   [[nodiscard]] bool darkModeAvailable() const;
-  [[nodiscard]] bool isDirty() const { return current_ != snapshot_; }
+  [[nodiscard]] bool isDirty() const { return requires_explicit_save_ || current_ != snapshot_; }
   [[nodiscard]] QString validationError() const { return validation_error_; }
   [[nodiscard]] const HoloNight::Config::Appearance& value() const { return current_; }
 
@@ -93,6 +93,7 @@ class AppearanceEditModel : public QObject {
   void setBaseChamfer(qreal value);
 
   void load(const HoloNight::Config::Appearance& value);
+  void loadInvalidDefaults();
   void markSaved();
   void setValidationError(const QString& value);
 
@@ -129,4 +130,5 @@ class AppearanceEditModel : public QObject {
   HoloNight::Config::Appearance current_{HoloNight::Config::defaults()};
   HoloNight::Config::Appearance snapshot_{current_};
   QString validation_error_;
+  bool requires_explicit_save_{false};
 };

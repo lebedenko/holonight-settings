@@ -186,6 +186,7 @@ void AppearanceEditModel::load(const HoloNight::Config::Appearance& value) {
   const bool was_dirty = isDirty();
   current_ = value;
   snapshot_ = value;
+  requires_explicit_save_ = false;
   emit themeSchemeChanged();
   emit themeAccentChanged();
   emit themeModeChanged();
@@ -212,9 +213,15 @@ void AppearanceEditModel::load(const HoloNight::Config::Appearance& value) {
   }
   setValidationError({});
 }
+void AppearanceEditModel::loadInvalidDefaults() {
+  load(HoloNight::Config::defaults());
+  requires_explicit_save_ = true;
+  emit isDirtyChanged();
+}
 void AppearanceEditModel::markSaved() {
   const bool dirty = isDirty();
   snapshot_ = current_;
+  requires_explicit_save_ = false;
   if (dirty) {
     emit isDirtyChanged();
   }

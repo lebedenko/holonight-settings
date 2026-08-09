@@ -8,6 +8,8 @@ class AppearanceEditModel;
 class AppearanceFileService;
 class ShellSettingsEditModel;
 class ShellConfigFileService;
+class AppearanceAdapterClient;
+struct AppearanceAdapterResponse;
 
 class SettingsSaveCoordinator : public QObject {
   Q_OBJECT
@@ -21,7 +23,7 @@ class SettingsSaveCoordinator : public QObject {
  public:
   SettingsSaveCoordinator(AppearanceEditModel* appearance, AppearanceFileService* appearance_files,
                           ShellSettingsEditModel* shell, ShellConfigFileService* shell_files,
-                          QObject* parent = nullptr);
+                          AppearanceAdapterClient* adapter = nullptr, QObject* parent = nullptr);
   [[nodiscard]] bool isDirty() const;
   [[nodiscard]] bool isBusy() const { return busy_; }
   [[nodiscard]] QString resultText() const { return result_text_; }
@@ -31,6 +33,9 @@ class SettingsSaveCoordinator : public QObject {
   Q_INVOKABLE void reloadConflict();
   Q_INVOKABLE void overwriteConflict();
   Q_INVOKABLE void cancelConflict();
+  Q_INVOKABLE void reapplyAppearance();
+  Q_INVOKABLE void refreshIntegrations();
+  Q_INVOKABLE void restoreNativeDefaults();
 
  Q_SIGNALS:
   void isDirtyChanged();
@@ -42,11 +47,17 @@ class SettingsSaveCoordinator : public QObject {
   void setBusy(bool value);
   void setResult(QString value);
   void setConflict(QString value);
+  void beginAppearance(bool overwrite);
+  void finishSave(QString appearance_result = {});
   AppearanceEditModel* appearance_;
   AppearanceFileService* appearance_files_;
   ShellSettingsEditModel* shell_;
   ShellConfigFileService* shell_files_;
+  AppearanceAdapterClient* adapter_;
   bool busy_{false};
+  int succeeded_{0};
+  int failed_{0};
+  bool appearance_staged_{false};
   QString result_text_;
   QString conflict_domain_;
 };

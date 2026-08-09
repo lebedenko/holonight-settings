@@ -11,6 +11,7 @@ HnApplicationWindow {
     required property AppearanceEditModel appearanceModel
     required property ShellSettingsEditModel shellModel
     required property SettingsSaveCoordinator saveCoordinator
+    required property AppearanceAdapterClient appearanceAdapter
     required property ShellStatusService shellStatus
     required property string appVersion
     property string currentPage: "appearance"
@@ -76,6 +77,8 @@ HnApplicationWindow {
                     anchors.fill: parent
                     appearanceModel: root.appearanceModel
                     shellModel: root.shellModel
+                    saveCoordinator: root.saveCoordinator
+                    appearanceAdapter: root.appearanceAdapter
                     currentPage: root.currentPage
                     currentPageTitle: navPanel.currentPageTitle
                 }

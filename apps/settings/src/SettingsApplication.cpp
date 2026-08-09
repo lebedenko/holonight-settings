@@ -1,5 +1,6 @@
 #include "SettingsApplication.h"
 
+#include "AppearanceAdapterClient.h"
 #include "AppearanceEditModel.h"
 #include "AppearanceFileService.h"
 #include "SettingsActivationService.h"
@@ -35,9 +36,11 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
   appearance_model_ = std::make_unique<AppearanceEditModel>();
   shell_model_ = std::make_unique<ShellSettingsEditModel>();
   appearance_files_ = std::make_unique<AppearanceFileService>(appearance_model_.get());
+  appearance_adapter_ = std::make_unique<AppearanceAdapterClient>();
   shell_files_ = std::make_unique<ShellConfigFileService>(shell_model_.get());
-  save_coordinator_ = std::make_unique<SettingsSaveCoordinator>(appearance_model_.get(), appearance_files_.get(),
-                                                                shell_model_.get(), shell_files_.get());
+  save_coordinator_ =
+      std::make_unique<SettingsSaveCoordinator>(appearance_model_.get(), appearance_files_.get(), shell_model_.get(),
+                                                shell_files_.get(), appearance_adapter_.get());
   shell_status_ = std::make_unique<ShellStatusService>();
 
   static_cast<void>(appearance_files_->load());
@@ -48,6 +51,7 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
       {QStringLiteral("appearanceModel"), QVariant::fromValue(appearance_model_.get())},
       {QStringLiteral("shellModel"), QVariant::fromValue(shell_model_.get())},
       {QStringLiteral("saveCoordinator"), QVariant::fromValue(save_coordinator_.get())},
+      {QStringLiteral("appearanceAdapter"), QVariant::fromValue(appearance_adapter_.get())},
       {QStringLiteral("shellStatus"), QVariant::fromValue(shell_status_.get())},
       {QStringLiteral("appVersion"), applicationVersion()},
   });

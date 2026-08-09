@@ -1,3 +1,4 @@
+#include "AppearanceAdapterClient.h"
 #include "AppearanceEditModel.h"
 #include "AppearanceFileService.h"
 #include "FontListModel.h"
@@ -29,6 +30,13 @@ void writeBytes(const QString& path, const QByteArray& contents) {
   QFile file(path);
   ASSERT_TRUE(file.open(QIODevice::WriteOnly));
   ASSERT_EQ(file.write(contents), contents.size());
+}
+
+QString writeAdapter(const QTemporaryDir& directory, const QByteArray& body) {
+  const QString path = directory.filePath(QStringLiteral("adapter"));
+  writeBytes(path, QByteArrayLiteral("#!/bin/sh\n") + body);
+  EXPECT_TRUE(QFile::setPermissions(path, QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner));
+  return path;
 }
 
 }  // namespace
@@ -219,6 +227,95 @@ TEST(AppearanceFileServiceTest, AtomicWriteFailureLeavesDomainDirty) {
 
   EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Error);
   EXPECT_TRUE(model.isDirty());
+}
+
+TEST(AppearanceFileServiceTest, RollbackRestoresExactBytesAndPermissions) {
+  QTemporaryDir directory;
+  const QString path = directory.filePath(QStringLiteral("appearance.toml"));
+  const QByteArray original = QByteArrayLiteral("# retained bytes\n");
+  writeBytes(path, original);
+  ASSERT_TRUE(QFile::setPermissions(path, QFile::ReadOwner | QFile::WriteOwner));
+  AppearanceEditModel model;
+  AppearanceFileService service(&model, path);
+  ASSERT_FALSE(service.load());
+
+  ASSERT_EQ(service.stage(), AppearanceFileService::SaveResult::Success);
+  ASSERT_TRUE(service.rollback());
+
+  QFile restored(path);
+  ASSERT_TRUE(restored.open(QIODevice::ReadOnly));
+  EXPECT_EQ(restored.readAll(), original);
+  EXPECT_EQ(restored.permissions() & (QFile::ReadOwner | QFile::WriteOwner | QFile::ExeOwner),
+            QFile::ReadOwner | QFile::WriteOwner);
+  EXPECT_TRUE(model.isDirty());
+}
+
+TEST(AppearanceFileServiceTest, RollbackRemovesNewCanonicalFile) {
+  QTemporaryDir directory;
+  const QString path = directory.filePath(QStringLiteral("appearance.toml"));
+  AppearanceEditModel model;
+  AppearanceFileService service(&model, path);
+  ASSERT_TRUE(service.load());
+  model.setThemeAccent(QStringLiteral("cyan"));
+  ASSERT_EQ(service.stage(), AppearanceFileService::SaveResult::Success);
+  ASSERT_TRUE(QFile::exists(path));
+  EXPECT_TRUE(service.rollback());
+  EXPECT_FALSE(QFile::exists(path));
+  EXPECT_TRUE(model.isDirty());
+}
+
+TEST(AppearanceAdapterClientTest, AcceptsVersionOneDegradedResponse) {
+  QTemporaryDir directory;
+  const QString adapter = writeAdapter(
+      directory,
+      QByteArrayLiteral("printf '%s\\n' '{\"protocol_version\":1,\"operation\":\"status\",\"result\":\"degraded\","
+                        "\"success\":true,\"degraded\":true,\"outputs\":[{\"name\":\"gtk\",\"status\":\"unavailable\","
+                        "\"apply_mode\":\"live\",\"diagnostic\":\"native fallback\"}]}'\n"));
+  AppearanceAdapterClient client(adapter);
+  QSignalSpy completed(&client, &AppearanceAdapterClient::completed);
+  client.status();
+  ASSERT_TRUE(completed.wait());
+  EXPECT_EQ(client.outputs().size(), 1);
+  EXPECT_TRUE(client.resultText().contains(QStringLiteral("limited")));
+}
+
+TEST(AppearanceAdapterClientTest, RejectsMalformedResponseWithoutLeakingStderr) {
+  QTemporaryDir directory;
+  const QString adapter = writeAdapter(directory, QByteArrayLiteral("echo SECRET_PATH >&2\nprintf 'invalid'\n"));
+  AppearanceAdapterClient client(adapter);
+  QSignalSpy failed(&client, &AppearanceAdapterClient::failed);
+  client.status();
+  ASSERT_TRUE(failed.wait());
+  EXPECT_FALSE(client.resultText().contains(QStringLiteral("SECRET_PATH")));
+}
+
+TEST(SettingsSaveCoordinatorTest, AdapterFailureRollsBackAppearanceButSavesShell) {
+  QTemporaryDir directory;
+  const QString adapter_path = writeAdapter(directory, QByteArrayLiteral("printf 'invalid'\n"));
+  const QString appearance_path = directory.filePath(QStringLiteral("appearance.toml"));
+  const QString shell_path = directory.filePath(QStringLiteral("config.toml"));
+  const QByteArray original = QByteArrayLiteral("# invalid but exact prior file\n");
+  writeBytes(appearance_path, original);
+  AppearanceEditModel appearance;
+  ShellSettingsEditModel shell;
+  AppearanceFileService appearance_files(&appearance, appearance_path);
+  ShellConfigFileService shell_files(&shell, shell_path);
+  ASSERT_FALSE(appearance_files.load());
+  ASSERT_TRUE(shell_files.load());
+  shell.setworkspaceCount(7);
+  AppearanceAdapterClient adapter(adapter_path);
+  SettingsSaveCoordinator coordinator(&appearance, &appearance_files, &shell, &shell_files, &adapter);
+  QSignalSpy busy(&coordinator, &SettingsSaveCoordinator::isBusyChanged);
+
+  coordinator.save();
+  ASSERT_TRUE(busy.wait());
+
+  QFile restored(appearance_path);
+  ASSERT_TRUE(restored.open(QIODevice::ReadOnly));
+  EXPECT_EQ(restored.readAll(), original);
+  EXPECT_TRUE(appearance.isDirty());
+  EXPECT_FALSE(shell.isDirty());
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Some changes saved")));
 }
 
 TEST(ShellConfigFileServiceTest, ProductSaveDoesNotCreateAppearanceFile) {

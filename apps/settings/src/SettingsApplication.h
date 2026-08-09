@@ -12,6 +12,7 @@ class ShellConfigFileService;
 class SettingsSaveCoordinator;
 class ShellStatusService;
 class SettingsActivationService;
+class AppearanceAdapterClient;
 
 class SettingsApplication : public QGuiApplication {
   Q_OBJECT
@@ -33,6 +34,7 @@ class SettingsApplication : public QGuiApplication {
   std::unique_ptr<AppearanceEditModel> appearance_model_;
   std::unique_ptr<ShellSettingsEditModel> shell_model_;
   std::unique_ptr<AppearanceFileService> appearance_files_;
+  std::unique_ptr<AppearanceAdapterClient> appearance_adapter_;
   std::unique_ptr<ShellConfigFileService> shell_files_;
   std::unique_ptr<SettingsSaveCoordinator> save_coordinator_;
   std::unique_ptr<ShellStatusService> shell_status_;

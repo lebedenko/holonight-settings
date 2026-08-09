@@ -9,6 +9,7 @@ set(SETTINGS_QML_FILES
     qml/EdgeFadeOverlay.qml
     qml/BarPage.qml
     qml/WeatherPage.qml
+    qml/IntegrationsPage.qml
     qml/PreviewPanel/PreviewPanel.qml
 )
 
@@ -44,6 +45,8 @@ qt_add_qml_module(holonight-settings
         src/ShellSettingsEditModel.cpp
         src/AppearanceFileService.h
         src/AppearanceFileService.cpp
+        src/AppearanceAdapterClient.h
+        src/AppearanceAdapterClient.cpp
         src/ShellConfigFileService.h
         src/ShellConfigFileService.cpp
         src/SettingsSaveCoordinator.h

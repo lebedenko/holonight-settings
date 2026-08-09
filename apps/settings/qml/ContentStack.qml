@@ -10,6 +10,8 @@ Item {
 
     required property AppearanceEditModel appearanceModel
     required property ShellSettingsEditModel shellModel
+    required property SettingsSaveCoordinator saveCoordinator
+    required property AppearanceAdapterClient appearanceAdapter
     required property string currentPage
     required property string currentPageTitle
     property bool ready: false
@@ -26,6 +28,8 @@ Item {
             return Qt.resolvedUrl("BarPage.qml");
         case "weather":
             return Qt.resolvedUrl("WeatherPage.qml");
+        case "integrations":
+            return Qt.resolvedUrl("IntegrationsPage.qml");
         default:
             return Qt.resolvedUrl("PlaceholderPage.qml");
         }
@@ -44,6 +48,11 @@ Item {
             properties.editModel = root.appearanceModel;
         else if (pageKey === "bar" || pageKey === "weather")
             properties.editModel = root.shellModel;
+        else if (pageKey === "integrations") {
+            properties.appearanceModel = root.appearanceModel;
+            properties.saveCoordinator = root.saveCoordinator;
+            properties.adapter = root.appearanceAdapter;
+        }
 
         return properties;
     }

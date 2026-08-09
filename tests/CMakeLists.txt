@@ -19,6 +19,7 @@ if(BUILD_APP)
     ../apps/settings/src/AppearanceEditModel.cpp
     ../apps/settings/src/ShellSettingsEditModel.cpp
     ../apps/settings/src/AppearanceFileService.cpp
+    ../apps/settings/src/AppearanceAdapterClient.cpp
     ../apps/settings/src/ShellConfigFileService.cpp
     ../apps/settings/src/SettingsSaveCoordinator.cpp
     ../apps/settings/src/FileRevision.cpp

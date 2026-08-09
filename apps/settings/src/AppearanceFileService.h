@@ -2,6 +2,7 @@
 
 #include "FileRevision.h"
 
+#include <QFile>
 #include <QString>
 
 #include <cstdint>
@@ -14,6 +15,9 @@ class AppearanceFileService {
   explicit AppearanceFileService(AppearanceEditModel* model, QString path = {});
   [[nodiscard]] bool load();
   [[nodiscard]] SaveResult save(bool overwrite = false);
+  [[nodiscard]] SaveResult stage(bool overwrite = false);
+  [[nodiscard]] bool commit();
+  [[nodiscard]] bool rollback();
   [[nodiscard]] QString error() const { return error_; }
   [[nodiscard]] QString path() const { return path_; }
 
@@ -24,4 +28,8 @@ class AppearanceFileService {
   FileRevision conflict_revision_;
   QString error_;
   bool initialized_{false};
+  QByteArray previous_contents_;
+  QFile::Permissions previous_permissions_;
+  bool previous_existed_{false};
+  bool staged_{false};
 };

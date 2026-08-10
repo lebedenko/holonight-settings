@@ -103,11 +103,8 @@ install(
     FILES ${PROJECT_SOURCE_DIR}/data/applications/org.holonight.Settings.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
 )
-configure_file(
-    ${PROJECT_SOURCE_DIR}/data/dbus-1/services/org.holonight.Settings.service.in
-    ${CMAKE_CURRENT_BINARY_DIR}/org.holonight.Settings.service
-    @ONLY
-)
+include(${PROJECT_SOURCE_DIR}/cmake/ConfigureSettingsActivation.cmake)
+configure_settings_activation_service(${CMAKE_CURRENT_BINARY_DIR}/org.holonight.Settings.service)
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/org.holonight.Settings.service
     DESTINATION ${CMAKE_INSTALL_DATADIR}/dbus-1/services

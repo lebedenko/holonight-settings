@@ -27,19 +27,19 @@ tasks:
     desc: Configure CMake (debug, no tests)
     deps: [build:qt-dependency]
     cmds:
-      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
 
   configure:release:
     desc: Configure CMake (release, no tests)
     deps: [build:qt-dependency]
     cmds:
-      - cmake -S . -B {{.RELEASE_BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+      - cmake -S . -B {{.RELEASE_BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_APP=ON -DBUILD_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
 
   configure-tests:
     desc: Configure CMake with tests enabled
     deps: [build:qt-dependency]
     cmds:
-      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=ON -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
+      - cmake -S . -B {{.BUILD_DIR}} -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_APP=ON -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX="$HOME/.local" -DCMAKE_PREFIX_PATH="{{.HOLONIGHT_PROVIDER_PREFIX}};{{.HOLONIGHT_QT_PREFIX}}" -DHolonightQt_DIR={{.HOLONIGHT_QT_DIR}}
 
   build:
     desc: Build the Settings application
@@ -57,13 +57,13 @@ tasks:
     desc: Build and install to ~/.local
     deps: [build]
     cmds:
-      - cmake --install {{.BUILD_DIR}} --prefix "$HOME/.local"
+      - cmake --install {{.BUILD_DIR}}
 
   install:system:
     desc: Build and install the release build to /usr (requires sudo)
     deps: [build:release]
     cmds:
-      - sudo cmake --install {{.RELEASE_BUILD_DIR}} --prefix /usr
+      - sudo cmake --install {{.RELEASE_BUILD_DIR}}
 
   uninstall:
     desc: Uninstall the debug build from ~/.local

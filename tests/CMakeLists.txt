@@ -66,3 +66,18 @@ if(ENABLE_COVERAGE)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS test_holonight_settings)
 endif()
+add_test(
+  NAME settings_activation_prefix_system
+  COMMAND ${CMAKE_COMMAND}
+    -DSETTINGS_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+    -DTEST_PREFIX=/usr
+    -DEXPECTED_EXEC=/usr/bin/holonight-settings
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/test_settings_activation_prefix.cmake)
+
+add_test(
+  NAME settings_activation_prefix_custom
+  COMMAND ${CMAKE_COMMAND}
+    -DSETTINGS_SOURCE_DIR=${PROJECT_SOURCE_DIR}
+    -DTEST_PREFIX=/opt/holonight-test
+    -DEXPECTED_EXEC=/opt/holonight-test/bin/holonight-settings
+    -P ${CMAKE_CURRENT_SOURCE_DIR}/test_settings_activation_prefix.cmake)

@@ -46,7 +46,7 @@ jobs:
           cmake --build holonight-shell-config-build --parallel
           cmake --install holonight-shell-config-build --prefix /usr
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/tmp/holonight-settings-prefix
       - name: Build
         run: cmake --build build --parallel
       - name: Test
@@ -57,8 +57,11 @@ jobs:
           cmake --build build --target qml-lint
       - name: Application install smoke
         run: |
-          cmake --install build --prefix /tmp/holonight-settings-prefix
+          cmake --install build
           test -x /tmp/holonight-settings-prefix/bin/holonight-settings
+          service=/tmp/holonight-settings-prefix/share/dbus-1/services/org.holonight.Settings.service
+          grep -Fx 'Exec=/tmp/holonight-settings-prefix/bin/holonight-settings' "$service"
+          test -x "$(sed -n 's/^Exec=//p' "$service")"
 
   static-checks:
     runs-on: ubuntu-24.04

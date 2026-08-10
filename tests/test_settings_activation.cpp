@@ -94,7 +94,7 @@ TEST(SettingsActivationServiceTest, DesktopAndServiceMetadataShareTheStableIdent
   EXPECT_TRUE(desktop.contains("DBusActivatable=true"));
   EXPECT_TRUE(desktop.contains("Exec=holonight-settings"));
   EXPECT_TRUE(service.contains("Name=org.holonight.Settings"));
-  EXPECT_TRUE(service.contains("/holonight-settings"));
+  EXPECT_TRUE(service.contains("Exec=@HOLONIGHT_SETTINGS_EXECUTABLE@"));
 }
 
 // GoogleTest assertion macros inflate this integration test's measured complexity.

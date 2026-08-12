@@ -201,7 +201,7 @@ Flickable {
                     descriptionText: qsTr("Use dark theme for all components")
                     sizeRole: HnControlSize.Hero
                     stacked: false
-                    dividerVisible: true
+                    dividerVisible: false
                     contentHorizontalPadding: root.rowHorizontalPadding
                     Layout.fillWidth: true
 
@@ -328,7 +328,7 @@ Flickable {
                     descriptionText: qsTr("Adjust the size of monospace text")
                     sizeRole: HnControlSize.Hero
                     stacked: false
-                    dividerVisible: false
+                    dividerVisible: true
                     contentHorizontalPadding: root.rowHorizontalPadding
                     Layout.fillWidth: true
 
@@ -387,7 +387,32 @@ Flickable {
                     dividerVisible: true
                     contentHorizontalPadding: root.rowHorizontalPadding
                     Layout.fillWidth: true
-                    control: Component { Slider { from: 6; to: 48; stepSize: 1; value: editModel.titleFontSize; onMoved: editModel.titleFontSize = Math.round(value); implicitWidth: root.inlineControlWidth } }
+                    control: Component {
+                        RowLayout {
+                            implicitWidth: root.inlineControlWidth
+                            spacing: 8
+
+                            Slider {
+                                objectName: "titleFontSizeSlider"
+                                from: 6
+                                to: 48
+                                stepSize: 1
+                                value: editModel.titleFontSize
+                                onMoved: editModel.titleFontSize = Math.round(value)
+                                activeFocusOnTab: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            HnLabel {
+                                objectName: "titleFontSizeValue"
+                                role: HnTypographyRole.Body
+                                rawText: qsTr("%1 pt").arg(editModel.titleFontSize)
+                                horizontalAlignment: Text.AlignRight
+                                Layout.preferredWidth: 40
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                        }
+                    }
                 }
 
                 HnSettingsRow {
@@ -416,7 +441,32 @@ Flickable {
                     dividerVisible: false
                     contentHorizontalPadding: root.rowHorizontalPadding
                     Layout.fillWidth: true
-                    control: Component { Slider { from: 6; to: 48; stepSize: 1; value: editModel.displayFontSize; onMoved: editModel.displayFontSize = Math.round(value); implicitWidth: root.inlineControlWidth } }
+                    control: Component {
+                        RowLayout {
+                            implicitWidth: root.inlineControlWidth
+                            spacing: 8
+
+                            Slider {
+                                objectName: "displayFontSizeSlider"
+                                from: 6
+                                to: 48
+                                stepSize: 1
+                                value: editModel.displayFontSize
+                                onMoved: editModel.displayFontSize = Math.round(value)
+                                activeFocusOnTab: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            HnLabel {
+                                objectName: "displayFontSizeValue"
+                                role: HnTypographyRole.Body
+                                rawText: qsTr("%1 pt").arg(editModel.displayFontSize)
+                                horizontalAlignment: Text.AlignRight
+                                Layout.preferredWidth: 40
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                        }
+                    }
                 }
             }
 
@@ -449,7 +499,32 @@ Flickable {
                 HnSettingsRow {
                     objectName: "layoutScaleRow"; titleText: qsTr("Layout scale"); descriptionText: qsTr("Scale shared spacing and sizing"); sizeRole: HnControlSize.Hero; dividerVisible: false
                     contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
-                    control: Component { Slider { implicitWidth: root.inlineControlWidth; from: 0.5; to: 3.0; stepSize: 0.05; value: editModel.layoutScale; onMoved: editModel.layoutScale = value } }
+                    control: Component {
+                        RowLayout {
+                            implicitWidth: root.inlineControlWidth
+                            spacing: 8
+
+                            Slider {
+                                objectName: "layoutScaleSlider"
+                                from: 0.5
+                                to: 3.0
+                                stepSize: 0.05
+                                value: editModel.layoutScale
+                                onMoved: editModel.layoutScale = value
+                                activeFocusOnTab: true
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                            HnLabel {
+                                objectName: "layoutScaleValue"
+                                role: HnTypographyRole.Body
+                                rawText: Number(editModel.layoutScale).toFixed(2) + qsTr("×")
+                                horizontalAlignment: Text.AlignRight
+                                Layout.preferredWidth: 52
+                                Layout.alignment: Qt.AlignVCenter
+                            }
+                        }
+                    }
                 }
             }
 

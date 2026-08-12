@@ -81,3 +81,12 @@ TEST(Acf005QmlContractTest, PagesReceiveOnlyTheirOwningDomainModel) {
   EXPECT_TRUE(window.contains(QStringLiteral("required property ShellSettingsEditModel shellModel")));
   EXPECT_TRUE(window.contains(QStringLiteral("required property SettingsSaveCoordinator saveCoordinator")));
 }
+
+TEST(Acf005QmlContractTest, SettingsWindowValidatesActivationPagesAgainstTheNavigationModel) {
+  const QString window = readProjectFile("apps/settings/qml/SettingsWindow.qml");
+
+  EXPECT_TRUE(window.contains(QStringLiteral("function requestPage(pageKey: string): void")));
+  EXPECT_TRUE(window.contains(QStringLiteral("for (const page of navPanel.pages)")));
+  EXPECT_TRUE(window.contains(QStringLiteral("if (page.key === pageKey)")));
+  EXPECT_TRUE(window.contains(QStringLiteral("root.currentPage = pageKey")));
+}

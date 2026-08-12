@@ -10,6 +10,7 @@
 #include "ShellStatusService.h"
 
 #include <QDebug>
+#include <QMetaObject>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
 
@@ -61,7 +62,11 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
       Qt::QueuedConnection);
   engine_->loadFromModule(QStringLiteral("HolonightSettings"), QStringLiteral("SettingsWindow"));
   if (!engine_->rootObjects().isEmpty()) {
-    activation_service_->setWindow(qobject_cast<QQuickWindow*>(engine_->rootObjects().constFirst()));
+    QObject* root = engine_->rootObjects().constFirst();
+    connect(
+        activation_service_.get(), &SettingsActivationService::pageRequested, root,
+        [root](const QString& page_key) { QMetaObject::invokeMethod(root, "requestPage", Q_ARG(QVariant, page_key)); });
+    activation_service_->setWindow(qobject_cast<QQuickWindow*>(root));
   }
 }
 

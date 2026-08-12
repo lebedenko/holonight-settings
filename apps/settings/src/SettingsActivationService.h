@@ -37,13 +37,21 @@ class SettingsActivationService : public QObject {
   Q_SLOT Q_SCRIPTABLE void ActivateAction(const QString& action_name,  // NOLINT(readability-identifier-naming)
                                           const QVariantList& parameter, const QVariantMap& platform_data);
 
+ Q_SIGNALS:
+  void pageRequested(const QString& page_key);
+
  private:
-  void requestActivation(const QVariantMap& platform_data);
+  struct ActivationRequest {
+    QVariantMap platform_data;
+    std::optional<QString> page_key;
+  };
+
+  void requestActivation(ActivationRequest request);
   [[nodiscard]] bool forwardActivation(const QVariantMap& platform_data);
 
   QDBusConnection connection_;
   QQuickWindow* window_ = nullptr;
-  std::optional<QVariantMap> pending_activation_;
+  std::optional<ActivationRequest> pending_activation_;
   QString error_string_;
   bool owns_service_ = false;
 };

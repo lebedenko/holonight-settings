@@ -69,6 +69,61 @@ TEST(SettingsActivationServiceTest, QueuesActivationUntilTheWindowIsReady) {
   EXPECT_NE(window.visibility(), QWindow::Minimized);
 }
 
+TEST(SettingsActivationServiceTest, RequestsActionPageBeforeRestoringWindowAndPreservesPlatformData) {
+  SettingsActivationService service;
+  QQuickWindow window;
+  window.hide();
+  QString observed_token;
+  bool was_visible_when_requested = true;
+  QObject::connect(&service, &SettingsActivationService::pageRequested, &service, [&](const QString&) {
+    observed_token = QString::fromUtf8(qgetenv("XDG_ACTIVATION_TOKEN"));
+    was_visible_when_requested = window.isVisible();
+  });
+  QSignalSpy page_spy(&service, &SettingsActivationService::pageRequested);
+  service.setWindow(&window);
+
+  service.ActivateAction(QStringLiteral("audio"), {},
+                         {{QStringLiteral("activation-token"), QStringLiteral("immediate-token")}});
+
+  ASSERT_EQ(page_spy.count(), 1);
+  EXPECT_EQ(page_spy.constFirst().constFirst().toString(), QStringLiteral("audio"));
+  EXPECT_EQ(observed_token, QStringLiteral("immediate-token"));
+  EXPECT_FALSE(was_visible_when_requested);
+  EXPECT_TRUE(window.isVisible());
+}
+
+TEST(SettingsActivationServiceTest, LatestQueuedActionWinsAndPreservesItsPlatformData) {
+  SettingsActivationService service;
+  QQuickWindow window;
+  window.hide();
+  QString observed_token;
+  QObject::connect(&service, &SettingsActivationService::pageRequested, &service,
+                   [&](const QString&) { observed_token = QString::fromUtf8(qgetenv("XDG_ACTIVATION_TOKEN")); });
+  QSignalSpy page_spy(&service, &SettingsActivationService::pageRequested);
+
+  service.ActivateAction(QStringLiteral("bar"), {},
+                         {{QStringLiteral("activation-token"), QStringLiteral("superseded-token")}});
+  service.ActivateAction(QStringLiteral("audio"), {},
+                         {{QStringLiteral("activation-token"), QStringLiteral("queued-token")}});
+  service.setWindow(&window);
+
+  ASSERT_EQ(page_spy.count(), 1);
+  EXPECT_EQ(page_spy.constFirst().constFirst().toString(), QStringLiteral("audio"));
+  EXPECT_EQ(observed_token, QStringLiteral("queued-token"));
+}
+
+TEST(SettingsActivationServiceTest, GenericActivationAndOpenDoNotRequestPages) {
+  SettingsActivationService service;
+  QQuickWindow window;
+  service.setWindow(&window);
+  QSignalSpy page_spy(&service, &SettingsActivationService::pageRequested);
+
+  service.Activate({});
+  service.Open({QStringLiteral("file:///ignored")}, {});
+
+  EXPECT_TRUE(page_spy.isEmpty());
+}
+
 TEST(SettingsActivationServiceTest, FailsClosedWhenTheBusIsDisconnected) {
   const QString connection_name =
       QStringLiteral("settings-activation-disconnected-%1").arg(QCoreApplication::applicationPid());
@@ -133,4 +188,33 @@ TEST(SettingsActivationServiceTest, ArbitratesOwnershipAndForwardsSecondaryActiv
 
   QDBusConnection::disconnectFromBus(primary_name);
   QDBusConnection::disconnectFromBus(secondary_name);
+}
+
+TEST(SettingsActivationServiceTest, ForwardsActivateActionOverTheRuntimeDbusInterface) {
+  if (!QDBusConnection::sessionBus().isConnected()) {
+    GTEST_SKIP() << "No session D-Bus is available";
+  }
+
+  const QString connection_name = QStringLiteral("settings-action-primary-%1").arg(QCoreApplication::applicationPid());
+  QDBusConnection connection = QDBusConnection::connectToBus(QDBusConnection::SessionBus, connection_name);
+  ASSERT_TRUE(connection.isConnected());
+
+  {
+    SettingsActivationService primary(connection);
+    QQuickWindow window;
+    primary.setWindow(&window);
+    ASSERT_EQ(primary.arbitrate({}), SettingsActivationService::StartupRole::Primary);
+    QSignalSpy page_spy(&primary, &SettingsActivationService::pageRequested);
+
+    QDBusInterface application(QStringLiteral("org.holonight.Settings"), QStringLiteral("/org/holonight/Settings"),
+                               QStringLiteral("org.freedesktop.Application"), connection);
+    const QDBusMessage reply = application.call(QDBus::BlockWithGui, QStringLiteral("ActivateAction"),
+                                                QStringLiteral("audio"), QVariantList{}, QVariantMap{});
+
+    ASSERT_EQ(reply.type(), QDBusMessage::ReplyMessage);
+    ASSERT_EQ(page_spy.count(), 1);
+    EXPECT_EQ(page_spy.constFirst().constFirst().toString(), QStringLiteral("audio"));
+  }
+
+  QDBusConnection::disconnectFromBus(connection_name);
 }

@@ -96,7 +96,7 @@ SettingsActivationService::StartupRole SettingsActivationService::arbitrate(cons
                                  QDBusConnectionInterface::DontAllowReplacement);
   if (registration.isValid() && registration.value() == QDBusConnectionInterface::ServiceRegistered) {
     owns_service_ = true;
-    requestActivation(platform_data);
+    requestActivation({.platform_data = platform_data, .page_key = std::nullopt});
     return StartupRole::Primary;
   }
 
@@ -115,9 +115,9 @@ SettingsActivationService::StartupRole SettingsActivationService::arbitrate(cons
 void SettingsActivationService::setWindow(QQuickWindow* window) {
   window_ = window;
   if (window_ != nullptr && pending_activation_.has_value()) {
-    const QVariantMap platform_data = *pending_activation_;
+    ActivationRequest request = std::move(*pending_activation_);
     pending_activation_.reset();
-    requestActivation(platform_data);
+    requestActivation(std::move(request));
   }
 }
 
@@ -136,25 +136,30 @@ QVariantMap SettingsActivationService::platformDataFromEnvironment() {
   return data;
 }
 
-void SettingsActivationService::Activate(const QVariantMap& platform_data) { requestActivation(platform_data); }
+void SettingsActivationService::Activate(const QVariantMap& platform_data) {
+  requestActivation({.platform_data = platform_data, .page_key = std::nullopt});
+}
 
 void SettingsActivationService::Open(const QStringList& /*uris*/, const QVariantMap& platform_data) {
-  requestActivation(platform_data);
+  requestActivation({.platform_data = platform_data, .page_key = std::nullopt});
 }
 
-void SettingsActivationService::ActivateAction(const QString& /*action_name*/, const QVariantList& /*parameter*/,
+void SettingsActivationService::ActivateAction(const QString& action_name, const QVariantList& /*parameter*/,
                                                const QVariantMap& platform_data) {
-  requestActivation(platform_data);
+  requestActivation({.platform_data = platform_data, .page_key = action_name});
 }
 
-void SettingsActivationService::requestActivation(const QVariantMap& platform_data) {
+void SettingsActivationService::requestActivation(ActivationRequest request) {
   if (window_ == nullptr) {
-    pending_activation_ = platform_data;
+    pending_activation_ = std::move(request);
     return;
   }
 
-  ScopedEnvironmentValue activation_token(kActivationTokenEnvironment, platform_data, kActivationToken);
-  ScopedEnvironmentValue startup_id(kDesktopStartupIdEnvironment, platform_data, kDesktopStartupId);
+  ScopedEnvironmentValue activation_token(kActivationTokenEnvironment, request.platform_data, kActivationToken);
+  ScopedEnvironmentValue startup_id(kDesktopStartupIdEnvironment, request.platform_data, kDesktopStartupId);
+  if (request.page_key.has_value()) {
+    Q_EMIT pageRequested(*request.page_key);
+  }
   if (window_->visibility() == QWindow::Minimized || !window_->isVisible()) {
     window_->showNormal();
   }

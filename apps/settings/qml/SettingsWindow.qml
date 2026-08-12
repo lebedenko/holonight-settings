@@ -23,6 +23,15 @@ HnApplicationWindow {
     height: 800
     title: qsTr("HoloNight Settings")
 
+    function requestPage(pageKey: string): void {
+        for (const page of navPanel.pages) {
+            if (page.key === pageKey) {
+                root.currentPage = pageKey;
+                return;
+            }
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         spacing: 8

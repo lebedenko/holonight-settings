@@ -22,8 +22,8 @@ no replacement, then follows one of three paths:
 - Interface: `org.freedesktop.Application`
 - Methods: `Activate(a{sv})`, `Open(as, a{sv})`, `ActivateAction(s, av, a{sv})`
 
-`Open` and `ActivateAction` currently normalize to window activation; their URI/action arguments are intentionally
-ignored because settings exposes neither document opening nor actions.
+`Open` remains page-neutral. `ActivateAction` treats its action name as a settings page key and ignores its parameter
+list; QML validates the key against the navigation model before changing the selected page.
 
 ## Activation and readiness flow
 

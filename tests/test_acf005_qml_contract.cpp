@@ -39,6 +39,9 @@ TEST(Acf005QmlContractTest, AppearancePageExposesEveryCanonicalControl) {
   EXPECT_TRUE(qml.contains(QStringLiteral("retainedFamily: editModel.monospaceFont")));
   EXPECT_TRUE(qml.contains(QStringLiteral("lightModeAvailable")));
   EXPECT_TRUE(qml.contains(QStringLiteral("darkModeAvailable")));
+  EXPECT_TRUE(qml.contains(QStringLiteral("function ensureSelectedSwatchVisible(): void")));
+  EXPECT_TRUE(qml.contains(QStringLiteral("swatch.x + (swatch.width - width) / 2")));
+  EXPECT_TRUE(qml.contains(QStringLiteral("function onThemeSchemeChanged(): void")));
 }
 
 TEST(Acf005QmlContractTest, LegacyControlsAndDuplicateActionsAreAbsent) {

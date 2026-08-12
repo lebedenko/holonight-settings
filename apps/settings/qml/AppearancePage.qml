@@ -118,6 +118,32 @@ Flickable {
                                 boundsBehavior: Flickable.StopAtBounds
                                 clip: true
 
+                                function ensureSelectedSwatchVisible(): void {
+                                    const selectedFamilyId = root.familyIdForScheme(editModel.themeScheme)
+                                    for (let index = 0; index < swatchRepeater.count; ++index) {
+                                        if (HolonightTheme.themeFamilies[index].id !== selectedFamilyId)
+                                            continue
+
+                                        const swatch = swatchRepeater.itemAt(index)
+                                        if (!swatch)
+                                            return
+
+                                        const targetContentX = swatch.x + (swatch.width - width) / 2
+                                        contentX = Math.max(0, Math.min(targetContentX, contentWidth - width))
+                                        return
+                                    }
+                                }
+
+                                onWidthChanged: ensureSelectedSwatchVisible()
+                                Component.onCompleted: Qt.callLater(ensureSelectedSwatchVisible)
+
+                                Connections {
+                                    target: editModel
+                                    function onThemeSchemeChanged(): void {
+                                        Qt.callLater(swatchFlickable.ensureSelectedSwatchVisible)
+                                    }
+                                }
+
                                 QQC2.ButtonGroup {
                                     id: themeFamilyGroup
                                 }
@@ -128,6 +154,8 @@ Flickable {
                                     spacing: 8
 
                                     Repeater {
+                                        id: swatchRepeater
+
                                         model: HolonightTheme.themeFamilies
 
                                         delegate: ColorSchemeSwatchCard {

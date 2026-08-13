@@ -22,6 +22,9 @@ tasks:
       - cmake -S ../holonight-shell/libs/holonight-shell-config -B /tmp/holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Debug
       - cmake --build /tmp/holonight-shell-config-build -j{{.NPROC}}
       - cmake --install /tmp/holonight-shell-config-build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake -S ../holonight-system-services -B ../holonight-system-services/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF
+      - cmake --build ../holonight-system-services/build -j{{.NPROC}}
+      - cmake --install ../holonight-system-services/build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
 
   configure:
     desc: Configure CMake (debug, no tests)

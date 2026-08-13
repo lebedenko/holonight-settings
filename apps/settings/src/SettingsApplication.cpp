@@ -3,6 +3,7 @@
 #include "AppearanceAdapterClient.h"
 #include "AppearanceEditModel.h"
 #include "AppearanceFileService.h"
+#include "AudioControllerQml.h"
 #include "SettingsActivationService.h"
 #include "SettingsSaveCoordinator.h"
 #include "ShellConfigFileService.h"
@@ -43,6 +44,8 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
       std::make_unique<SettingsSaveCoordinator>(appearance_model_.get(), appearance_files_.get(), shell_model_.get(),
                                                 shell_files_.get(), appearance_adapter_.get());
   shell_status_ = std::make_unique<ShellStatusService>();
+  audio_controller_ = std::make_unique<AudioControllerQml>();
+  audio_controller_->start();
 
   static_cast<void>(appearance_files_->load());
   static_cast<void>(shell_files_->load());
@@ -54,6 +57,7 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
       {QStringLiteral("saveCoordinator"), QVariant::fromValue(save_coordinator_.get())},
       {QStringLiteral("appearanceAdapter"), QVariant::fromValue(appearance_adapter_.get())},
       {QStringLiteral("shellStatus"), QVariant::fromValue(shell_status_.get())},
+      {QStringLiteral("audioController"), QVariant::fromValue(audio_controller_.get())},
       {QStringLiteral("appVersion"), applicationVersion()},
   });
 

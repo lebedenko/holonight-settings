@@ -13,6 +13,7 @@ HnApplicationWindow {
     required property SettingsSaveCoordinator saveCoordinator
     required property AppearanceAdapterClient appearanceAdapter
     required property ShellStatusService shellStatus
+    required property AudioController audioController
     required property string appVersion
     property string currentPage: "appearance"
 
@@ -88,6 +89,7 @@ HnApplicationWindow {
                     shellModel: root.shellModel
                     saveCoordinator: root.saveCoordinator
                     appearanceAdapter: root.appearanceAdapter
+                    audioController: root.audioController
                     currentPage: root.currentPage
                     currentPageTitle: navPanel.currentPageTitle
                 }

@@ -12,6 +12,7 @@ Item {
     required property ShellSettingsEditModel shellModel
     required property SettingsSaveCoordinator saveCoordinator
     required property AppearanceAdapterClient appearanceAdapter
+    required property AudioController audioController
     required property string currentPage
     required property string currentPageTitle
     property bool ready: false
@@ -30,6 +31,8 @@ Item {
             return Qt.resolvedUrl("WeatherPage.qml");
         case "integrations":
             return Qt.resolvedUrl("IntegrationsPage.qml");
+        case "audio":
+            return Qt.resolvedUrl("AudioPage.qml");
         default:
             return Qt.resolvedUrl("PlaceholderPage.qml");
         }
@@ -52,7 +55,8 @@ Item {
             properties.appearanceModel = root.appearanceModel;
             properties.saveCoordinator = root.saveCoordinator;
             properties.adapter = root.appearanceAdapter;
-        }
+        } else if (pageKey === "audio")
+            properties.audioController = root.audioController;
 
         return properties;
     }

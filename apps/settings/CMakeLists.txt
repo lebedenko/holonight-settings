@@ -10,6 +10,7 @@ set(SETTINGS_QML_FILES
     qml/BarPage.qml
     qml/WeatherPage.qml
     qml/IntegrationsPage.qml
+    qml/AudioPage.qml
     qml/PreviewPanel/PreviewPanel.qml
 )
 
@@ -59,6 +60,8 @@ qt_add_qml_module(holonight-settings
         src/FontListModel.cpp
         src/ShellStatusService.h
         src/ShellStatusService.cpp
+        src/AudioControllerQml.h
+        src/AudioControllerQml.cpp
 )
 
 file(GLOB SETTINGS_NAVIGATION_ICONS CONFIGURE_DEPENDS
@@ -75,6 +78,7 @@ qt6_add_resources(holonight-settings "settings_navigation_icons"
 target_link_libraries(holonight-settings PRIVATE
     HoloNight::Config
     HoloNightShellConfig::Config
+    HoloNightSystem::Audio
     HolonightQt::Appearance
     HolonightQt::Theme
     Qt6::Core

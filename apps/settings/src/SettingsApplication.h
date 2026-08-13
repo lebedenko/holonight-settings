@@ -13,6 +13,7 @@ class SettingsSaveCoordinator;
 class ShellStatusService;
 class SettingsActivationService;
 class AppearanceAdapterClient;
+class AudioControllerQml;
 
 class SettingsApplication : public QGuiApplication {
   Q_OBJECT
@@ -38,6 +39,7 @@ class SettingsApplication : public QGuiApplication {
   std::unique_ptr<ShellConfigFileService> shell_files_;
   std::unique_ptr<SettingsSaveCoordinator> save_coordinator_;
   std::unique_ptr<ShellStatusService> shell_status_;
+  std::unique_ptr<AudioControllerQml> audio_controller_;
   std::unique_ptr<QQmlApplicationEngine> engine_;
   bool should_run_ = false;
   int startup_exit_code_ = 0;

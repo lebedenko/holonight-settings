@@ -16,6 +16,7 @@ option(ENABLE_COVERAGE "Instrument tests for gcov/gcovr coverage" OFF)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(HoloNightConfig REQUIRED)
 find_package(HoloNightShellConfig REQUIRED)
+find_package(HoloNightSystemServices REQUIRED)
 
 if(BUILD_APP)
   find_package(Qt6 REQUIRED COMPONENTS Gui Quick Qml DBus)

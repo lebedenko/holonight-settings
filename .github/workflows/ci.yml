@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-shell
-          ref: 93e1faf3659d1aac0a506d173ac58839fe3b05b5
+          ref: 587c8164024986725b8a0f4b4a7fa03d3fc4c8cd
           path: holonight-shell-dep
       - name: Checkout holonight-system-services
         uses: actions/checkout@v4
@@ -95,7 +95,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: lebedenko/holonight-shell
-          ref: 93e1faf3659d1aac0a506d173ac58839fe3b05b5
+          ref: 587c8164024986725b8a0f4b4a7fa03d3fc4c8cd
           path: holonight-shell-dep
       - name: Checkout holonight-system-services
         uses: actions/checkout@v4

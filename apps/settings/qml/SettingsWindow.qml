@@ -85,6 +85,7 @@ HnApplicationWindow {
 
                 ContentStack {
                     anchors.fill: parent
+                    anchors.margins: contentFrame.normalizedBorderWidth
                     appearanceModel: root.appearanceModel
                     shellModel: root.shellModel
                     saveCoordinator: root.saveCoordinator

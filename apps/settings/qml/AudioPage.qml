@@ -1,7 +1,7 @@
 import Holonight.Core
 import HolonightSettings
 import QtQuick
-import QtQuick.Controls.Basic
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 
 Item {
@@ -30,7 +30,7 @@ Item {
                 rawText: qsTr("Output volume")
             }
 
-            Slider {
+            Controls.Slider {
                 id: masterVolume
                 objectName: "audioMasterVolume"
                 Layout.preferredWidth: 280
@@ -40,7 +40,7 @@ Item {
                 onMoved: root.audioController.setVolume(Math.round(value))
             }
 
-            Switch {
+            Controls.Switch {
                 objectName: "audioMasterMuted"
                 text: qsTr("Mute")
                 checked: root.audioController.muted
@@ -57,12 +57,12 @@ Item {
         ListView {
             objectName: "audioOutputDevices"
             Layout.fillWidth: true
-            Layout.fillHeight: true
+            Layout.preferredHeight: Math.min(contentHeight, 180)
             clip: true
             spacing: 8
             model: root.audioController.outputs
 
-            delegate: RadioButton {
+            delegate: Controls.RadioButton {
                 required property int deviceId
                 required property string description
                 required property bool isDefault
@@ -87,7 +87,7 @@ Item {
             spacing: 8
             model: root.audioController.inputs
 
-            delegate: RadioButton {
+            delegate: Controls.RadioButton {
                 required property int deviceId
                 required property string description
                 required property bool isDefault
@@ -96,6 +96,10 @@ Item {
                 checked: isDefault
                 onClicked: root.audioController.setDefaultInput(deviceId)
             }
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 }

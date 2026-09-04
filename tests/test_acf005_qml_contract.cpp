@@ -93,3 +93,20 @@ TEST(Acf005QmlContractTest, SettingsWindowValidatesActivationPagesAgainstTheNavi
   EXPECT_TRUE(window.contains(QStringLiteral("if (page.key === pageKey)")));
   EXPECT_TRUE(window.contains(QStringLiteral("root.currentPage = pageKey")));
 }
+
+TEST(Acf005QmlContractTest, SettingsContentStaysInsideTheFrameBorder) {
+  const QString window = readProjectFile("apps/settings/qml/SettingsWindow.qml");
+
+  ASSERT_FALSE(window.isEmpty());
+  EXPECT_TRUE(window.contains(QStringLiteral("anchors.margins: contentFrame.normalizedBorderWidth")));
+}
+
+TEST(Acf005QmlContractTest, AudioDevicesStayGroupedAtTheTop) {
+  const QString audio = readProjectFile("apps/settings/qml/AudioPage.qml");
+
+  ASSERT_FALSE(audio.isEmpty());
+  EXPECT_TRUE(audio.contains(QStringLiteral("import QtQuick.Controls as Controls")));
+  EXPECT_FALSE(audio.contains(QStringLiteral("import QtQuick.Controls.Basic")));
+  EXPECT_EQ(audio.count(QStringLiteral("Layout.preferredHeight: Math.min(contentHeight, 180)")), 2);
+  EXPECT_TRUE(audio.contains(QStringLiteral("Item {\n            Layout.fillHeight: true\n        }")));
+}

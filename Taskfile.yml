@@ -10,6 +10,10 @@ vars:
     sh: nproc
 
 tasks:
+  license-check:
+    desc: Validate REUSE licensing metadata
+    cmds: [reuse lint]
+
   build:qt-dependency:
     desc: Build and install exact sibling provider dependencies
     cmds:

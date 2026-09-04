@@ -8,6 +8,8 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(GNUInstallDirs)
+install(FILES LICENSE LICENSES/GPL-3.0-or-later.txt
+  DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/${PROJECT_NAME}")
 
 option(BUILD_APP "Build the HoloNight Settings application" ON)
 option(BUILD_TESTS "Build unit and integration tests" OFF)

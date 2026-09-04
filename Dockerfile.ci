@@ -2,6 +2,6 @@ FROM archlinux:latest
 
 RUN pacman -Syu --noconfirm && \
     pacman -S --noconfirm \
-        base-devel clang cmake dbus git gtest ninja pkgconf \
+        base-devel clang cmake dbus git gtest libpulse ninja pkgconf \
         qt6-base qt6-declarative qt6-wayland tomlplusplus \
     && pacman -Scc --noconfirm

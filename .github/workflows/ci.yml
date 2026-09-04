@@ -30,6 +30,12 @@ jobs:
           repository: lebedenko/holonight-shell
           ref: 93e1faf3659d1aac0a506d173ac58839fe3b05b5
           path: holonight-shell-dep
+      - name: Checkout holonight-system-services
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-system-services
+          ref: 4556dc9b22237823387110340347cd1301ed9245
+          path: holonight-system-services-dep
       - name: Install holonight-config
         run: |
           cmake -S holonight-config-dep -B holonight-config-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -45,6 +51,11 @@ jobs:
           cmake -S holonight-shell-dep/libs/holonight-shell-config -B holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build holonight-shell-config-build --parallel
           cmake --install holonight-shell-config-build --prefix /usr
+      - name: Install holonight-system-services
+        run: |
+          cmake -S holonight-system-services-dep -B holonight-system-services-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+          cmake --build holonight-system-services-build --parallel
+          cmake --install holonight-system-services-build --prefix /usr
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON -DCMAKE_INSTALL_PREFIX=/tmp/holonight-settings-prefix
       - name: Build
@@ -86,6 +97,12 @@ jobs:
           repository: lebedenko/holonight-shell
           ref: 93e1faf3659d1aac0a506d173ac58839fe3b05b5
           path: holonight-shell-dep
+      - name: Checkout holonight-system-services
+        uses: actions/checkout@v4
+        with:
+          repository: lebedenko/holonight-system-services
+          ref: 4556dc9b22237823387110340347cd1301ed9245
+          path: holonight-system-services-dep
       - name: Install holonight-config
         run: |
           cmake -S holonight-config-dep -B holonight-config-dep/build -G Ninja -DCMAKE_BUILD_TYPE=Release
@@ -101,6 +118,11 @@ jobs:
           cmake -S holonight-shell-dep/libs/holonight-shell-config -B holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build holonight-shell-config-build --parallel
           cmake --install holonight-shell-config-build --prefix /usr
+      - name: Install holonight-system-services
+        run: |
+          cmake -S holonight-system-services-dep -B holonight-system-services-build -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+          cmake --build holonight-system-services-build --parallel
+          cmake --install holonight-system-services-build --prefix /usr
       - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON
       - run: cmake --build build --target format-check
       - run: cmake --build build --target tidy

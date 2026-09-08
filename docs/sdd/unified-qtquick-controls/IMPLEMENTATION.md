@@ -103,7 +103,8 @@ diagnostics. The runner then explicitly terminates and reaps it. Acceptance must
 marker within thirty seconds; premature exits, missing evidence and timeouts fail.
 
 Every runtime process uses a private D-Bus daemon, temporary XDG configuration/cache/data/runtime paths, an offscreen
-software platform, and an unavailable PulseAudio socket. It does not invoke adapter actions, desktop activation,
+software platform, and an unavailable PulseAudio socket. The application also receives an empty executable search path, preventing
+live adapter discovery even if a future regression reaches that branch. It does not invoke adapter actions, desktop activation,
 pointer/focus automation, or live audio operations. Only in-memory edits and disposable files are used. Startup's
 existing internal raise request produces the exact offscreen warning "This plugin does not support raise()";
 that and the expected refused-audio diagnostic are the only tolerated warnings. All QML diagnostics fail.
@@ -128,3 +129,8 @@ Implementation `d45141e9b9ee191c64bc334eca0ad505e25cd582` (`feat(settings): adop
 is published on canonical origin/main. `git ls-remote origin refs/heads/main` returned that exact revision after
 push. This documentation-only handoff closes local UQC-103; the umbrella coordinator can pin its published tip.
 The completed checks above establish local acceptance, while UQC-201 remains the final ecosystem gate.
+
+
+Final isolation hardening: the runner gives the app an empty PATH so native adapters cannot be discovered.
+The same eight focused checks passed again (15.98 seconds), followed by all four strict staged-install modes.
+This follow-up changes only the acceptance runner and its record; production implementation remains `d45141e`.

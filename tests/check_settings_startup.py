@@ -24,7 +24,7 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
                 'QML_IMPORT_PATH', 'QML2_IMPORT_PATH', 'QT_PLUGIN_PATH', 'DBUS_SESSION_BUS_ADDRESS',
                 'DBUS_STARTER_ADDRESS', 'DBUS_STARTER_BUS_TYPE', 'DESKTOP_STARTUP_ID', 'XDG_ACTIVATION_TOKEN'):
         env.pop(key, None)
-    for name in ('config', 'cache', 'data', 'runtime'):
+    for name in ('config', 'cache', 'data', 'runtime', 'empty-path'):
         (root / name).mkdir(mode=0o700)
     env.update(QT_QPA_PLATFORM='offscreen', QT_QPA_PLATFORMTHEME='', QT_STYLE_OVERRIDE='',
                QT_QUICK_BACKEND='software', QT_FORCE_STDERR_LOGGING='1', QML_IMPORT_TRACE='1',
@@ -47,10 +47,13 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
         env['QT_QUICK_CONTROLS_CONF'] = str(config)
 
     # exec preserves the shell PID for /proc inspection and explicit termination,
-    # while dbus-run-session owns and reaps a private daemon.
+    # while dbus-run-session owns and reaps a private daemon. The application
+    # gets an empty executable search path so even a regression cannot launch
+    # the live native appearance adapter.
     pid_file = root / 'app.pid'
     command = ['dbus-run-session', '--', 'sh', '-c',
-               'echo $$ > "$1"; shift; exec "$@"', 'settings-check', str(pid_file), *command]
+               'echo $$ > "$1"; shift; PATH="$1"; export PATH; shift; exec "$@"',
+               'settings-check', str(pid_file), str(root / 'empty-path'), *command]
     with (root / 'output.log').open('w+') as log:
         process = subprocess.Popen(command, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         try:

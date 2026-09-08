@@ -7,4 +7,4 @@
 - [x] Align import policy, CI, build paths and documentation.
 - [x] Implement isolated production-window and actual-executable acceptance.
 - [x] Run focused and complete verification; record commands and limitations.
-- [ ] Publish implementation and hand off for umbrella pin and UQC-104 readiness.
+- [x] Publish implementation and prepare the verified handoff for the umbrella pin and UQC-104 readiness.

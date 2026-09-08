@@ -121,3 +121,10 @@ run-clang-tidy -removed-arg workflow passes, including the final focused source 
 This completes local UQC-103 acceptance. Publication and umbrella handoff follow this record. Human-operated
 Hyprland/Sway, real-application and ecosystem activation acceptance remain UQC-201 gates; this is not an integrated
 initiative or a claim of desktop visual/interaction acceptance.
+
+## Published handoff — 2026-09-08
+
+Implementation `d45141e9b9ee191c64bc334eca0ad505e25cd582` (`feat(settings): adopt overridable runtime Quick Controls`)
+is published on canonical origin/main. `git ls-remote origin refs/heads/main` returned that exact revision after
+push. This documentation-only handoff closes local UQC-103; the umbrella coordinator can pin its published tip.
+The completed checks above establish local acceptance, while UQC-201 remains the final ecosystem gate.

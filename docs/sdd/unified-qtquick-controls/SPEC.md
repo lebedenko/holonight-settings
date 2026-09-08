@@ -1,6 +1,6 @@
 # UQC-103: Runtime Quick Controls adoption
 
-Status: Locally verified; publication handoff pending
+Status: Done (local acceptance and implementation publication complete)
 
 Settings baseline: `579515ffb456c59cd1299e5852c392c3064c8262`.
 Umbrella baseline: `e3811c90ba8e14fae84f4419bdcb02f822b338d6`.

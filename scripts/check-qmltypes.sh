@@ -7,7 +7,7 @@ if [[ "${build_dir}" != /* ]]; then
   build_dir="${repo_root}/${build_dir}"
 fi
 
-qmltypes_file="${build_dir}/apps/settings/HolonightSettings/holonight-settings.qmltypes"
+qmltypes_file="${build_dir}/apps/settings/qml/holonight-settings/HolonightSettings/holonight-settings.qmltypes"
 if [[ ! -s "${qmltypes_file}" ]]; then
   echo "Missing Settings QML metadata: ${qmltypes_file}" >&2
   exit 1

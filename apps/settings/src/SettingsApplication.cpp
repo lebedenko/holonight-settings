@@ -11,6 +11,7 @@
 #include "ShellStatusService.h"
 
 #include <QDebug>
+#include <QDir>
 #include <QMetaObject>
 #include <QQmlApplicationEngine>
 #include <QQuickWindow>
@@ -51,6 +52,12 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
   static_cast<void>(shell_files_->load());
 
   engine_ = std::make_unique<QQmlApplicationEngine>();
+  const QString executable_dir = applicationDirPath();
+  if (executable_dir == QStringLiteral(SETTINGS_BUILD_DIR)) {
+    engine_->addImportPath(QStringLiteral(SETTINGS_DEPENDENCY_QML_DIR));
+  } else {
+    engine_->addImportPath(QDir(executable_dir).absoluteFilePath(QStringLiteral("../" SETTINGS_INSTALLED_QML_DIR)));
+  }
   engine_->setInitialProperties({
       {QStringLiteral("appearanceModel"), QVariant::fromValue(appearance_model_.get())},
       {QStringLiteral("shellModel"), QVariant::fromValue(shell_model_.get())},

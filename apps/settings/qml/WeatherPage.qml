@@ -1,8 +1,8 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
-import Holonight
 import Holonight.Core
 import Holonight.Controls
 
@@ -92,7 +92,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        ComboBox {
+                        Controls.ComboBox {
                             id: weatherProviderComboBox
 
                             objectName: "weatherProviderComboBox"
@@ -130,7 +130,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        TextField {
+                        Controls.TextField {
                             id: weatherApiKeyTextField
 
                             objectName: "weatherApiKeyTextField"
@@ -162,7 +162,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        ComboBox {
+                        Controls.ComboBox {
                             id: weatherLocationSourceComboBox
 
                             objectName: "weatherLocationSourceComboBox"
@@ -199,7 +199,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        TextField {
+                        Controls.TextField {
                             id: weatherCityTextField
 
                             objectName: "weatherCityTextField"
@@ -231,7 +231,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        ComboBox {
+                        Controls.ComboBox {
                             id: weatherTempUnitComboBox
 
                             objectName: "weatherTempUnitComboBox"
@@ -269,7 +269,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        ComboBox {
+                        Controls.ComboBox {
                             id: weatherWindUnitComboBox
 
                             objectName: "weatherWindUnitComboBox"
@@ -308,7 +308,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        ComboBox {
+                        Controls.ComboBox {
                             id: weatherPressureUnitComboBox
 
                             objectName: "weatherPressureUnitComboBox"
@@ -354,7 +354,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        Switch {
+                        Controls.Switch {
                             id: weatherShowInBarSwitch
 
                             objectName: "weatherShowInBarSwitch"
@@ -377,7 +377,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        Switch {
+                        Controls.Switch {
                             id: weatherCompactModeSwitch
 
                             objectName: "weatherCompactModeSwitch"
@@ -400,7 +400,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        Switch {
+                        Controls.Switch {
                             id: weatherShowFeelsLikeSwitch
 
                             objectName: "weatherShowFeelsLikeSwitch"
@@ -423,7 +423,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        Switch {
+                        Controls.Switch {
                             id: weatherShowLocationSwitch
 
                             objectName: "weatherShowLocationSwitch"
@@ -446,7 +446,7 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        ComboBox {
+                        Controls.ComboBox {
                             id: weatherRefreshIntervalComboBox
 
                             objectName: "weatherRefreshIntervalComboBox"

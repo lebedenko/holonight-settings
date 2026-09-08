@@ -1,9 +1,8 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Basic as QQC2
-import Holonight
 import Holonight.Core
 import Holonight.Controls
 
@@ -144,7 +143,7 @@ Flickable {
                                     }
                                 }
 
-                                QQC2.ButtonGroup {
+                                Controls.ButtonGroup {
                                     id: themeFamilyGroup
                                 }
 
@@ -167,7 +166,7 @@ Flickable {
                                             title: modelData.name
                                             schemeId: root.variantIdForFamilyAndMode(modelData, editModel.themeMode)
                                             checked: root.familyIdForScheme(editModel.themeScheme) === familyId
-                                            QQC2.ButtonGroup.group: themeFamilyGroup
+                                            Controls.ButtonGroup.group: themeFamilyGroup
                                             onClicked: {
                                                 editModel.themeScheme = root.variantIdForFamilyAndMode(
                                                     themeFamilyDelegate.modelData, editModel.themeMode)
@@ -234,8 +233,14 @@ Flickable {
                     Layout.fillWidth: true
 
                     control: Component {
-                        Switch {
-                            sizeRole: HnControlSize.Large
+                        Controls.Switch {
+                            id: darkModeSwitch
+
+                            Binding {
+                                target: "sizeRole" in darkModeSwitch ? darkModeSwitch : null
+                                property: "sizeRole"
+                                value: HnControlSize.Large
+                            }
                             objectName: "darkModeSwitch"
                             checked: editModel.themeMode === "dark"
                             enabled: checked ? editModel.lightModeAvailable : editModel.darkModeAvailable
@@ -297,7 +302,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "uiFontSizeSlider"
                                 from: 6
                                 to: 48
@@ -366,7 +371,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "monospaceFontSizeSlider"
                                 from: 6
                                 to: 48
@@ -420,7 +425,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "titleFontSizeSlider"
                                 from: 6
                                 to: 48
@@ -474,7 +479,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "displayFontSizeSlider"
                                 from: 6
                                 to: 48
@@ -506,17 +511,17 @@ Flickable {
                 HnSettingsRow {
                     objectName: "iconThemeRow"; titleText: qsTr("Icon theme"); sizeRole: HnControlSize.Hero; dividerVisible: true
                     contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
-                    control: Component { TextField { implicitWidth: root.inlineControlWidth; text: editModel.iconTheme; onTextEdited: editModel.iconTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
+                    control: Component { Controls.TextField { implicitWidth: root.inlineControlWidth; text: editModel.iconTheme; onTextEdited: editModel.iconTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
                 }
                 HnSettingsRow {
                     objectName: "fallbackIconThemeRow"; titleText: qsTr("Fallback icon theme"); sizeRole: HnControlSize.Hero; dividerVisible: true
                     contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
-                    control: Component { TextField { implicitWidth: root.inlineControlWidth; text: editModel.fallbackIconTheme; onTextEdited: editModel.fallbackIconTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
+                    control: Component { Controls.TextField { implicitWidth: root.inlineControlWidth; text: editModel.fallbackIconTheme; onTextEdited: editModel.fallbackIconTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
                 }
                 HnSettingsRow {
                     objectName: "cursorThemeRow"; titleText: qsTr("Cursor theme"); sizeRole: HnControlSize.Hero; dividerVisible: false
                     contentHorizontalPadding: root.rowHorizontalPadding; Layout.fillWidth: true
-                    control: Component { TextField { implicitWidth: root.inlineControlWidth; text: editModel.cursorTheme; onTextEdited: editModel.cursorTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
+                    control: Component { Controls.TextField { implicitWidth: root.inlineControlWidth; text: editModel.cursorTheme; onTextEdited: editModel.cursorTheme = text; validator: RegularExpressionValidator { regularExpression: /\S(?:.*\S)?/ } } }
                 }
             }
 
@@ -532,7 +537,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "layoutScaleSlider"
                                 from: 0.5
                                 to: 3.0
@@ -624,7 +629,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "shapeScaleSlider"
                                 from: 0.25
                                 to: 4.0
@@ -669,13 +674,13 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Switch {
+                            Controls.Switch {
                                 objectName: "baseRadiusSwitch"
                                 checked: editModel.baseRadiusEnabled
                                 onToggled: editModel.baseRadiusEnabled = checked
                                 Layout.alignment: Qt.AlignVCenter
                             }
-                            Slider {
+                            Controls.Slider {
                                 objectName: "baseRadiusSlider"
                                 from: 0
                                 to: 128
@@ -718,13 +723,13 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Switch {
+                            Controls.Switch {
                                 objectName: "baseChamferSwitch"
                                 checked: editModel.baseChamferEnabled
                                 onToggled: editModel.baseChamferEnabled = checked
                                 Layout.alignment: Qt.AlignVCenter
                             }
-                            Slider {
+                            Controls.Slider {
                                 objectName: "baseChamferSlider"
                                 from: 0
                                 to: 128

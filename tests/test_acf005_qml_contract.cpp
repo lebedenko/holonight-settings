@@ -52,7 +52,7 @@ TEST(Acf005QmlContractTest, LegacyControlsAndDuplicateActionsAreAbsent) {
   const QString weather = readProjectFile("apps/settings/qml/WeatherPage.qml");
   const QString footer = readProjectFile("apps/settings/qml/FooterBar.qml");
 
-  EXPECT_TRUE(appearance.contains(QStringLiteral("import QtQuick.Controls.Basic as QQC2")));
+  EXPECT_TRUE(appearance.contains(QStringLiteral("import QtQuick.Controls as Controls")));
   EXPECT_FALSE(bar.contains(QStringLiteral("import QtQuick.Controls.Basic")));
   EXPECT_FALSE(weather.contains(QStringLiteral("import QtQuick.Controls.Basic")));
   EXPECT_FALSE(appearance.contains(QStringLiteral("transparency"), Qt::CaseInsensitive));

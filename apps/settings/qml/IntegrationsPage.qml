@@ -1,9 +1,8 @@
-import Holonight as HnStyle
 import Holonight.Controls
 import Holonight.Core
 import HolonightSettings
 import QtQuick
-import QtQuick.Controls.Basic
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 
 Flickable {
@@ -49,19 +48,19 @@ Flickable {
         }
 
         RowLayout {
-            HnStyle.Button {
+            Controls.Button {
                 objectName: "reapplyAppearanceButton"
                 text: qsTr("Reapply HoloNight Appearance")
                 enabled: !root.saveCoordinator.isBusy && !root.adapter.busy && !root.appearanceModel.isDirty
                 onClicked: root.saveCoordinator.reapplyAppearance()
             }
-            HnStyle.Button {
+            Controls.Button {
                 objectName: "restoreNativeDefaultsButton"
                 text: qsTr("Restore Native Toolkit Defaults")
                 enabled: !root.saveCoordinator.isBusy && !root.adapter.busy && !root.appearanceModel.isDirty
                 onClicked: root.saveCoordinator.restoreNativeDefaults()
             }
-            HnStyle.Button {
+            Controls.Button {
                 objectName: "refreshIntegrationsButton"
                 text: qsTr("Refresh Status")
                 enabled: !root.saveCoordinator.isBusy && !root.adapter.busy

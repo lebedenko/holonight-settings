@@ -1,8 +1,8 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
-import Holonight
 import Holonight.Core
 import Holonight.Controls
 
@@ -96,7 +96,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "workspaceCountSlider"
                                 from: 3
                                 to: 10
@@ -141,7 +141,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             spacing: 8
 
-                            Slider {
+                            Controls.Slider {
                                 objectName: "trayMaxItemsSlider"
                                 from: 2
                                 to: 5

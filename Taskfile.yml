@@ -3,9 +3,10 @@ version: "3"
 vars:
   BUILD_DIR: build
   RELEASE_BUILD_DIR: build-release
-  HOLONIGHT_QT_PREFIX: /tmp/holonight-qt-prefix
-  HOLONIGHT_QT_DIR: /tmp/holonight-qt-prefix/lib/cmake/HolonightQt
-  HOLONIGHT_PROVIDER_PREFIX: /tmp/holonight-provider-prefix
+  DEPENDENCY_BUILD_DIR: build-dependencies
+  HOLONIGHT_QT_PREFIX: "{{.ROOT_DIR}}/build-dependencies/prefix"
+  HOLONIGHT_QT_DIR: "{{.HOLONIGHT_QT_PREFIX}}/lib/cmake/HolonightQt"
+  HOLONIGHT_PROVIDER_PREFIX: "{{.HOLONIGHT_QT_PREFIX}}"
   NPROC:
     sh: nproc
 
@@ -17,18 +18,18 @@ tasks:
   build:qt-dependency:
     desc: Build and install exact sibling provider dependencies
     cmds:
-      - cmake -S ../holonight-config -B ../holonight-config/build -G Ninja -DCMAKE_BUILD_TYPE=Debug
-      - cmake --build ../holonight-config/build -j{{.NPROC}}
-      - cmake --install ../holonight-config/build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
-      - cmake -S ../holonight-qt -B ../holonight-qt/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH={{.HOLONIGHT_PROVIDER_PREFIX}}
-      - cmake --build ../holonight-qt/build -j{{.NPROC}}
-      - cmake --install ../holonight-qt/build --prefix {{.HOLONIGHT_QT_PREFIX}}
-      - cmake -S ../holonight-shell/libs/holonight-shell-config -B /tmp/holonight-shell-config-build -G Ninja -DCMAKE_BUILD_TYPE=Debug
-      - cmake --build /tmp/holonight-shell-config-build -j{{.NPROC}}
-      - cmake --install /tmp/holonight-shell-config-build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
-      - cmake -S ../holonight-system-services -B ../holonight-system-services/build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF
-      - cmake --build ../holonight-system-services/build -j{{.NPROC}}
-      - cmake --install ../holonight-system-services/build --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake -S ../holonight-config -B {{.DEPENDENCY_BUILD_DIR}}/config -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=OFF
+      - cmake --build {{.DEPENDENCY_BUILD_DIR}}/config -j{{.NPROC}}
+      - cmake --install {{.DEPENDENCY_BUILD_DIR}}/config --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake -S ../holonight-qt -B {{.DEPENDENCY_BUILD_DIR}}/qt -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH={{.HOLONIGHT_PROVIDER_PREFIX}} -DBUILD_TESTS=OFF -DBUILD_DEMO=OFF -DBUILD_CONTROLS_GALLERY=OFF -DBUILD_QT5_PROBES=OFF
+      - cmake --build {{.DEPENDENCY_BUILD_DIR}}/qt -j{{.NPROC}}
+      - cmake --install {{.DEPENDENCY_BUILD_DIR}}/qt --prefix {{.HOLONIGHT_QT_PREFIX}}
+      - cmake -S ../holonight-shell/libs/holonight-shell-config -B {{.DEPENDENCY_BUILD_DIR}}/shell-config -G Ninja -DCMAKE_BUILD_TYPE=Debug
+      - cmake --build {{.DEPENDENCY_BUILD_DIR}}/shell-config -j{{.NPROC}}
+      - cmake --install {{.DEPENDENCY_BUILD_DIR}}/shell-config --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
+      - cmake -S ../holonight-system-services -B {{.DEPENDENCY_BUILD_DIR}}/system-services -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=OFF
+      - cmake --build {{.DEPENDENCY_BUILD_DIR}}/system-services -j{{.NPROC}}
+      - cmake --install {{.DEPENDENCY_BUILD_DIR}}/system-services --prefix {{.HOLONIGHT_PROVIDER_PREFIX}}
 
   configure:
     desc: Configure CMake (debug, no tests)
@@ -124,6 +125,12 @@ tasks:
     deps: [configure]
     cmds:
       - cmake --build {{.BUILD_DIR}} --target qml-lint
+
+  qml-import-check:
+    desc: Check application runtime Controls policy and fixtures
+    cmds:
+      - python3 scripts/check-qml-import-policy.py
+      - python3 tests/test_qml_import_policy.py
 
   qmltypes-check:
     desc: Check generated QML type metadata

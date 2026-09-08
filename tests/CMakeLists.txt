@@ -7,7 +7,7 @@ function(holonight_add_test_exe name)
   target_compile_definitions(${name} PRIVATE TEST_SOURCE_DIR="${CMAKE_SOURCE_DIR}" HOLONIGHT_TESTS)
   gtest_discover_tests(${name}
     DISCOVERY_MODE PRE_TEST
-    PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QML_IMPORT_PATH=/tmp/holonight-qt-prefix/lib/qt6/qml;QML2_IMPORT_PATH=/tmp/holonight-qt-prefix/lib/qt6/qml")
+    PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QML_IMPORT_PATH=${SETTINGS_DEPENDENCY_QML_DIR};QML2_IMPORT_PATH=${SETTINGS_DEPENDENCY_QML_DIR}")
 endfunction()
 
 if(BUILD_APP)
@@ -39,7 +39,7 @@ add_test(NAME acf005_package_consumer
   COMMAND ${CMAKE_COMMAND}
     -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/package-consumer
     -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}/package-consumer-build
-    -DPROVIDER_PREFIX=/tmp/holonight-provider-prefix
+    "-DPROVIDER_PREFIX=${CMAKE_PREFIX_PATH}"
     -P ${CMAKE_CURRENT_SOURCE_DIR}/run_package_consumer.cmake)
 
 add_test(NAME acf005_clean_break
@@ -81,3 +81,23 @@ add_test(
     -DTEST_PREFIX=/opt/holonight-test
     -DEXPECTED_EXEC=/opt/holonight-test/bin/holonight-settings
     -P ${CMAKE_CURRENT_SOURCE_DIR}/test_settings_activation_prefix.cmake)
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME settings_qml_import_policy
+  COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/check-qml-import-policy.py)
+add_test(NAME settings_qml_import_policy_fixtures
+  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/test_qml_import_policy.py)
+if(BUILD_APP)
+  foreach(style IN ITEMS default environment)
+    add_test(NAME settings_controls_${style}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_settings_startup.py
+        $<TARGET_FILE:settings_controls_acceptance> ${SETTINGS_DEPENDENCY_QML_DIR} ${style} --acceptance)
+    set_tests_properties(settings_controls_${style} PROPERTIES TIMEOUT 45)
+  endforeach()
+  foreach(mode IN ITEMS default environment command-line configuration)
+    add_test(NAME settings_startup_${mode}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_settings_startup.py
+        $<TARGET_FILE:holonight-settings> ${SETTINGS_DEPENDENCY_QML_DIR} ${mode})
+    set_tests_properties(settings_startup_${mode} PROPERTIES TIMEOUT 15)
+  endforeach()
+endif()

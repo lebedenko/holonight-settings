@@ -1,6 +1,6 @@
 import HolonightSettings
 import QtQuick
-import QtQuick.Controls.Basic
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import Holonight.Core
 import Holonight.Controls
@@ -82,13 +82,13 @@ Item {
         root.transitionDirection = pageIndex > root.displayedPageIndex ? 1 : -1;
         root.displayedPage = pageKey;
         root.displayedPageIndex = pageIndex;
-        contentStack.replace(root.pageSource(pageKey), root.pageProperties(pageKey), StackView.Transition);
+        contentStack.replace(root.pageSource(pageKey), root.pageProperties(pageKey), Controls.StackView.Transition);
     }
 
     clip: true
     onCurrentPageChanged: root.showPage(root.currentPage)
     Component.onCompleted: {
-        contentStack.push(root.pageSource(root.currentPage), root.pageProperties(root.currentPage), StackView.Immediate);
+        contentStack.push(root.pageSource(root.currentPage), root.pageProperties(root.currentPage), Controls.StackView.Immediate);
         root.displayedPage = root.currentPage;
         root.displayedPageIndex = root.pageIndex(root.currentPage);
         root.ready = true;
@@ -108,7 +108,7 @@ Item {
             }
         }
 
-        StackView {
+        Controls.StackView {
             id: contentStack
 
             objectName: "settingsContentStack"

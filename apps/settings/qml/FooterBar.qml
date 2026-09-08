@@ -1,11 +1,10 @@
 pragma ComponentBehavior: Bound
 
-import Holonight as HnStyle
 import Holonight.Controls
 import Holonight.Core
 import HolonightSettings
 import QtQuick
-import QtQuick.Controls.Basic
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 
 Rectangle {
@@ -51,7 +50,7 @@ Rectangle {
         trailingContent: RowLayout {
             spacing: 8
 
-            HnStyle.Button {
+            Controls.Button {
                 objectName: "discardChangesButton"
                 text: qsTr("Discard Changes")
                 enabled: root.saveCoordinator.isDirty && !root.saveCoordinator.isBusy
@@ -59,7 +58,7 @@ Rectangle {
                 onClicked: root.saveCoordinator.discard()
             }
 
-            HnStyle.Button {
+            Controls.Button {
                 objectName: "saveButton"
                 text: qsTr("Save")
                 enabled: root.saveCoordinator.isDirty && !root.saveCoordinator.isBusy
@@ -72,7 +71,7 @@ Rectangle {
 
     }
 
-    Dialog {
+    Controls.Dialog {
         id: errorDialog
 
         property string errorMessage: ""
@@ -80,7 +79,7 @@ Rectangle {
         modal: true
         width: 440
         padding: 20
-        anchors.centerIn: Overlay.overlay
+        anchors.centerIn: Controls.Overlay.overlay
 
         background: HnSurfaceFrame {
             surfaceRole: HnSurfaceRole.Popup
@@ -119,7 +118,7 @@ Rectangle {
 
                 Item { Layout.fillWidth: true }
 
-                HnStyle.Button {
+                Controls.Button {
                     text: qsTr("Reload")
                     onClicked: {
                         root.saveCoordinator.reloadConflict();
@@ -127,7 +126,7 @@ Rectangle {
                     }
                 }
 
-                HnStyle.Button {
+                Controls.Button {
                     text: qsTr("Overwrite")
                     highlighted: true
                     onClicked: {
@@ -136,7 +135,7 @@ Rectangle {
                     }
                 }
 
-                HnStyle.Button {
+                Controls.Button {
                     text: qsTr("Cancel")
                     onClicked: {
                         root.saveCoordinator.cancelConflict();

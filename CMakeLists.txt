@@ -20,9 +20,19 @@ find_package(HoloNightConfig REQUIRED)
 find_package(HoloNightShellConfig REQUIRED)
 find_package(HoloNightSystemServices REQUIRED)
 
+if(BUILD_APP OR BUILD_TESTS)
+  find_package(HolonightQt REQUIRED)
+  get_filename_component(_holonight_lib_dir "${HolonightQt_DIR}/../.." ABSOLUTE)
+  set(SETTINGS_DEPENDENCY_QML_DIR "${_holonight_lib_dir}/qt6/qml" CACHE PATH
+    "Installed provider QML used by build executables and checks")
+endif()
+
 if(BUILD_APP)
   find_package(Qt6 REQUIRED COMPONENTS Gui Quick Qml DBus)
   find_package(HolonightQt REQUIRED)
+  if(BUILD_TESTS)
+    find_package(Qt6 REQUIRED COMPONENTS Test)
+  endif()
   qt_policy(SET QTP0004 NEW)
   add_subdirectory(apps/settings)
 endif()
@@ -72,9 +82,9 @@ endif()
 if(BUILD_APP AND QMLLINT)
   add_custom_target(qml-lint
     COMMAND ${QMLLINT} --unqualified disable --unused-imports disable
-      -I "${CMAKE_CURRENT_BINARY_DIR}/apps/settings"
+      -I "${CMAKE_CURRENT_BINARY_DIR}/apps/settings/qml/holonight-settings"
       -I "${CMAKE_BINARY_DIR}"
-      -I "/tmp/holonight-qt-prefix/${CMAKE_INSTALL_LIBDIR}/qt6/qml"
+      -I "${SETTINGS_DEPENDENCY_QML_DIR}"
       ${ALL_QML_FILES}
     DEPENDS holonight-settings_qmltyperegistration
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"

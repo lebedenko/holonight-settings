@@ -56,8 +56,12 @@ void AppearanceAdapterClient::apply(const QString& path) {
   start(QStringLiteral("apply"),
         {QStringLiteral("apply"), QStringLiteral("--appearance"), path, QStringLiteral("--json")});
 }
-void AppearanceAdapterClient::status() {
-  start(QStringLiteral("status"), {QStringLiteral("status"), QStringLiteral("--json")});
+void AppearanceAdapterClient::status(const QString& appearance_path) {
+  QStringList arguments{QStringLiteral("status"), QStringLiteral("--json")};
+  if (!appearance_path.isEmpty()) {
+    arguments << QStringLiteral("--appearance") << appearance_path;
+  }
+  start(QStringLiteral("status"), arguments);
 }
 void AppearanceAdapterClient::revert() {
   start(QStringLiteral("revert"), {QStringLiteral("revert"), QStringLiteral("--json")});

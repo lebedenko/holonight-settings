@@ -208,7 +208,7 @@ void SettingsSaveCoordinator::refreshIntegrations() {
   if (busy_ || adapter_ == nullptr) {
     return;
   }
-  adapter_->status();
+  adapter_->status(appearance_files_->path());
 }
 void SettingsSaveCoordinator::restoreNativeDefaults() {
   if (busy_ || adapter_ == nullptr || appearance_->isDirty()) {

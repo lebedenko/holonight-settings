@@ -279,6 +279,24 @@ TEST(AppearanceAdapterClientTest, AcceptsVersionOneDegradedResponse) {
   EXPECT_TRUE(client.resultText().contains(QStringLiteral("limited")));
 }
 
+TEST(AppearanceAdapterClientTest, StatusPassesCanonicalAppearancePath) {
+  QTemporaryDir directory;
+  const QString arguments_path = directory.filePath(QStringLiteral("arguments"));
+  const QString appearance_path = directory.filePath(QStringLiteral("appearance.toml"));
+  const QString adapter = writeAdapter(
+      directory, QByteArrayLiteral("printf '%s\\n' \"$@\" >'") + arguments_path.toUtf8() +
+                     QByteArrayLiteral("'\nprintf '%s\\n' "
+                                       "'{\"protocol_version\":1,\"operation\":\"status\",\"result\":\"success\","
+                                       "\"success\":true,\"degraded\":false,\"outputs\":[]}'\n"));
+  AppearanceAdapterClient client(adapter);
+  QSignalSpy completed(&client, &AppearanceAdapterClient::completed);
+  client.status(appearance_path);
+  ASSERT_TRUE(completed.wait());
+  QFile arguments(arguments_path);
+  ASSERT_TRUE(arguments.open(QIODevice::ReadOnly));
+  EXPECT_EQ(arguments.readAll(), QByteArrayLiteral("status\n--json\n--appearance\n") + appearance_path.toUtf8() + '\n');
+}
+
 TEST(AppearanceAdapterClientTest, RejectsMalformedResponseWithoutLeakingStderr) {
   QTemporaryDir directory;
   const QString adapter = writeAdapter(directory, QByteArrayLiteral("echo SECRET_PATH >&2\nprintf 'invalid'\n"));

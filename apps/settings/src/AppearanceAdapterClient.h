@@ -36,7 +36,7 @@ class AppearanceAdapterClient : public QObject {
   [[nodiscard]] QString resultText() const { return result_text_; }
   [[nodiscard]] QVariantList outputs() const;
   void apply(const QString& appearance_path);
-  Q_INVOKABLE void status();
+  Q_INVOKABLE void status(const QString& appearance_path = {});
   Q_INVOKABLE void revert();
 
  Q_SIGNALS:

@@ -170,6 +170,64 @@ Flickable {
 
             }
 
+            SectionGroup {
+                frameObjectName: "taskbarSectionFrame"
+                label: qsTr("Window management (labwc)")
+                Layout.fillWidth: true
+                HnSettingsRow {
+                    titleText: qsTr("Taskbar")
+                    descriptionText: qsTr("Show advertised windows on every bar")
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component {
+                        Controls.Switch {
+                            objectName: "taskbarEnabledSwitch"
+                            checked: root.editModel.taskbarEnabled
+                            onToggled: root.editModel.taskbarEnabled = checked
+                        }
+                    }
+                }
+                HnSettingsRow {
+                    titleText: qsTr("Group by application")
+                    descriptionText: qsTr("Turn off to show one button per window")
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component {
+                        Controls.Switch {
+                            objectName: "taskbarGroupedSwitch"
+                            checked: root.editModel.taskbarGrouped
+                            onToggled: root.editModel.taskbarGrouped = checked
+                        }
+                    }
+                }
+                HnSettingsRow {
+                    titleText: qsTr("Window overview")
+                    descriptionText: qsTr("Enable the overview button and optional keyboard binding")
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component {
+                        Controls.Switch {
+                            objectName: "windowOverviewAccessSwitch"
+                            checked: root.editModel.windowOverviewAccess
+                            onToggled: root.editModel.windowOverviewAccess = checked
+                        }
+                    }
+                }
+                HnSettingsRow {
+                    titleText: qsTr("Desktop menu")
+                    descriptionText: qsTr("Let HoloNight own desktop input; disabled by default")
+                    contentHorizontalPadding: root.rowHorizontalPadding
+                    Layout.fillWidth: true
+                    control: Component {
+                        Controls.Switch {
+                            objectName: "desktopMenuEnabledSwitch"
+                            checked: root.editModel.desktopMenuEnabled
+                            onToggled: root.editModel.desktopMenuEnabled = checked
+                        }
+                    }
+                }
+            }
+
         }
 
     }

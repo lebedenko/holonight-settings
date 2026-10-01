@@ -11,6 +11,10 @@ class ShellSettingsEditModel : public QObject {
   QML_UNCREATABLE("ShellSettingsEditModel is created by SettingsApplication")
 
 #define SHELL_PROPERTY(type, name) Q_PROPERTY(type name READ name WRITE set##name NOTIFY name##Changed)
+  SHELL_PROPERTY(bool, taskbarEnabled)
+  SHELL_PROPERTY(bool, taskbarGrouped)
+  SHELL_PROPERTY(bool, windowOverviewAccess)
+  SHELL_PROPERTY(bool, desktopMenuEnabled)
   SHELL_PROPERTY(int, workspaceCount)
   SHELL_PROPERTY(int, trayMaxItems)
   SHELL_PROPERTY(QString, weatherProvider)
@@ -33,6 +37,10 @@ class ShellSettingsEditModel : public QObject {
 #define SHELL_ACCESSORS(type, name) \
   type name() const;                \
   void set##name(type value);
+  SHELL_ACCESSORS(bool, taskbarEnabled)
+  SHELL_ACCESSORS(bool, taskbarGrouped)
+  SHELL_ACCESSORS(bool, windowOverviewAccess)
+  SHELL_ACCESSORS(bool, desktopMenuEnabled)
   SHELL_ACCESSORS(int, workspaceCount)
   SHELL_ACCESSORS(int, trayMaxItems)
   SHELL_ACCESSORS(QString, weatherProvider)
@@ -55,6 +63,10 @@ class ShellSettingsEditModel : public QObject {
 
  Q_SIGNALS:
 #define SHELL_SIGNAL(name) void name##Changed();
+  SHELL_SIGNAL(taskbarEnabled)
+  SHELL_SIGNAL(taskbarGrouped)
+  SHELL_SIGNAL(windowOverviewAccess)
+  SHELL_SIGNAL(desktopMenuEnabled)
   SHELL_SIGNAL(workspaceCount)
   SHELL_SIGNAL(trayMaxItems)
   SHELL_SIGNAL(weatherProvider)

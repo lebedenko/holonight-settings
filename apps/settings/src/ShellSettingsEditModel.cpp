@@ -3,6 +3,10 @@
 #include <algorithm>
 
 ShellSettingsEditModel::ShellSettingsEditModel(QObject* parent) : QObject(parent) {}
+bool ShellSettingsEditModel::taskbarEnabled() const { return current_.taskbar.enabled; }
+bool ShellSettingsEditModel::taskbarGrouped() const { return current_.taskbar.grouped; }
+bool ShellSettingsEditModel::windowOverviewAccess() const { return current_.taskbar.overview_access; }
+bool ShellSettingsEditModel::desktopMenuEnabled() const { return current_.taskbar.desktop_menu; }
 int ShellSettingsEditModel::workspaceCount() const { return current_.bar_workspaces.count; }
 int ShellSettingsEditModel::trayMaxItems() const { return current_.bar_system_tray.max_items; }
 QString ShellSettingsEditModel::weatherProvider() const { return current_.weather.provider; }
@@ -68,6 +72,10 @@ STRING_SETTER(weatherPressureUnit, current_.weather.pressure_unit)
     member = value;                                             \
     changed(&ShellSettingsEditModel::name##Changed, was_dirty); \
   }
+BOOL_SETTER(taskbarEnabled, current_.taskbar.enabled)
+BOOL_SETTER(taskbarGrouped, current_.taskbar.grouped)
+BOOL_SETTER(windowOverviewAccess, current_.taskbar.overview_access)
+BOOL_SETTER(desktopMenuEnabled, current_.taskbar.desktop_menu)
 BOOL_SETTER(weatherShowInBar, current_.weather.show_in_bar)
 BOOL_SETTER(weatherCompactMode, current_.weather.compact_mode)
 BOOL_SETTER(weatherShowFeelsLike, current_.weather.show_feels_like)
@@ -87,6 +95,10 @@ void ShellSettingsEditModel::load(const HoloNight::ShellConfig::ProductConfig& v
   const bool dirty = isDirty();
   current_ = value;
   snapshot_ = value;
+  emit taskbarEnabledChanged();
+  emit taskbarGroupedChanged();
+  emit windowOverviewAccessChanged();
+  emit desktopMenuEnabledChanged();
   emit workspaceCountChanged();
   emit trayMaxItemsChanged();
   emit weatherProviderChanged();

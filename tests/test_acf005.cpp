@@ -506,3 +506,25 @@ TEST(SettingsSaveCoordinatorTest, SaveReentryWhileBusyIsIgnored) {
   EXPECT_EQ(busy_entries, 1);
   EXPECT_FALSE(appearance.isDirty());
 }
+
+TEST(ShellSettingsEditModelTest, TaskbarSettingsTrackDirtyAndReload) {
+  ShellSettingsEditModel model;
+  HoloNight::ShellConfig::ProductConfig config;
+  model.load(config);
+  EXPECT_TRUE(model.taskbarEnabled());
+  EXPECT_TRUE(model.taskbarGrouped());
+  EXPECT_TRUE(model.windowOverviewAccess());
+  EXPECT_FALSE(model.desktopMenuEnabled());
+  model.settaskbarEnabled(false);
+  model.settaskbarGrouped(false);
+  model.setwindowOverviewAccess(false);
+  model.setdesktopMenuEnabled(true);
+  EXPECT_TRUE(model.isDirty());
+  const auto saved = model.value();
+  model.load(saved);
+  EXPECT_FALSE(model.isDirty());
+  EXPECT_FALSE(model.taskbarEnabled());
+  EXPECT_FALSE(model.taskbarGrouped());
+  EXPECT_FALSE(model.windowOverviewAccess());
+  EXPECT_TRUE(model.desktopMenuEnabled());
+}

@@ -7,7 +7,7 @@ parser, writer, and exported `HolonightConfig::Config` package. Tests live in `t
 under `docs/sdd/`.
 
 Use `task build`, `task test`, `task format-check`, `task tidy`, `task qml-lint`, and `task qmltypes-check` for local
-development. These workflows build and install the sibling `../holonight-qt` dependency into `build-dependencies/prefix` without provider tests/examples.
+development. These workflows build and install the sibling `../holonight-qt` dependency into `build/deps/prefix` without provider tests/examples.
 
 Use C++23 and the checked-in formatting/static-analysis configuration. Keep the public headers under
 `holonight_config/` source-compatible because the shell consumes this package directly.
@@ -15,3 +15,6 @@ Use C++23 and the checked-in formatting/static-analysis configuration. Keep the 
 Do not import `QtQuick.Controls.Basic` in QML. Import `QtQuick.Controls` with a namespace alias, such as
 `import QtQuick.Controls as Controls`, and qualify controls, enums and attached properties through that alias. Do not import the Holonight style directly.
 Keep Core/composites explicit; run `task qml-import-check`. Preserve the embedded overridable style default.
+
+Developer tooling uses `build/debug`, `build/test`, `build/release` and module-owned `build/deps`.
+See tooling/README.md; run task tooling:refresh explicitly after configuring/building for editor metadata.

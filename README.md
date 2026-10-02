@@ -24,7 +24,7 @@ The executable embeds `:/qtquickcontrols2.conf` with `Style=Holonight`. Qt suppo
 (`QT_QUICK_CONTROLS_STYLE=Fusion`), `-style Fusion`, or an external `QT_QUICK_CONTROLS_CONF` file; there is no
 imperative style selection.
 
-`task` stages sibling dependencies under `build-dependencies/prefix` with provider tests/examples disabled.
+`task` stages sibling dependencies under `build/deps/prefix` with provider tests/examples disabled.
 CMake derives `SETTINGS_DEPENDENCY_QML_DIR` from the installed HolonightQt package; override that cache path for
 nonstandard layouts. Only build executables use it. Installed settings discovers `../lib/qt6/qml` (using the
 configured install libdir) relative to its executable, then Qt's ordinary module paths.
@@ -36,3 +36,8 @@ its dependencies into the configured prefix, run `tests/check_settings_startup.p
 and `lib/qt6/qml` in `default`, `environment`, `command-line`, and `configuration` modes.
 Install at the configure-time prefix: the D-Bus activation service records that exact executable path.
 See the [UQC-103 verification record](docs/sdd/unified-qtquick-controls/IMPLEMENTATION.md).
+
+## Standalone developer tooling
+
+See [tooling/README.md](tooling/README.md) for presets, local dependency overrides, editor refresh,
+`task tooling:doctor`, and the independent Serena project.

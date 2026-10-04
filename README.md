@@ -41,3 +41,13 @@ See the [UQC-103 verification record](docs/sdd/unified-qtquick-controls/IMPLEMEN
 
 See [tooling/README.md](tooling/README.md) for presets, local dependency overrides, editor refresh,
 `task tooling:doctor`, and the independent Serena project.
+
+## Local CI rehearsal
+
+Run `task ci` with Python 3, Task and Docker (Podman fallback). It runs every push
+validation lane in fresh isolated builds with the same pinned tools and providers
+as GitHub. New non-ignored inputs are included and reported for adding before
+pushing. Complete logs and evidence live in ignored `build/ci/`; any required
+failure returns nonzero and prints its full log. Existing developer tasks remain
+available. Publication/uploads remain remote operations. See
+[local SDD](docs/sdd/local-ci/README.md).

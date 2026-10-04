@@ -64,6 +64,8 @@ file(GLOB_RECURSE ALL_SOURCE_FILES LIST_DIRECTORIES false CONFIGURE_DEPENDS
   apps/*.cpp apps/*.h libs/*.cpp libs/*.h tests/*.cpp tests/*.h)
 file(GLOB_RECURSE ALL_CXX_FILES LIST_DIRECTORIES false CONFIGURE_DEPENDS
   apps/*.cpp libs/*.cpp tests/*.cpp)
+# The standalone installed-provider consumer has its own compiler database/check.
+list(REMOVE_ITEM ALL_CXX_FILES "${CMAKE_CURRENT_SOURCE_DIR}/tests/package-consumer/main.cpp")
 file(GLOB_RECURSE ALL_QML_FILES LIST_DIRECTORIES false CONFIGURE_DEPENDS apps/*.qml)
 
 if(CLANG_FORMAT)
@@ -72,13 +74,26 @@ if(CLANG_FORMAT)
 endif()
 
 if(CLANG_TIDY)
+  set(TIDY_JOBS 2 CACHE STRING "Parallel clang-tidy jobs")
+  set(TIDY_DB_DIR ${CMAKE_BINARY_DIR}/tidy)
+  set(STRIP_TIDY_FLAGS_SCRIPT ${CMAKE_BINARY_DIR}/strip_tidy_flags.cmake)
+  file(MAKE_DIRECTORY ${TIDY_DB_DIR})
+  file(WRITE ${STRIP_TIDY_FLAGS_SCRIPT}
+    "file(READ \"${CMAKE_BINARY_DIR}/compile_commands.json\" db)\n"
+    "string(REPLACE \"-mno-direct-extern-access\" \"\" db \"\${db}\")\n"
+    "string(REPLACE \"-Wno-template-id-cdtor\" \"\" db \"\${db}\")\n"
+    "file(WRITE \"${TIDY_DB_DIR}/compile_commands.json\" \"\${db}\")\n")
   if(RUN_CLANG_TIDY)
     add_custom_target(tidy
-      COMMAND ${RUN_CLANG_TIDY} -quiet -p ${CMAKE_BINARY_DIR}
-        -removed-arg=-mno-direct-extern-access ${ALL_CXX_FILES}
+      COMMAND ${CMAKE_COMMAND} -P ${STRIP_TIDY_FLAGS_SCRIPT}
+      COMMAND ${RUN_CLANG_TIDY} -quiet -j ${TIDY_JOBS} -p ${TIDY_DB_DIR}
+        -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}/(apps|libs|tests)/.*\\.(h|hpp)$" ${ALL_CXX_FILES}
       VERBATIM)
   else()
-    add_custom_target(tidy COMMAND ${CLANG_TIDY} --quiet -p ${CMAKE_BINARY_DIR} ${ALL_CXX_FILES} VERBATIM)
+    add_custom_target(tidy
+      COMMAND ${CMAKE_COMMAND} -P ${STRIP_TIDY_FLAGS_SCRIPT}
+      COMMAND ${CLANG_TIDY} --quiet -p ${TIDY_DB_DIR}
+        -header-filter "^${CMAKE_CURRENT_SOURCE_DIR}/(apps|libs|tests)/.*\\.(h|hpp)$" ${ALL_CXX_FILES} VERBATIM)
   endif()
 endif()
 

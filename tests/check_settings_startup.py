@@ -15,6 +15,7 @@ parser.add_argument('qml_root', type=Path)
 parser.add_argument('mode', choices=['default', 'environment', 'command-line', 'configuration'])
 parser.add_argument('--acceptance', action='store_true')
 parser.add_argument('--forbid-qml-root', type=Path)
+parser.add_argument('--evidence-dir', type=Path, default=os.environ.get('HOLONIGHT_CI_STARTUP_LOG_DIR'))
 args = parser.parse_args()
 
 with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
@@ -82,6 +83,10 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
             if process.poll() is None:
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
+            if args.evidence_dir:
+                args.evidence_dir.mkdir(parents=True, exist_ok=True)
+                evidence = args.evidence_dir / f'{args.executable.name}-{args.mode}.log'
+                evidence.write_text((root / 'output.log').read_text())
 
     if args.forbid_qml_root:
         assert str(args.forbid_qml_root.resolve()) not in trace, 'Installed binary used build QML discovery'

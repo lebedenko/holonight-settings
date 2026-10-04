@@ -69,7 +69,7 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
   });
 
   connect(
-      engine_.get(), &QQmlApplicationEngine::objectCreationFailed, this, []() { QCoreApplication::exit(EXIT_FAILURE); },
+      engine_.get(), &QQmlApplicationEngine::objectCreationFailed, this, [] { QCoreApplication::exit(EXIT_FAILURE); },
       Qt::QueuedConnection);
   engine_->loadFromModule(QStringLiteral("HolonightSettings"), QStringLiteral("SettingsWindow"));
   if (!engine_->rootObjects().isEmpty()) {

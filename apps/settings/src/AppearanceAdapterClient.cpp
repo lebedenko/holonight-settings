@@ -8,12 +8,17 @@
 
 namespace {
 constexpr qsizetype kMaximumOutput = 1024 * 1024;
-const QSet<QString> kStatuses{QStringLiteral("applied"),   QStringLiteral("unchanged"),
-                              QStringLiteral("restored"),  QStringLiteral("unavailable"),
-                              QStringLiteral("delegated"), QStringLiteral("application-owned"),
-                              QStringLiteral("conflict"),  QStringLiteral("error")};
-const QSet<QString> kModes{QStringLiteral("live"), QStringLiteral("relaunch"), QStringLiteral("session-restart"),
-                           QStringLiteral("delegated")};
+const QSet<QString> kStatuses{
+    QStringLiteral("applied"),     QStringLiteral("unchanged"), QStringLiteral("restored"),
+    QStringLiteral("unavailable"), QStringLiteral("delegated"), QStringLiteral("application-owned"),
+    QStringLiteral("conflict"),    QStringLiteral("error"),
+};
+const QSet<QString> kModes{
+    QStringLiteral("live"),
+    QStringLiteral("relaunch"),
+    QStringLiteral("session-restart"),
+    QStringLiteral("delegated"),
+};
 }  // namespace
 
 AppearanceAdapterClient::AppearanceAdapterClient(QString executable, QObject* parent)
@@ -44,10 +49,12 @@ AppearanceAdapterClient::AppearanceAdapterClient(QString executable, QObject* pa
 QVariantList AppearanceAdapterClient::outputs() const {
   QVariantList values;
   for (const auto& output : response_.outputs) {
-    values.append(QVariantMap{{QStringLiteral("name"), output.name},
-                              {QStringLiteral("status"), output.status},
-                              {QStringLiteral("applyMode"), output.applyMode},
-                              {QStringLiteral("diagnostic"), output.diagnostic}});
+    values.append(QVariantMap{
+        {QStringLiteral("name"), output.name},
+        {QStringLiteral("status"), output.status},
+        {QStringLiteral("applyMode"), output.apply_mode},
+        {QStringLiteral("diagnostic"), output.diagnostic},
+    });
   }
   return values;
 }
@@ -147,10 +154,12 @@ void AppearanceAdapterClient::finish(int exit_code, QProcess::ExitStatus exit_st
       fail(tr("Appearance propagation returned an invalid output record"));
       return;
     }
-    parsed.outputs.append({.name = name,
-                           .status = status,
-                           .applyMode = mode,
-                           .diagnostic = value.value(QStringLiteral("diagnostic")).toString()});
+    parsed.outputs.append({
+        .name = name,
+        .status = status,
+        .apply_mode = mode,
+        .diagnostic = value.value(QStringLiteral("diagnostic")).toString(),
+    });
   }
   if (!success) {
     fail(tr("Appearance propagation failed; the appearance file was restored"));

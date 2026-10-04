@@ -33,7 +33,8 @@ TEST(Acf005QmlContractTest, AppearancePageExposesEveryCanonicalControl) {
       QStringLiteral("uiFontRow"),      QStringLiteral("monospaceFontRow"), QStringLiteral("titleFontRow"),
       QStringLiteral("displayFontRow"), QStringLiteral("iconThemeRow"),     QStringLiteral("fallbackIconThemeRow"),
       QStringLiteral("cursorThemeRow"), QStringLiteral("layoutScaleRow"),   QStringLiteral("cornerStyleRow"),
-      QStringLiteral("shapeScaleRow"),  QStringLiteral("baseRadiusRow"),    QStringLiteral("baseChamferRow")};
+      QStringLiteral("shapeScaleRow"),  QStringLiteral("baseRadiusRow"),    QStringLiteral("baseChamferRow"),
+  };
   EXPECT_TRUE(containsAllObjectNames(qml, object_names));
   EXPECT_TRUE(qml.contains(QStringLiteral("retainedFamily: editModel.uiFont")));
   EXPECT_TRUE(qml.contains(QStringLiteral("retainedFamily: editModel.monospaceFont")));

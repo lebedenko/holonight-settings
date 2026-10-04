@@ -9,7 +9,7 @@
 struct AppearanceAdapterOutput {
   QString name{};
   QString status{};
-  QString applyMode{};
+  QString apply_mode{};
   QString diagnostic{};
 };
 

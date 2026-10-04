@@ -494,7 +494,7 @@ TEST(SettingsSaveCoordinatorTest, SaveReentryWhileBusyIsIgnored) {
   appearance.setThemeAccent(QStringLiteral("cyan"));
   SettingsSaveCoordinator coordinator(&appearance, &appearance_files, &shell, &shell_files);
   int busy_entries = 0;
-  QObject::connect(&coordinator, &SettingsSaveCoordinator::isBusyChanged, [&]() {
+  QObject::connect(&coordinator, &SettingsSaveCoordinator::isBusyChanged, [&] {
     if (coordinator.isBusy()) {
       ++busy_entries;
       coordinator.save();

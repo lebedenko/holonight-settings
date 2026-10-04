@@ -166,7 +166,7 @@ void SettingsActivationService::requestActivation(ActivationRequest request) {
   window_->raise();
   window_->requestActivate();
 
-  QTimer::singleShot(kActivationGracePeriod, window_, [window = window_]() {
+  QTimer::singleShot(kActivationGracePeriod, window_, [window = window_] {
     if (window->isVisible() && !window->isActive()) {
       window->alert(0);
     }

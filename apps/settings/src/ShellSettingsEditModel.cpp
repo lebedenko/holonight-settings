@@ -24,13 +24,12 @@ int ShellSettingsEditModel::weatherRefreshInterval() const { return current_.wea
 
 void ShellSettingsEditModel::changed(void (ShellSettingsEditModel::*signal)(), bool was_dirty) {
   emit(this->*signal)();
-  if (was_dirty != isDirty()) {
+  if (document_ == nullptr && was_dirty != isDirty()) {
     emit isDirtyChanged();
   }
 }
 void ShellSettingsEditModel::setworkspaceCount(int value) {
   const bool was_dirty = isDirty();
-  value = std::clamp(value, 3, 10);
   if (current_.bar_workspaces.count == value) {
     return;
   }
@@ -39,7 +38,6 @@ void ShellSettingsEditModel::setworkspaceCount(int value) {
 }
 void ShellSettingsEditModel::settrayMaxItems(int value) {
   const bool was_dirty = isDirty();
-  value = std::clamp(value, 2, 5);
   if (current_.bar_system_tray.max_items == value) {
     return;
   }
@@ -83,7 +81,6 @@ BOOL_SETTER(weatherShowLocation, current_.weather.show_location)
 #undef BOOL_SETTER
 void ShellSettingsEditModel::setweatherRefreshInterval(int value) {
   const bool was_dirty = isDirty();
-  value = std::max(1, value);
   if (current_.weather.refresh_interval == value) {
     return;
   }
@@ -123,4 +120,9 @@ void ShellSettingsEditModel::markSaved() {
   if (dirty) {
     emit isDirtyChanged();
   }
+}
+
+void ShellSettingsEditModel::attachDocument(DocumentEditSession* document) {
+  document_ = document;
+  connect(document_, &DocumentEditSession::dirtyChanged, this, &ShellSettingsEditModel::isDirtyChanged);
 }

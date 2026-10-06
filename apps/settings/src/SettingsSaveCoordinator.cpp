@@ -18,6 +18,9 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
       adapter_(adapter) {
   connect(appearance_, &AppearanceEditModel::isDirtyChanged, this, &SettingsSaveCoordinator::isDirtyChanged);
   connect(shell_, &ShellSettingsEditModel::isDirtyChanged, this, &SettingsSaveCoordinator::isDirtyChanged);
+  connect(appearance_->document(), &DocumentEditSession::stateChanged, this,
+          &SettingsSaveCoordinator::conflictsChanged);
+  connect(shell_->document(), &DocumentEditSession::stateChanged, this, &SettingsSaveCoordinator::conflictsChanged);
   if (adapter_ != nullptr) {
     connect(adapter_, &AppearanceAdapterClient::completed, this, [this](const AppearanceAdapterResponse& response) {
       if (!busy_) {
@@ -29,13 +32,17 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
         return;
       }
       if (!appearance_files_->commit()) {
+        appearance_staged_ = false;
         ++failed_;
-        finishSave(QStringLiteral("Appearance: unable to commit saved appearance"));
+        finishSave(QStringLiteral("Appearance: ") + appearance_files_->error());
         return;
       }
       appearance_staged_ = false;
-      setConflict({});
+      const auto remaining = conflicts();
+      setConflict(remaining.isEmpty() ? QString{}
+                                      : remaining.first().toMap().value(QStringLiteral("domain")).toString());
       ++succeeded_;
+      outcomes_ << QStringLiteral("Appearance saved");
       finishSave(response.result == QStringLiteral("degraded")
                      ? QStringLiteral("Appearance saved with limited native toolkit propagation")
                      : QString{});
@@ -53,7 +60,8 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
       appearance_staged_ = false;
       ++failed_;
       finishSave(restored ? QStringLiteral("Appearance: ") + diagnostic
-                          : QStringLiteral("Appearance rollback failed; edits were retained"));
+                          : QStringLiteral("Appearance: ") + diagnostic + QStringLiteral("; rollback refused: ") +
+                                appearance_files_->error());
     });
   }
 }
@@ -86,6 +94,7 @@ void SettingsSaveCoordinator::save() {
   }
   setBusy(true);
   setConflict({});
+  outcomes_.clear();
   succeeded_ = 0;
   failed_ = 0;
   appearance_staged_ = false;
@@ -96,25 +105,27 @@ void SettingsSaveCoordinator::save() {
         appearance_staged_ = true;
       } else {
         ++succeeded_;
+        outcomes_ << QStringLiteral("Appearance saved");
       }
     } else {
       ++failed_;
       if (result == AppearanceFileService::SaveResult::Conflict) {
         setConflict(QStringLiteral("Appearance"));
       }
-      setResult(QStringLiteral("Appearance: ") + appearance_files_->error());
+      outcomes_ << QStringLiteral("Appearance: ") + appearance_files_->error();
     }
   }
   if (shell_->isDirty()) {
     const auto result = shell_files_->save();
     if (result == ShellConfigFileService::SaveResult::Success) {
       ++succeeded_;
+      outcomes_ << QStringLiteral("Shell settings saved");
     } else {
       ++failed_;
       if (result == ShellConfigFileService::SaveResult::Conflict && conflict_domain_.isEmpty()) {
         setConflict(QStringLiteral("Shell settings"));
       }
-      setResult(QStringLiteral("Shell settings: ") + shell_files_->error());
+      outcomes_ << QStringLiteral("Shell settings: ") + shell_files_->error();
     }
   }
   if (appearance_staged_) {
@@ -124,73 +135,52 @@ void SettingsSaveCoordinator::save() {
   finishSave();
 }
 
-void SettingsSaveCoordinator::finishSave(QString appearance_result) {
-  if (failed_ == 0) {
-    setResult(appearance_result.isEmpty() ? QStringLiteral("Changes saved") : std::move(appearance_result));
-  } else if (succeeded_ > 0) {
-    setResult(QStringLiteral("Some changes saved; remaining domain needs attention"));
-  } else if (!appearance_result.isEmpty()) {
-    setResult(std::move(appearance_result));
+void SettingsSaveCoordinator::finishSave(const QString& appearance_result) {
+  if (!appearance_result.isEmpty()) {
+    outcomes_ << appearance_result;
+  } else if (appearance_staged_ || (succeeded_ > 0 && outcomes_.isEmpty())) {
+    outcomes_ << QStringLiteral("Appearance saved");
   }
+  setResult(outcomes_.join(QStringLiteral("; ")));
   setBusy(false);
 }
 void SettingsSaveCoordinator::discard() {
-  if (busy_ || !isDirty()) {
+  if (busy_) {
     return;
   }
   setBusy(true);
   QStringList errors;
-  if (appearance_->isDirty() && !appearance_files_->load()) {
+  if (!appearance_files_->load()) {
     errors << QStringLiteral("Appearance: ") + appearance_files_->error();
   }
-  if (shell_->isDirty() && !shell_files_->load()) {
+  if (!shell_files_->load()) {
     errors << QStringLiteral("Shell settings: ") + shell_files_->error();
   }
   setResult(errors.isEmpty() ? QStringLiteral("Changes discarded") : errors.join(QStringLiteral("; ")));
   setConflict({});
   setBusy(false);
 }
-void SettingsSaveCoordinator::reloadConflict() {
-  if (busy_ || conflict_domain_.isEmpty()) {
-    return;
-  }
-  setBusy(true);
-  const bool succeeded =
-      conflict_domain_ == QStringLiteral("Appearance") ? appearance_files_->load() : shell_files_->load();
-  setResult(succeeded ? QStringLiteral("External changes loaded") : QStringLiteral("Reload failed"));
-  if (succeeded) {
-    setConflict({});
-  }
-  setBusy(false);
-}
-void SettingsSaveCoordinator::overwriteConflict() {
-  if (busy_ || conflict_domain_.isEmpty()) {
-    return;
-  }
-  setBusy(true);
-  bool succeeded = false;
-  if (conflict_domain_ == QStringLiteral("Appearance")) {
-    if (adapter_ != nullptr) {
-      const auto staged = appearance_files_->stage(true);
-      if (staged == AppearanceFileService::SaveResult::Success) {
-        succeeded_ = 0;
-        failed_ = 0;
-        appearance_staged_ = true;
-        adapter_->apply(appearance_files_->path());
-        return;
-      }
-    } else {
-      succeeded = appearance_files_->save(true) == AppearanceFileService::SaveResult::Success;
+QVariantList SettingsSaveCoordinator::conflicts() const {
+  QVariantList result;
+  for (const auto& domain : {QStringLiteral("Appearance"), QStringLiteral("Shell settings")}) {
+    const auto* document = domain == QStringLiteral("Appearance") ? appearance_->document() : shell_->document();
+    for (const auto& item : document->conflicts()) {
+      auto row = item.toMap();
+      row["domain"] = domain;
+      result.push_back(row);
     }
-  } else {
-    succeeded = shell_files_->save(true) == ShellConfigFileService::SaveResult::Success;
   }
-  setResult(succeeded ? QStringLiteral("External changes overwritten")
-                      : QStringLiteral("File changed again; reload before overwriting"));
-  if (succeeded) {
+  return result;
+}
+void SettingsSaveCoordinator::resolveConflict(const QString& domain, const QString& property, bool keepPending) {
+  if (busy_) {
+    return;
+  }
+  auto* document = domain == QStringLiteral("Appearance") ? appearance_->document() : shell_->document();
+  document->resolve(property, keepPending);
+  if (conflicts().isEmpty()) {
     setConflict({});
   }
-  setBusy(false);
 }
 void SettingsSaveCoordinator::cancelConflict() {
   setConflict({});

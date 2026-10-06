@@ -13,10 +13,19 @@
 #include <QTemporaryDir>
 
 #include <gtest/gtest.h>
+#include <holonight/config/appearance_document.h>
 #include <holonight/config/store.h>
 #include <holonight_shell_config/config_writer.h>
 
 namespace {
+
+QByteArray readBytes(const QString& path) {
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return {};
+  }
+  return file.readAll();
+}
 
 QByteArray fileHash(const QString& path) {
   QFile file(path);
@@ -139,7 +148,7 @@ TEST(AppearanceFileServiceTest, MissingLoadsDefaultsWithoutCreatingFileOrDirtyin
   EXPECT_FALSE(model.isDirty());
 }
 
-TEST(AppearanceFileServiceTest, DetectsExternalIdentityChangeAndRequiresStableOverwrite) {
+TEST(AppearanceFileServiceTest, InvalidExternalDocumentBlocksSaving) {
   QTemporaryDir directory;
   AppearanceEditModel model;
   const QString path = directory.filePath(QStringLiteral("appearance.toml"));
@@ -150,15 +159,15 @@ TEST(AppearanceFileServiceTest, DetectsExternalIdentityChangeAndRequiresStableOv
   ASSERT_TRUE(external.open(QIODevice::WriteOnly));
   external.write("external");
   external.close();
-  EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Conflict);
+  EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Error);
   ASSERT_TRUE(external.open(QIODevice::WriteOnly));
   external.write("changed again");
   external.close();
-  EXPECT_EQ(service.save(true), AppearanceFileService::SaveResult::Conflict);
+  EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Error);
   EXPECT_TRUE(model.isDirty());
 }
 
-TEST(AppearanceFileServiceTest, InvalidStartupUsesDirtyDefaultsAndRedactsDocumentContents) {
+TEST(AppearanceFileServiceTest, InvalidStartupUsesCleanDefaultsAndBlocksSaving) {
   QTemporaryDir directory;
   const QString path = directory.filePath(QStringLiteral("appearance.toml"));
   writeBytes(path, QByteArrayLiteral("not valid toml SECRET_VALUE"));
@@ -168,27 +177,29 @@ TEST(AppearanceFileServiceTest, InvalidStartupUsesDirtyDefaultsAndRedactsDocumen
   EXPECT_FALSE(service.load());
 
   EXPECT_EQ(model.themeScheme(), QStringLiteral("holonight-dark"));
-  EXPECT_TRUE(model.isDirty());
-  EXPECT_FALSE(service.error().contains(QStringLiteral("SECRET_VALUE")));
-  EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Success);
   EXPECT_FALSE(model.isDirty());
-  EXPECT_TRUE(HoloNight::Config::load(path.toStdString()));
+  EXPECT_FALSE(service.error().contains(QStringLiteral("SECRET_VALUE")));
+  EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Error);
+  EXPECT_FALSE(model.isDirty());
+  EXPECT_EQ(readBytes(path), QByteArrayLiteral("not valid toml SECRET_VALUE"));
 }
 
-TEST(AppearanceFileServiceTest, ExplicitOverwriteSucceedsWhenConflictRevisionIsStable) {
+TEST(AppearanceFileServiceTest, SelectedConflictCanKeepPendingWhilePreservingUnknownText) {
   QTemporaryDir directory;
   const QString path = directory.filePath(QStringLiteral("appearance.toml"));
   AppearanceEditModel model;
   AppearanceFileService service(&model, path);
   ASSERT_TRUE(service.load());
   model.setThemeAccent(QStringLiteral("cyan"));
-  writeBytes(path, QByteArrayLiteral("external"));
+  writeBytes(path, QByteArrayLiteral("version = 2\n# preserved\nunknown = 42\n[theme]\naccent = \"violet\"\n"));
   ASSERT_EQ(service.save(), AppearanceFileService::SaveResult::Conflict);
 
-  EXPECT_EQ(service.save(true), AppearanceFileService::SaveResult::Success);
+  model.document()->resolve(QStringLiteral("themeAccent"), true);
+  EXPECT_EQ(service.save(), AppearanceFileService::SaveResult::Success);
   EXPECT_FALSE(model.isDirty());
-  ASSERT_TRUE(HoloNight::Config::load(path.toStdString()));
-  EXPECT_EQ(HoloNight::Config::load(path.toStdString()).value->appearance.theme.accent, "cyan");
+  EXPECT_TRUE(readBytes(path).contains("# preserved\nunknown = 42"));
+  ASSERT_TRUE(HoloNight::Config::readAppearanceDocument(path.toStdString()));
+  EXPECT_EQ(HoloNight::Config::readAppearanceDocument(path.toStdString()).value->appearance.theme.accent, "cyan");
 }
 
 TEST(AppearanceFileServiceTest, FailedDiscardRetainsEditedValueAndSnapshot) {
@@ -232,12 +243,13 @@ TEST(AppearanceFileServiceTest, AtomicWriteFailureLeavesDomainDirty) {
 TEST(AppearanceFileServiceTest, RollbackRestoresExactBytesAndPermissions) {
   QTemporaryDir directory;
   const QString path = directory.filePath(QStringLiteral("appearance.toml"));
-  const QByteArray original = QByteArrayLiteral("# retained bytes\n");
+  const QByteArray original = QByteArrayLiteral("version = 2\n# retained bytes\n");
   writeBytes(path, original);
   ASSERT_TRUE(QFile::setPermissions(path, QFile::ReadOwner | QFile::WriteOwner));
   AppearanceEditModel model;
   AppearanceFileService service(&model, path);
-  ASSERT_FALSE(service.load());
+  ASSERT_TRUE(service.load());
+  model.setThemeAccent(QStringLiteral("cyan"));
 
   ASSERT_EQ(service.stage(), AppearanceFileService::SaveResult::Success);
   ASSERT_TRUE(service.rollback());
@@ -312,13 +324,14 @@ TEST(SettingsSaveCoordinatorTest, AdapterFailureRollsBackAppearanceButSavesShell
   const QString adapter_path = writeAdapter(directory, QByteArrayLiteral("printf 'invalid'\n"));
   const QString appearance_path = directory.filePath(QStringLiteral("appearance.toml"));
   const QString shell_path = directory.filePath(QStringLiteral("config.toml"));
-  const QByteArray original = QByteArrayLiteral("# invalid but exact prior file\n");
+  const QByteArray original = QByteArrayLiteral("version = 2\n# exact prior file\n");
   writeBytes(appearance_path, original);
   AppearanceEditModel appearance;
   ShellSettingsEditModel shell;
   AppearanceFileService appearance_files(&appearance, appearance_path);
   ShellConfigFileService shell_files(&shell, shell_path);
-  ASSERT_FALSE(appearance_files.load());
+  ASSERT_TRUE(appearance_files.load());
+  appearance.setThemeAccent(QStringLiteral("cyan"));
   ASSERT_TRUE(shell_files.load());
   shell.setworkspaceCount(7);
   AppearanceAdapterClient adapter(adapter_path);
@@ -333,7 +346,7 @@ TEST(SettingsSaveCoordinatorTest, AdapterFailureRollsBackAppearanceButSavesShell
   EXPECT_EQ(restored.readAll(), original);
   EXPECT_TRUE(appearance.isDirty());
   EXPECT_FALSE(shell.isDirty());
-  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Some changes saved")));
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Shell settings")));
 }
 
 TEST(ShellConfigFileServiceTest, ProductSaveDoesNotCreateAppearanceFile) {
@@ -373,7 +386,7 @@ TEST(SettingsSaveCoordinatorTest, AppearanceSuccessAndShellFailureAreIndependent
   AppearanceFileService appearance_files(&appearance, appearance_path);
   ShellConfigFileService shell_files(&shell, shell_path);
   ASSERT_TRUE(appearance_files.load());
-  ASSERT_TRUE(shell_files.load());
+  ASSERT_FALSE(shell_files.load());
   appearance.setThemeAccent(QStringLiteral("cyan"));
   shell.setworkspaceCount(7);
   SettingsSaveCoordinator coordinator(&appearance, &appearance_files, &shell, &shell_files);
@@ -382,7 +395,7 @@ TEST(SettingsSaveCoordinatorTest, AppearanceSuccessAndShellFailureAreIndependent
 
   EXPECT_FALSE(appearance.isDirty());
   EXPECT_TRUE(shell.isDirty());
-  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Some changes saved")));
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Shell settings")));
   const QByteArray appearance_hash = fileHash(appearance_path);
   ASSERT_TRUE(QDir().rmdir(shell_path));
   coordinator.save();
@@ -409,7 +422,7 @@ TEST(SettingsSaveCoordinatorTest, AppearanceFailureDoesNotPreventShellSuccess) {
   EXPECT_TRUE(appearance.isDirty());
   EXPECT_FALSE(shell.isDirty());
   EXPECT_TRUE(QFile::exists(shell_path));
-  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Some changes saved")));
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Shell settings")));
 }
 
 TEST(SettingsSaveCoordinatorTest, DiscardReloadsDirtyDomainsIndependently) {
@@ -438,7 +451,7 @@ TEST(SettingsSaveCoordinatorTest, DiscardReloadsDirtyDomainsIndependently) {
   EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Appearance")));
 }
 
-TEST(SettingsSaveCoordinatorTest, ConflictCommandsCancelReloadAndOverwritePerDomain) {
+TEST(SettingsSaveCoordinatorTest, ConflictCancelRetainsEditsAndSelectedKeepAllowsSaving) {
   QTemporaryDir directory;
   const QString appearance_path = directory.filePath(QStringLiteral("appearance.toml"));
   AppearanceEditModel appearance;
@@ -447,7 +460,7 @@ TEST(SettingsSaveCoordinatorTest, ConflictCommandsCancelReloadAndOverwritePerDom
   ShellConfigFileService shell_files(&shell, directory.filePath(QStringLiteral("config.toml")));
   ASSERT_TRUE(appearance_files.load());
   appearance.setThemeAccent(QStringLiteral("cyan"));
-  writeBytes(appearance_path, QByteArrayLiteral("external"));
+  writeBytes(appearance_path, QByteArrayLiteral("version = 2\n[theme]\naccent = \"violet\"\n"));
   SettingsSaveCoordinator coordinator(&appearance, &appearance_files, &shell, &shell_files);
 
   coordinator.save();
@@ -456,7 +469,8 @@ TEST(SettingsSaveCoordinatorTest, ConflictCommandsCancelReloadAndOverwritePerDom
   EXPECT_TRUE(coordinator.conflictDomain().isEmpty());
   EXPECT_TRUE(appearance.isDirty());
   coordinator.save();
-  coordinator.overwriteConflict();
+  coordinator.resolveConflict(QStringLiteral("Appearance"), QStringLiteral("themeAccent"), true);
+  coordinator.save();
   EXPECT_FALSE(appearance.isDirty());
   EXPECT_TRUE(coordinator.conflictDomain().isEmpty());
 }
@@ -477,7 +491,7 @@ TEST(SettingsSaveCoordinatorTest, ReloadConflictAcceptsExternalAppearance) {
   coordinator.save();
   ASSERT_EQ(coordinator.conflictDomain(), QStringLiteral("Appearance"));
 
-  coordinator.reloadConflict();
+  coordinator.resolveConflict(QStringLiteral("Appearance"), QStringLiteral("themeAccent"), false);
 
   EXPECT_TRUE(coordinator.conflictDomain().isEmpty());
   EXPECT_FALSE(appearance.isDirty());

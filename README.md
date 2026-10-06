@@ -1,7 +1,8 @@
 # HoloNight Settings
 
-The standalone Qt 6 settings application and configuration-schema package for HoloNight. The application edits the
-same TOML configuration consumed by `holonight-shell`; this repository is the single owner of that schema.
+The standalone Qt 6 settings application edits shared appearance and Shell preferences. Shell owns its exported
+configuration schema; the toolkit-neutral Config library owns document editing and appearance compatibility.
+Each other application retains its own configuration and settings UI.
 
 ## Build
 
@@ -51,3 +52,20 @@ pushing. Complete logs and evidence live in ignored `build/ci/`; any required
 failure returns nonzero and prints its full log. Existing developer tasks remain
 available. Publication/uploads remain remote operations. See
 [local SDD](docs/sdd/local-ci/README.md).
+
+## Configuration editing
+
+Save writes pending value patches and retains unrelated text, comments and unknown fields. Reset removes the selected
+override; absent values use domain defaults. Valid appearance v1 files upgrade to sparse v2 on their first successful
+save while retaining other explicit values. Unsupported versions and invalid external documents cannot be overwritten.
+
+External changes update untouched controls. Pending edits remain visible; review conflicts per preference and either
+keep the pending value or accept the external value. Save checks the latest disk values again. Discard loads the latest
+valid document; a failed reload retains edits. Defaults and override status, sparse resets and diagnostics appear on
+the existing Appearance, Bar and Weather pages. API key conflict values are masked.
+
+Appearance and Shell saves report separate outcomes. Appearance is staged before native application; failures restore
+the exact prior document only while both its staged revision and physical target remain current. An intervening editor
+change is preserved and reported as an application failure. Cooperating writers lock the target's sibling lock file;
+arbitrary editors retain a race between the final revision check and replacement. No daemon or running Shell is needed
+for document editing. Files, Viewer and other applications are outside this settings migration.

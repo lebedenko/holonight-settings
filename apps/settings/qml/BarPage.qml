@@ -73,6 +73,12 @@ Flickable {
             anchors.rightMargin: 24
             spacing: 20
 
+            OverridePanel {
+                Layout.fillWidth: true
+                document: root.editModel.document
+                group: "bar"
+            }
+
             SectionGroup {
                 frameObjectName: "generalSectionFrame"
                 label: qsTr("General")
@@ -98,8 +104,8 @@ Flickable {
 
                             Controls.Slider {
                                 objectName: "workspaceCountSlider"
-                                from: 3
-                                to: 10
+                                from: root.editModel.document.metadata("workspaceCount").minimum
+                                to: root.editModel.document.metadata("workspaceCount").maximum
                                 stepSize: 1
                                 value: root.editModel.workspaceCount
                                 onMoved: root.editModel.workspaceCount = Math.round(value)
@@ -143,8 +149,8 @@ Flickable {
 
                             Controls.Slider {
                                 objectName: "trayMaxItemsSlider"
-                                from: 2
-                                to: 5
+                                from: root.editModel.document.metadata("trayMaxItems").minimum
+                                to: root.editModel.document.metadata("trayMaxItems").maximum
                                 stepSize: 1
                                 value: root.editModel.trayMaxItems
                                 onMoved: root.editModel.trayMaxItems = Math.round(value)

@@ -10,6 +10,11 @@
   ],
   "dependencies": [
     {
+      "module": "holonight-system-services",
+      "package": "HoloNightSystemServices",
+      "source_variable": "HOLONIGHT_SYSTEM_SERVICES_SOURCE"
+    },
+    {
       "module": "holonight-config",
       "package": "HoloNightConfig",
       "source_variable": "HOLONIGHT_CONFIG_SOURCE"
@@ -18,6 +23,12 @@
       "module": "holonight-qt",
       "package": "HolonightQt",
       "source_variable": "HOLONIGHT_QT_SOURCE"
+    },
+    {
+      "module": "holonight-shell",
+      "package": "HoloNightShellConfig",
+      "source_variable": "HOLONIGHT_SHELL_SOURCE",
+      "cmake_subdirectory": "libs/holonight-shell-config"
     }
   ],
   "qml_modules": [

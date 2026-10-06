@@ -13,9 +13,11 @@ endfunction()
 if(BUILD_APP)
   holonight_add_test_exe(test_holonight_settings
     main.cpp
+    test_configuration_documents.cpp
     test_acf005.cpp
     test_acf005_qml_contract.cpp
     test_settings_activation.cpp
+    ../apps/settings/src/DocumentEditSession.cpp
     ../apps/settings/src/AppearanceEditModel.cpp
     ../apps/settings/src/ShellSettingsEditModel.cpp
     ../apps/settings/src/AppearanceFileService.cpp

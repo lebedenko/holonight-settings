@@ -86,6 +86,12 @@ Flickable {
             anchors.rightMargin: 24
             spacing: 20
 
+            OverridePanel {
+                Layout.fillWidth: true
+                document: root.editModel.document
+                group: ""
+            }
+
             SectionGroup {
                 frameObjectName: "themeSectionFrame"
                 label: qsTr("Theme")

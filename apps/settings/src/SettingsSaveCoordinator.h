@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QVariantList>
 #include <QtQml/qqml.h>
 
 class AppearanceEditModel;
@@ -18,6 +19,7 @@ class SettingsSaveCoordinator : public QObject {
   Q_PROPERTY(bool isDirty READ isDirty NOTIFY isDirtyChanged)
   Q_PROPERTY(bool isBusy READ isBusy NOTIFY isBusyChanged)
   Q_PROPERTY(QString resultText READ resultText NOTIFY resultTextChanged)
+  Q_PROPERTY(QVariantList conflicts READ conflicts NOTIFY conflictsChanged)
   Q_PROPERTY(QString conflictDomain READ conflictDomain NOTIFY conflictDomainChanged)
 
  public:
@@ -30,8 +32,8 @@ class SettingsSaveCoordinator : public QObject {
   [[nodiscard]] QString conflictDomain() const { return conflict_domain_; }
   Q_INVOKABLE void save();
   Q_INVOKABLE void discard();
-  Q_INVOKABLE void reloadConflict();
-  Q_INVOKABLE void overwriteConflict();
+  [[nodiscard]] QVariantList conflicts() const;
+  Q_INVOKABLE void resolveConflict(const QString& domain, const QString& property, bool keepPending);
   Q_INVOKABLE void cancelConflict();
   Q_INVOKABLE void reapplyAppearance();
   Q_INVOKABLE void refreshIntegrations();
@@ -42,13 +44,14 @@ class SettingsSaveCoordinator : public QObject {
   void isBusyChanged();
   void resultTextChanged();
   void conflictDomainChanged();
+  void conflictsChanged();
 
  private:
   void setBusy(bool value);
   void setResult(QString value);
   void setConflict(QString value);
-  void beginAppearance(bool overwrite);
-  void finishSave(QString appearance_result = {});
+  QStringList outcomes_;
+  void finishSave(const QString& appearance_result = {});
   AppearanceEditModel* appearance_;
   AppearanceFileService* appearance_files_;
   ShellSettingsEditModel* shell_;

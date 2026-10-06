@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DocumentEditSession.h"
+
 #include <QObject>
 #include <QString>
 #include <QtQml/qqml.h>
@@ -37,6 +39,7 @@ class AppearanceEditModel : public QObject {
 #undef APPEARANCE_PROPERTY
   Q_PROPERTY(bool lightModeAvailable READ lightModeAvailable NOTIFY themeSchemeChanged)
   Q_PROPERTY(bool darkModeAvailable READ darkModeAvailable NOTIFY themeSchemeChanged)
+  Q_PROPERTY(DocumentEditSession* document READ document CONSTANT)
   Q_PROPERTY(bool isDirty READ isDirty NOTIFY isDirtyChanged)
   Q_PROPERTY(QString validationError READ validationError NOTIFY validationErrorChanged)
 
@@ -66,7 +69,9 @@ class AppearanceEditModel : public QObject {
   [[nodiscard]] qreal baseChamfer() const;
   [[nodiscard]] bool lightModeAvailable() const;
   [[nodiscard]] bool darkModeAvailable() const;
-  [[nodiscard]] bool isDirty() const { return requires_explicit_save_ || current_ != snapshot_; }
+  [[nodiscard]] bool isDirty() const {
+    return document_ != nullptr ? document_->dirty() : requires_explicit_save_ || current_ != snapshot_;
+  }
   [[nodiscard]] QString validationError() const { return validation_error_; }
   [[nodiscard]] const HoloNight::Config::Appearance& value() const { return current_; }
 
@@ -95,6 +100,8 @@ class AppearanceEditModel : public QObject {
   void load(const HoloNight::Config::Appearance& value);
   void loadInvalidDefaults();
   void markSaved();
+  [[nodiscard]] DocumentEditSession* document() const { return document_; }
+  void attachDocument(DocumentEditSession* document);
   void setValidationError(const QString& value);
 
  Q_SIGNALS:
@@ -125,6 +132,7 @@ class AppearanceEditModel : public QObject {
   void validationErrorChanged();
 
  private:
+  DocumentEditSession* document_{nullptr};
   void changed(void (AppearanceEditModel::*signal)(), bool was_dirty);
   [[nodiscard]] QString sibling(const QString& mode) const;
   HoloNight::Config::Appearance current_{HoloNight::Config::defaults()};

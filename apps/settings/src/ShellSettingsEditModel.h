@@ -1,5 +1,7 @@
 #pragma once
 
+#include "DocumentEditSession.h"
+
 #include <QObject>
 #include <QtQml/qqml.h>
 
@@ -30,6 +32,7 @@ class ShellSettingsEditModel : public QObject {
   SHELL_PROPERTY(bool, weatherShowLocation)
   SHELL_PROPERTY(int, weatherRefreshInterval)
 #undef SHELL_PROPERTY
+  Q_PROPERTY(DocumentEditSession* document READ document CONSTANT)
   Q_PROPERTY(bool isDirty READ isDirty NOTIFY isDirtyChanged)
 
  public:
@@ -56,10 +59,12 @@ class ShellSettingsEditModel : public QObject {
   SHELL_ACCESSORS(bool, weatherShowLocation)
   SHELL_ACCESSORS(int, weatherRefreshInterval)
 #undef SHELL_ACCESSORS
-  [[nodiscard]] bool isDirty() const { return current_ != snapshot_; }
+  [[nodiscard]] bool isDirty() const { return document_ != nullptr ? document_->dirty() : current_ != snapshot_; }
   [[nodiscard]] const HoloNight::ShellConfig::ProductConfig& value() const { return current_; }
   void load(const HoloNight::ShellConfig::ProductConfig& value);
   void markSaved();
+  [[nodiscard]] DocumentEditSession* document() const { return document_; }
+  void attachDocument(DocumentEditSession* document);
 
  Q_SIGNALS:
 #define SHELL_SIGNAL(name) void name##Changed();
@@ -85,6 +90,7 @@ class ShellSettingsEditModel : public QObject {
   void isDirtyChanged();
 
  private:
+  DocumentEditSession* document_{nullptr};
   void changed(void (ShellSettingsEditModel::*signal)(), bool was_dirty);
   HoloNight::ShellConfig::ProductConfig current_;
   HoloNight::ShellConfig::ProductConfig snapshot_;

@@ -56,7 +56,7 @@ def packages(config, location):
 def dependency_source(dep):
     key = dep['source_variable']
     source = Path(os.environ.get(key, ROOT.parent / dep['module'])).resolve()
-    if not (source / 'CMakeLists.txt').is_file():
+    if not (source / dep.get('cmake_subdirectory', '') / 'CMakeLists.txt').is_file():
         raise RuntimeError(f'Missing {dep["module"]} source: {source}. Set {key} to a local checkout, '
                            'or supply HOLONIGHT_DEPENDENCY_PREFIX. Sources are never downloaded.')
     return source
@@ -90,6 +90,8 @@ def prepare(config):
                     dirty += name.encode() + hashlib.sha256(file.read_bytes()).digest()
         signature = {'source': str(source), 'revision': revision, 'dirty': hashlib.sha256(dirty).hexdigest(),
                      'prefix': str(location), 'options': dep.get('options', []), 'wayland': config.get('wayland', False)}
+        if 'cmake_subdirectory' in dep:
+            signature['cmake_subdirectory'] = dep['cmake_subdirectory']
         revision_lines.append(f'{dep["module"]}\t{source}\t{revision or "unversioned"}')
         state[dep['module']] = signature
         try:
@@ -101,7 +103,7 @@ def prepare(config):
             print(f'{dep["module"]}: source revision and installed package are current')
             continue
         build = ROOT / 'build/deps' / dep['module']
-        args = ['cmake', '-S', source, '-B', build, '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Debug',
+        args = ['cmake', '-S', source / dep.get('cmake_subdirectory', ''), '-B', build, '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Debug',
                 f'-DCMAKE_INSTALL_PREFIX={location}', '-DCMAKE_INSTALL_LIBDIR=lib',
                 f'-DCMAKE_PREFIX_PATH={location}', '-DCMAKE_EXPORT_COMPILE_COMMANDS=ON',
                 '-DBUILD_TESTS=OFF', '-DBUILD_TESTING=OFF', '-DBUILD_DEMO=OFF', '-DBUILD_CONTROLS_GALLERY=OFF',

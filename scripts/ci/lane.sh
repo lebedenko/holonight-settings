@@ -29,28 +29,28 @@ fetch_provider() {
   git -C "/work/providers/$name" checkout --detach FETCH_HEAD
   [ "$(git -C "/work/providers/$name" rev-parse HEAD)" = "$revision" ]
 }
-fetch_provider holonight-config 81b01d3ae8433f3a4b017db2feb588a1ee62b714
-fetch_provider holonight-qt 8d11e3e91fea5ad0d20a34f2ed27e5e5f485124a
-fetch_provider holonight-shell 50143ee0f211d658b26f74bee1ddd5f310e89f7e
-fetch_provider holonight-system-services 4556dc9b22237823387110340347cd1301ed9245
+fetch_provider holonight-config d6a392b41991f70a004d58f7694c7b6115cb7280
+fetch_provider holonight-qt 98803bca05e16ae0d0784a6cb43b0ace561385de
+fetch_provider holonight-shell e490ff73f3da4b3a671aaf0496c8dbdc94a53ff8
+fetch_provider holonight-system-services 398804a7cce5a57f9f6870c4e7ec99e9b1f3ddaa
 prefix=/work/providers/prefix
 cmake -S /work/providers/holonight-config -B /work/providers/config-build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
 cmake --build /work/providers/config-build --parallel 2
 cmake --install /work/providers/config-build --prefix "$prefix"
+cmake -S /work/providers/holonight-system-services -B /work/providers/services-build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
+cmake --build /work/providers/services-build --parallel 2
+cmake --install /work/providers/services-build --prefix "$prefix"
 cmake -S /work/providers/holonight-qt -B /work/providers/qt-build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$prefix" \
   -DBUILD_TESTS=OFF -DBUILD_DEMO=OFF -DBUILD_CONTROLS_GALLERY=OFF -DBUILD_QT5_PROBES=OFF
 cmake --build /work/providers/qt-build --parallel 2
 cmake --install /work/providers/qt-build --prefix "$prefix"
 cmake -S /work/providers/holonight-shell/libs/holonight-shell-config -B /work/providers/shell-config-build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="$prefix"
 cmake --build /work/providers/shell-config-build --parallel 2
 cmake --install /work/providers/shell-config-build --prefix "$prefix"
-cmake -S /work/providers/holonight-system-services -B /work/providers/services-build -G Ninja \
-  -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF
-cmake --build /work/providers/services-build --parallel 2
-cmake --install /work/providers/services-build --prefix "$prefix"
 build=build/verification
 stage=/work/settings-install
 trap 'status=$?; if [ -d "$build/Testing" ]; then cp -a "$build/Testing" /output/; fi; exit "$status"' 0

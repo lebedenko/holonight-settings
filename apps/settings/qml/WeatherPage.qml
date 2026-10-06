@@ -13,6 +13,10 @@ Flickable {
 
     required property ShellSettingsEditModel editModel
 
+    function choices(property: string, labels: var): var {
+        return root.editModel.document.metadata(property).choices.map(value => ({ text: labels[value] || value, value: value }));
+    }
+
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
 
@@ -73,6 +77,12 @@ Flickable {
             anchors.rightMargin: 24
             spacing: 20
 
+            OverridePanel {
+                Layout.fillWidth: true
+                document: root.editModel.document
+                group: "weather"
+            }
+
             // Provider Section
             SectionGroup {
                 frameObjectName: "providerSectionFrame"
@@ -97,10 +107,7 @@ Flickable {
 
                             objectName: "weatherProviderComboBox"
                             implicitWidth: root.inlineControlWidth
-                            model: [
-                                { text: qsTr("Open-Meteo"), value: "open-meteo" },
-                                { text: qsTr("OpenWeatherMap"), value: "openweathermap" }
-                            ]
+                            model: root.choices("weatherProvider", { "open-meteo": qsTr("Open-Meteo"), "openweathermap": qsTr("OpenWeatherMap") })
                             textRole: "text"
                             valueRole: "value"
                             currentIndex: {
@@ -167,10 +174,7 @@ Flickable {
 
                             objectName: "weatherLocationSourceComboBox"
                             implicitWidth: root.inlineControlWidth
-                            model: [
-                                { text: qsTr("Manual"), value: "manual" },
-                                { text: qsTr("Auto (IP Geolocation)"), value: "auto" }
-                            ]
+                            model: root.choices("weatherLocationSource", { "manual": qsTr("Manual"), "auto": qsTr("Auto (IP Geolocation)") })
                             textRole: "text"
                             valueRole: "value"
                             currentIndex: {
@@ -236,11 +240,7 @@ Flickable {
 
                             objectName: "weatherTempUnitComboBox"
                             implicitWidth: root.inlineControlWidth
-                            model: [
-                                { text: qsTr("°C (Celsius)"), value: "celsius" },
-                                { text: qsTr("°F (Fahrenheit)"), value: "fahrenheit" },
-                                { text: qsTr("K (Kelvin)"), value: "kelvin" }
-                            ]
+                            model: root.choices("weatherTempUnit", { "celsius": qsTr("°C (Celsius)"), "fahrenheit": qsTr("°F (Fahrenheit)"), "kelvin": qsTr("K (Kelvin)") })
                             textRole: "text"
                             valueRole: "value"
                             currentIndex: {
@@ -274,12 +274,7 @@ Flickable {
 
                             objectName: "weatherWindUnitComboBox"
                             implicitWidth: root.inlineControlWidth
-                            model: [
-                                { text: qsTr("km/h"), value: "kmh" },
-                                { text: qsTr("m/s"), value: "ms" },
-                                { text: qsTr("mph"), value: "mph" },
-                                { text: qsTr("knots"), value: "knots" }
-                            ]
+                            model: root.choices("weatherWindUnit", { "kmh": qsTr("km/h"), "ms": qsTr("m/s"), "mph": qsTr("mph"), "knots": qsTr("knots") })
                             textRole: "text"
                             valueRole: "value"
                             currentIndex: {
@@ -313,12 +308,7 @@ Flickable {
 
                             objectName: "weatherPressureUnitComboBox"
                             implicitWidth: root.inlineControlWidth
-                            model: [
-                                { text: qsTr("hPa"), value: "hpa" },
-                                { text: qsTr("mmHg"), value: "mmhg" },
-                                { text: qsTr("inHg"), value: "inhg" },
-                                { text: qsTr("bar"), value: "bar" }
-                            ]
+                            model: root.choices("weatherPressureUnit", { "hpa": qsTr("hPa"), "mmhg": qsTr("mmHg"), "inhg": qsTr("inHg"), "bar": qsTr("bar") })
                             textRole: "text"
                             valueRole: "value"
                             currentIndex: {
@@ -456,14 +446,14 @@ Flickable {
                                 { text: qsTr("15 minutes"), value: 900 },
                                 { text: qsTr("30 minutes"), value: 1800 },
                                 { text: qsTr("1 hour"), value: 3600 }
-                            ]
+                            ].concat([{text: qsTr("%1 seconds").arg(root.editModel.weatherRefreshInterval), value: root.editModel.weatherRefreshInterval}]).filter((choice, index, values) => values.findIndex(other => other.value === choice.value) === index)
                             textRole: "text"
                             valueRole: "value"
                             currentIndex: {
                                 for (let i = 0; i < model.length; ++i) {
                                     if (model[i].value === root.editModel.weatherRefreshInterval) return i;
                                 }
-                                return 2;
+                                return -1;
                             }
                             onActivated: (index) => {
                                 root.editModel.weatherRefreshInterval = model[index].value;

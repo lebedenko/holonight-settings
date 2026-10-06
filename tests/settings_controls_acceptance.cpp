@@ -173,7 +173,7 @@ void verify(QQuickWindow* window) {
   // disposable appearance file is touched; no save reaches the native adapter.
   QFile appearance_file(qEnvironmentVariable("HOLONIGHT_APPEARANCE_FILE"));
   require(appearance_file.open(QIODevice::WriteOnly), "Cannot create disposable external revision");
-  appearance_file.write("# external test revision\n");
+  appearance_file.write("version = 2\n# external test revision\n[typography]\nui_size = 20\n");
   appearance_file.close();
   invoke(coordinator, "save");
   require(coordinator->property("conflictDomain").toString() == QStringLiteral("Appearance"),

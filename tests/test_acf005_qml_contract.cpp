@@ -68,8 +68,9 @@ TEST(Acf005QmlContractTest, LegacyControlsAndDuplicateActionsAreAbsent) {
   EXPECT_TRUE(footer.contains(QStringLiteral("objectName: \"saveButton\"")));
   EXPECT_TRUE(footer.contains(QStringLiteral("enabled: root.saveCoordinator.isDirty && !root.saveCoordinator.isBusy")));
   EXPECT_TRUE(footer.contains(QStringLiteral("rawText: root.saveCoordinator.resultText")));
-  EXPECT_TRUE(footer.contains(QStringLiteral("Reload")));
-  EXPECT_TRUE(footer.contains(QStringLiteral("Overwrite")));
+  EXPECT_TRUE(footer.contains(QStringLiteral("Accept external")));
+  EXPECT_FALSE(footer.contains(QStringLiteral("Overwrite")));
+  EXPECT_TRUE(footer.contains(QStringLiteral("Keep pending")));
   EXPECT_TRUE(footer.contains(QStringLiteral("Cancel")));
   EXPECT_TRUE(footer.contains(QStringLiteral("surfaceRole: HnSurfaceRole.Popup")));
   EXPECT_TRUE(footer.contains(QStringLiteral("fillColor: HoloniightPalette.surfaceRaised")));

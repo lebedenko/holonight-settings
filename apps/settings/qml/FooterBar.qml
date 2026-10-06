@@ -44,11 +44,17 @@ Rectangle {
                 role: HnTypographyRole.Caption
                 rawText: root.saveCoordinator.resultText
             }
-
         }
 
         trailingContent: RowLayout {
             spacing: 8
+
+            Controls.Button {
+                text: qsTr("Review conflicts")
+                visible: root.saveCoordinator.conflicts.length > 0
+                enabled: !root.saveCoordinator.isBusy
+                onClicked: errorDialog.open()
+            }
 
             Controls.Button {
                 objectName: "discardChangesButton"
@@ -66,9 +72,7 @@ Rectangle {
                 Layout.preferredHeight: 36
                 onClicked: root.saveCoordinator.save()
             }
-
         }
-
     }
 
     Controls.Dialog {
@@ -100,10 +104,42 @@ Rectangle {
             }
         }
 
-        contentItem: HnLabel {
-            role: HnTypographyRole.Body
-            rawText: qsTr("%1 changed outside Settings.").arg(root.saveCoordinator.conflictDomain)
-            wrapMode: Text.WordWrap
+        contentItem: Controls.ScrollView {
+            id: conflictScroll
+            implicitHeight: Math.min(320, conflictContent.implicitHeight)
+            contentWidth: availableWidth
+            contentHeight: conflictContent.implicitHeight
+            ColumnLayout {
+                id: conflictContent
+                width: conflictScroll.availableWidth
+                Repeater {
+                    model: root.saveCoordinator.conflicts
+                    delegate: ColumnLayout {
+                        id: conflictRow
+                        required property var modelData
+                        Layout.fillWidth: true
+                        HnLabel {
+                            Layout.fillWidth: true
+                            rawText: conflictRow.modelData.domain + ": " + conflictRow.modelData.label
+                        }
+                        HnLabel {
+                            Layout.fillWidth: true
+                            wrapMode: Text.WordWrap
+                            rawText: qsTr("Before: %1\nExternal: %2\nPending: %3").arg(conflictRow.modelData.baseline).arg(conflictRow.modelData.disk).arg(conflictRow.modelData.pending)
+                        }
+                        RowLayout {
+                            Controls.Button {
+                                text: qsTr("Keep pending")
+                                onClicked: root.saveCoordinator.resolveConflict(conflictRow.modelData.domain, conflictRow.modelData.property, true)
+                            }
+                            Controls.Button {
+                                text: qsTr("Accept external")
+                                onClicked: root.saveCoordinator.resolveConflict(conflictRow.modelData.domain, conflictRow.modelData.property, false)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         footer: Item {
@@ -116,23 +152,8 @@ Rectangle {
                 anchors.bottomMargin: 12
                 spacing: 8
 
-                Item { Layout.fillWidth: true }
-
-                Controls.Button {
-                    text: qsTr("Reload")
-                    onClicked: {
-                        root.saveCoordinator.reloadConflict();
-                        errorDialog.close();
-                    }
-                }
-
-                Controls.Button {
-                    text: qsTr("Overwrite")
-                    highlighted: true
-                    onClicked: {
-                        root.saveCoordinator.overwriteConflict();
-                        errorDialog.close();
-                    }
+                Item {
+                    Layout.fillWidth: true
                 }
 
                 Controls.Button {
@@ -143,12 +164,15 @@ Rectangle {
                     }
                 }
             }
-
         }
-
     }
 
     Connections {
+        function onConflictsChanged() {
+            if (root.saveCoordinator.conflicts.length === 0)
+                errorDialog.close();
+        }
+
         function onConflictDomainChanged() {
             if (root.saveCoordinator.conflictDomain !== "")
                 errorDialog.open();
@@ -156,5 +180,4 @@ Rectangle {
 
         target: root.saveCoordinator
     }
-
 }

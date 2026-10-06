@@ -3,6 +3,7 @@ set(SETTINGS_QML_FILES
     qml/NavPanel.qml
     qml/ContentStack.qml
     qml/PlaceholderPage.qml
+    qml/OverridePanel.qml
     qml/FooterBar.qml
     qml/AppearancePage.qml
     qml/ColorSchemeSwatchCard.qml
@@ -42,6 +43,8 @@ function(add_settings_application target main_source)
       NO_IMPORT_SCAN
       QML_FILES ${SETTINGS_QML_FILES}
       SOURCES
+          src/DocumentEditSession.h
+          src/DocumentEditSession.cpp
           src/AppearanceEditModel.h
           src/AppearanceEditModel.cpp
           src/ShellSettingsEditModel.h

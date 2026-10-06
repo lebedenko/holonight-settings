@@ -51,7 +51,7 @@ bool AppearanceEditModel::darkModeAvailable() const { return !sibling(QStringLit
 
 void AppearanceEditModel::changed(void (AppearanceEditModel::*signal)(), bool was_dirty) {
   emit(this->*signal)();
-  if (was_dirty != isDirty()) {
+  if (document_ == nullptr && was_dirty != isDirty()) {
     emit isDirtyChanged();
   }
   setValidationError({});
@@ -83,7 +83,7 @@ void AppearanceEditModel::setThemeScheme(const QString& value) {
   current_.theme.scheme = toStd(value);
   emit themeSchemeChanged();
   emit themeModeChanged();
-  if (dirty != isDirty()) {
+  if (document_ == nullptr && dirty != isDirty()) {
     emit isDirtyChanged();
   }
   setValidationError({});
@@ -232,4 +232,9 @@ void AppearanceEditModel::setValidationError(const QString& value) {
   }
   validation_error_ = value;
   emit validationErrorChanged();
+}
+
+void AppearanceEditModel::attachDocument(DocumentEditSession* document) {
+  document_ = document;
+  connect(document_, &DocumentEditSession::dirtyChanged, this, &AppearanceEditModel::isDirtyChanged);
 }

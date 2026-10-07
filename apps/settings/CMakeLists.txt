@@ -1,5 +1,6 @@
 set(SETTINGS_QML_FILES
     qml/SettingsWindow.qml
+    qml/WallpaperWindow.qml
     qml/NavPanel.qml
     qml/ContentStack.qml
     qml/PlaceholderPage.qml
@@ -43,6 +44,12 @@ function(add_settings_application target main_source)
       NO_IMPORT_SCAN
       QML_FILES ${SETTINGS_QML_FILES}
       SOURCES
+          src/PortalFolderChooser.h
+          src/PortalFolderChooser.cpp
+          src/WallpaperController.h
+          src/WallpaperController.cpp
+          src/WallpaperModel.h
+          src/WallpaperModel.cpp
           src/DocumentEditSession.h
           src/DocumentEditSession.cpp
           src/AppearanceEditModel.h
@@ -118,6 +125,8 @@ add_settings_application(holonight-settings src/main.cpp)
 if(BUILD_TESTS)
   add_settings_application(settings_controls_acceptance "${PROJECT_SOURCE_DIR}/tests/settings_controls_acceptance.cpp")
   target_link_libraries(settings_controls_acceptance PRIVATE Qt6::Test)
+  add_settings_application(wallpaper_acceptance "${PROJECT_SOURCE_DIR}/tests/wallpaper_acceptance.cpp")
+  target_link_libraries(wallpaper_acceptance PRIVATE Qt6::Test)
 endif()
 
 install(TARGETS holonight-settings DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -127,6 +136,7 @@ install(
 )
 install(
     FILES ${PROJECT_SOURCE_DIR}/data/applications/org.holonight.Settings.desktop
+          ${PROJECT_SOURCE_DIR}/data/applications/org.holonight.Wallpaper.desktop
     DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
 )
 include(${PROJECT_SOURCE_DIR}/cmake/ConfigureSettingsActivation.cmake)

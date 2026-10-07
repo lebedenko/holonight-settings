@@ -14,7 +14,7 @@ Item {
 
     signal pageRequested(string pageKey)
 
-    readonly property var pages: [
+    property var pages: [
         {key: "appearance",    label: qsTr("Appearance"),    icon: "appearance"},
         {key: "bar",           label: qsTr("Bar"),           icon: "bar"},
         {key: "sidebar",       label: qsTr("Sidebar"),       icon: "sidebar"},
@@ -86,7 +86,9 @@ Item {
                 sizeRole: HnControlSize.Large
                 title: navDelegate.modelData.label
                 checked: root.currentPage === navDelegate.modelData.key
-                leadingContent: Component {
+                leadingContent: navDelegate.modelData.icon ? navigationIcon : null
+                Component {
+                    id: navigationIcon
                     HnIcon {
                         source: "qrc:/HolonightSettings/settings-navigation/" + navDelegate.modelData.icon + ".svg"
                         rendering: HnIcon.Semantic

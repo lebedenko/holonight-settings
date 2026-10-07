@@ -17,6 +17,11 @@ if(BUILD_APP)
     test_acf005.cpp
     test_acf005_qml_contract.cpp
     test_settings_activation.cpp
+    test_wallpaper.cpp
+    test_portal_folder_chooser.cpp
+    ../apps/settings/src/PortalFolderChooser.cpp
+    ../apps/settings/src/WallpaperController.cpp
+    ../apps/settings/src/WallpaperModel.cpp
     ../apps/settings/src/DocumentEditSession.cpp
     ../apps/settings/src/AppearanceEditModel.cpp
     ../apps/settings/src/ShellSettingsEditModel.cpp
@@ -101,5 +106,18 @@ if(BUILD_APP)
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_settings_startup.py
         $<TARGET_FILE:holonight-settings> ${SETTINGS_DEPENDENCY_QML_DIR} ${mode})
     set_tests_properties(settings_startup_${mode} PROPERTIES TIMEOUT 15)
+  endforeach()
+endif()
+
+if(BUILD_APP)
+  foreach(order IN ITEMS settings wallpaper)
+    set(wallpaper_args)
+    if(order STREQUAL "wallpaper")
+      set(wallpaper_args --wallpaper)
+    endif()
+    add_test(NAME wallpaper_opening_order_${order}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_wallpaper_startup.py
+        $<TARGET_FILE:wallpaper_acceptance> ${wallpaper_args})
+    set_tests_properties(wallpaper_opening_order_${order} PROPERTIES TIMEOUT 30)
   endforeach()
 endif()

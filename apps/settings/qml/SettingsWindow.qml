@@ -15,6 +15,7 @@ HnApplicationWindow {
     required property ShellStatusService shellStatus
     required property AudioController audioController
     required property string appVersion
+    property WallpaperController wallpaperController: null
     property string currentPage: "appearance"
 
     visible: true
@@ -87,6 +88,7 @@ HnApplicationWindow {
                     anchors.fill: parent
                     anchors.margins: contentFrame.normalizedBorderWidth
                     appearanceModel: root.appearanceModel
+                    wallpaperController: root.wallpaperController
                     shellModel: root.shellModel
                     saveCoordinator: root.saveCoordinator
                     appearanceAdapter: root.appearanceAdapter

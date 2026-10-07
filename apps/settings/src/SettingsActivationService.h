@@ -25,8 +25,9 @@ class SettingsActivationService : public QObject {
   SettingsActivationService(SettingsActivationService&&) = delete;
   SettingsActivationService& operator=(SettingsActivationService&&) = delete;
 
-  [[nodiscard]] StartupRole arbitrate(const QVariantMap& platform_data);
+  [[nodiscard]] StartupRole arbitrate(const QVariantMap& platform_data, bool wallpaper = false);
   void setWindow(QQuickWindow* window);
+  void setWallpaperWindow(QQuickWindow* window);
 
   [[nodiscard]] QString errorString() const;
   [[nodiscard]] static QVariantMap platformDataFromEnvironment();
@@ -39,18 +40,24 @@ class SettingsActivationService : public QObject {
 
  Q_SIGNALS:
   void pageRequested(const QString& page_key);
+  void settingsRequested();
+  void wallpaperRequested(const QString& connector);
 
  private:
   struct ActivationRequest {
     QVariantMap platform_data;
     std::optional<QString> page_key;
+    bool wallpaper = false;
+    QString connector;
   };
 
   void requestActivation(ActivationRequest request);
-  [[nodiscard]] bool forwardActivation(const QVariantMap& platform_data);
+  [[nodiscard]] bool forwardActivation(const QVariantMap& platform_data, bool wallpaper);
 
   QDBusConnection connection_;
   QQuickWindow* window_ = nullptr;
+  QQuickWindow* wallpaper_window_ = nullptr;
+  std::optional<ActivationRequest> pending_wallpaper_;
   std::optional<ActivationRequest> pending_activation_;
   QString error_string_;
   bool owns_service_ = false;

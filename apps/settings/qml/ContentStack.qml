@@ -15,6 +15,7 @@ Item {
     required property AudioController audioController
     required property string currentPage
     required property string currentPageTitle
+    property WallpaperController wallpaperController: null
     property bool ready: false
     property string displayedPage: ""
     property int displayedPageIndex: -1
@@ -47,8 +48,10 @@ Item {
         const properties = {
             "objectName": "contentPage-" + pageKey
         };
-        if (pageKey === "appearance")
+        if (pageKey === "appearance") {
             properties.editModel = root.appearanceModel;
+            properties.wallpaperController = root.wallpaperController;
+        }
         else if (pageKey === "bar" || pageKey === "weather")
             properties.editModel = root.shellModel;
         else if (pageKey === "integrations") {

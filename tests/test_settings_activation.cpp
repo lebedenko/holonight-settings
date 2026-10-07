@@ -214,7 +214,42 @@ TEST(SettingsActivationServiceTest, ForwardsActivateActionOverTheRuntimeDbusInte
     ASSERT_EQ(reply.type(), QDBusMessage::ReplyMessage);
     ASSERT_EQ(page_spy.count(), 1);
     EXPECT_EQ(page_spy.constFirst().constFirst().toString(), QStringLiteral("audio"));
+    QQuickWindow wallpaper;
+    primary.setWallpaperWindow(&wallpaper);
+    QSignalSpy connector_spy(&primary, &SettingsActivationService::wallpaperRequested);
+    const auto wallpaper_reply =
+        application.call(QDBus::BlockWithGui, QStringLiteral("ActivateAction"), QStringLiteral("wallpaper"),
+                         QVariantList{QStringLiteral("DP-2")}, QVariantMap{});
+    ASSERT_EQ(wallpaper_reply.type(), QDBusMessage::ReplyMessage);
+    ASSERT_EQ(connector_spy.count(), 1);
+    EXPECT_EQ(connector_spy.first().first().toString(), QStringLiteral("DP-2"));
+    EXPECT_TRUE(wallpaper.isVisible());
   }
 
   QDBusConnection::disconnectFromBus(connection_name);
+}
+
+TEST(SettingsActivationServiceTest, WallpaperAndSettingsQueueIndependently) {
+  SettingsActivationService service;
+  QQuickWindow settings;
+  QQuickWindow wallpaper;
+  QSignalSpy pages(&service, &SettingsActivationService::pageRequested);
+  QSignalSpy requests(&service, &SettingsActivationService::wallpaperRequested);
+  service.ActivateAction("wallpaper", {QStringLiteral("DP-2")}, {});
+  service.ActivateAction("audio", {}, {});
+  service.setWallpaperWindow(&wallpaper);
+  EXPECT_TRUE(wallpaper.isVisible());
+  EXPECT_FALSE(settings.isVisible());
+  EXPECT_EQ(requests.last().first().toString(), QStringLiteral("DP-2"));
+  EXPECT_EQ(pages.count(), 0);
+  service.setWindow(&settings);
+  EXPECT_TRUE(settings.isVisible());
+  EXPECT_EQ(pages.count(), 1);
+  EXPECT_EQ(pages.first().first().toString(), QStringLiteral("audio"));
+  wallpaper.close();
+  EXPECT_TRUE(settings.isVisible());
+  service.ActivateAction("wallpaper", {}, {});
+  EXPECT_TRUE(wallpaper.isVisible());
+  settings.close();
+  EXPECT_TRUE(wallpaper.isVisible());
 }

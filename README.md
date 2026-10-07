@@ -69,3 +69,16 @@ the exact prior document only while both its staged revision and physical target
 change is preserved and reported as an application failure. Cooperating writers lock the target's sibling lock file;
 arbitrary editors retain a race between the final revision check and replacement. No daemon or running Shell is needed
 for document editing. Files, Viewer and other applications are outside this settings migration.
+
+## Wallpaper picker
+
+Run `holonight-settings --wallpaper` to open the dedicated Wallpaper window.
+The **Change Wallpaper** launcher, Appearance's **Change…** button, and the shell
+desktop menu open the same picker. Settings and Wallpaper share one process and
+close independently. Choose a folder or Favorites, select an image and display,
+and press **Apply**. **Apply to all displays** keeps the shell's last-image
+fallback. Closing discards unapplied assignments; added folders and favorites
+persist in `$XDG_CONFIG_HOME/holonight/settings-wallpapers.ini`.
+
+See [the feature record](docs/sdd/dedicated-wallpaper-picker.md) for activation,
+conflict resolution, and display assignment behavior.

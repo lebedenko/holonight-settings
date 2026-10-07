@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 HoloNight contributors
+[Desktop Entry]
+Type=Application
+Name=Change Wallpaper
+Comment=Choose wallpapers for your displays
+Exec=holonight-settings --wallpaper
+Icon=holonight-settings
+Terminal=false
+Categories=Settings;DesktopSettings;

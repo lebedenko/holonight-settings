@@ -12,6 +12,7 @@ Flickable {
     id: root
 
     required property AppearanceEditModel editModel
+    property WallpaperController wallpaperController: null
 
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
@@ -90,6 +91,33 @@ Flickable {
                 Layout.fillWidth: true
                 document: root.editModel.document
                 group: ""
+            }
+
+            SectionGroup {
+                label: qsTr("Wallpaper")
+                Layout.fillWidth: true
+                visible: root.wallpaperController !== null
+                HnSettingsRow {
+                    titleText: qsTr("Current wallpaper")
+                    descriptionText: root.wallpaperController ? root.wallpaperController.currentPath.split("/").pop() : ""
+                    Layout.fillWidth: true
+                    control: Component {
+                        RowLayout {
+                            Image {
+                                source: root.wallpaperController ? root.wallpaperController.currentImage : ""
+                                sourceSize: Qt.size(160, 90)
+                                asynchronous: true
+                                fillMode: Image.PreserveAspectFit
+                                Layout.preferredWidth: 120
+                                Layout.preferredHeight: 68
+                            }
+                            Controls.Button {
+                                text: qsTr("Change…")
+                                onClicked: root.wallpaperController.openRequested()
+                            }
+                        }
+                    }
+                }
             }
 
             SectionGroup {

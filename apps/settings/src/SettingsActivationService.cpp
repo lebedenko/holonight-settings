@@ -74,7 +74,8 @@ SettingsActivationService::~SettingsActivationService() {
   connection_.unregisterObject(QLatin1String(kObjectPath));
 }
 
-SettingsActivationService::StartupRole SettingsActivationService::arbitrate(const QVariantMap& platform_data) {
+SettingsActivationService::StartupRole SettingsActivationService::arbitrate(const QVariantMap& platform_data,
+                                                                            bool wallpaper) {
   if (!connection_.isConnected()) {
     error_string_ = tr("The session D-Bus is unavailable: %1").arg(connection_.lastError().message());
     return StartupRole::Error;
@@ -96,12 +97,12 @@ SettingsActivationService::StartupRole SettingsActivationService::arbitrate(cons
                                  QDBusConnectionInterface::DontAllowReplacement);
   if (registration.isValid() && registration.value() == QDBusConnectionInterface::ServiceRegistered) {
     owns_service_ = true;
-    requestActivation({.platform_data = platform_data, .page_key = std::nullopt});
+    requestActivation({.platform_data = platform_data, .page_key = std::nullopt, .wallpaper = wallpaper});
     return StartupRole::Primary;
   }
 
   connection_.unregisterObject(QLatin1String(kObjectPath));
-  if (forwardActivation(platform_data)) {
+  if (forwardActivation(platform_data, wallpaper)) {
     return StartupRole::Secondary;
   }
 
@@ -117,6 +118,15 @@ void SettingsActivationService::setWindow(QQuickWindow* window) {
   if (window_ != nullptr && pending_activation_.has_value()) {
     ActivationRequest request = std::move(*pending_activation_);
     pending_activation_.reset();
+    requestActivation(std::move(request));
+  }
+}
+
+void SettingsActivationService::setWallpaperWindow(QQuickWindow* window) {
+  wallpaper_window_ = window;
+  if ((window != nullptr) && pending_wallpaper_) {
+    auto request = std::move(*pending_wallpaper_);
+    pending_wallpaper_.reset();
     requestActivation(std::move(request));
   }
 }
@@ -144,36 +154,51 @@ void SettingsActivationService::Open(const QStringList& /*uris*/, const QVariant
   requestActivation({.platform_data = platform_data, .page_key = std::nullopt});
 }
 
-void SettingsActivationService::ActivateAction(const QString& action_name, const QVariantList& /*parameter*/,
+void SettingsActivationService::ActivateAction(const QString& action_name, const QVariantList& parameter,
                                                const QVariantMap& platform_data) {
-  requestActivation({.platform_data = platform_data, .page_key = action_name});
+  requestActivation({
+      .platform_data = platform_data,
+      .page_key = action_name,
+      .wallpaper = action_name == QStringLiteral("wallpaper"),
+      .connector = parameter.isEmpty() ? QString{} : parameter.first().toString(),
+  });
 }
 
 void SettingsActivationService::requestActivation(ActivationRequest request) {
-  if (window_ == nullptr) {
-    pending_activation_ = std::move(request);
-    return;
-  }
-
   ScopedEnvironmentValue activation_token(kActivationTokenEnvironment, request.platform_data, kActivationToken);
   ScopedEnvironmentValue startup_id(kDesktopStartupIdEnvironment, request.platform_data, kDesktopStartupId);
-  if (request.page_key.has_value()) {
+  auto* window = request.wallpaper ? wallpaper_window_ : window_;
+  if (window == nullptr) {
+    if (request.wallpaper) {
+      pending_wallpaper_ = request;
+      emit wallpaperRequested(request.connector);
+    } else {
+      pending_activation_ = request;
+      emit settingsRequested();
+    }
+    return;
+  }
+  if (request.wallpaper) {
+    emit wallpaperRequested(request.connector);
+  }
+
+  if (!request.wallpaper && request.page_key.has_value()) {
     Q_EMIT pageRequested(*request.page_key);
   }
-  if (window_->visibility() == QWindow::Minimized || !window_->isVisible()) {
-    window_->showNormal();
+  if (window->visibility() == QWindow::Minimized || !window->isVisible()) {
+    window->showNormal();
   }
-  window_->raise();
-  window_->requestActivate();
+  window->raise();
+  window->requestActivate();
 
-  QTimer::singleShot(kActivationGracePeriod, window_, [window = window_] {
+  QTimer::singleShot(kActivationGracePeriod, window, [window] {
     if (window->isVisible() && !window->isActive()) {
       window->alert(0);
     }
   });
 }
 
-bool SettingsActivationService::forwardActivation(const QVariantMap& platform_data) {
+bool SettingsActivationService::forwardActivation(const QVariantMap& platform_data, bool wallpaper) {
   QDBusInterface application(QLatin1String(kServiceName), QLatin1String(kObjectPath),
                              QLatin1String(kApplicationInterface), connection_);
   if (!application.isValid()) {
@@ -181,7 +206,10 @@ bool SettingsActivationService::forwardActivation(const QVariantMap& platform_da
     return false;
   }
 
-  QDBusPendingCallWatcher watcher(application.asyncCall(QStringLiteral("Activate"), platform_data));
+  QDBusPendingCallWatcher watcher(wallpaper ? application.asyncCall(QStringLiteral("ActivateAction"),
+                                                                    QStringLiteral("wallpaper"), QVariantList{},
+                                                                    platform_data)
+                                            : application.asyncCall(QStringLiteral("Activate"), platform_data));
   QEventLoop wait_loop;
   QTimer timeout;
   timeout.setSingleShot(true);

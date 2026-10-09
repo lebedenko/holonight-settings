@@ -88,6 +88,8 @@ Flickable {
             spacing: 20
 
             OverridePanel {
+                objectName: "appearanceOverridePanel"
+                toggleObjectName: "appearanceOverrideToggle"
                 Layout.fillWidth: true
                 document: root.editModel.document
                 group: ""

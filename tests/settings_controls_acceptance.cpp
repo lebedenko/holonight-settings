@@ -11,6 +11,7 @@
 #include <QSet>
 #include <QTest>
 #include <QTextStream>
+#include <QWheelEvent>
 
 #include <stdexcept>
 
@@ -71,7 +72,53 @@ void origin(QObject* object, const QString& suffix) {
           qPrintable(QStringLiteral("No implementation context for ") + object->objectName() + " expected " + suffix));
 }
 
+void click(QQuickWindow* window, QObject* object) {
+  auto* item = qobject_cast<QQuickItem*>(object);
+  require(item != nullptr && item->isVisible() && item->isEnabled(), "Click target unavailable");
+  const QPoint position = item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint();
+  require(QRectF(0, 0, window->width(), window->height()).contains(position), "Click target outside window");
+  QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, position);
+}
+
+void scrollAppearance(QQuickWindow* window, QObject* page) {
+  const qreal height = page->property("contentHeight").toReal();
+  const qreal limit = height - page->property("height").toReal();
+  require(limit > 0, "Expanded Appearance must overflow");
+  for (int batch = 0; batch < 32; ++batch) {
+    for (int step = 0; step < 128; ++step) {
+      const int index = (batch * 128) + step;
+      const qreal fraction = (index % 2048) / 2047.0;
+      set(page, "contentY", ((index < 2048 ? fraction : 1 - fraction) * limit) + 0.13);
+    }
+    bool heartbeat = false;
+    QMetaObject::invokeMethod(page, [&] { heartbeat = true; }, Qt::QueuedConnection);
+    require(QTest::qWaitFor([&] { return heartbeat; }, 1000), "Scroll event-loop heartbeat stalled");
+    require(qFuzzyCompare(height, page->property("contentHeight").toReal()), "Scrolling changed content height");
+  }
+  set(page, "contentY", (limit / 2) + 0.13);
+  auto* item = qobject_cast<QQuickItem*>(page);
+  require(item != nullptr, "Appearance is not an item");
+  // The page margin avoids child sliders and combo boxes consuming wheel input.
+  const QPointF position = item->mapToScene(QPointF(4, item->height() / 2));
+  QTest::mouseMove(window, position.toPoint());
+  for (int direction : {-1, 1}) {
+    const qreal before = page->property("contentY").toReal();
+    QWheelEvent event(position, window->mapToGlobal(position.toPoint()), QPoint(), QPoint(0, direction * 120),
+                      Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
+    // Match QtTest mouse timestamps instead of Flickable's local fallback timer.
+    QTest::lastMouseTimestamp += 16;
+    event.setTimestamp(static_cast<ulong>(QTest::lastMouseTimestamp));
+    QCoreApplication::sendEvent(window, &event);
+    require(QTest::qWaitFor([&] { return page->property("contentY").toReal() != before; }, 1000),
+            "Appearance wheel input did not scroll");
+    require(QTest::qWaitFor([&] { return !page->property("moving").toBool(); }, 2000),
+            "Appearance wheel scrolling did not settle");
+  }
+  QTextStream(stdout) << "SCROLL_APPEARANCE_OK\n";
+}
+
 void verify(QQuickWindow* window) {
+  require(QTest::qWaitForWindowExposed(window), "Settings window was not exposed");
   const bool holonight = qEnvironmentVariable("QT_QUICK_CONTROLS_STYLE") != QStringLiteral("Fusion");
   const QString style = holonight ? QStringLiteral("/Holonight/") : QStringLiteral("/QtQuick/Controls/Fusion/");
   auto* stack = named(window, "settingsContentStack");
@@ -140,8 +187,40 @@ void verify(QQuickWindow* window) {
   require(QMetaObject::invokeMethod(font_combo, "activated", Q_ARG(int, 12)), "Font selection signal");
   require(appearance->property("uiFont").toString() == QStringLiteral("Test Font 12"), "Font selection binding");
   invoke(popup, "close");
+  require(QTest::qWaitFor([&] { return !popup->property("visible").toBool(); }), "Font popup did not close");
 
-  page("bar");
+  auto* scrolling_page = objectProperty(stack, "currentItem");
+  set(scrolling_page, "contentY", 0.0);
+  click(window, named(window, "appearanceOverrideToggle"));
+  require(named(window, "appearanceOverridePanel")->property("expanded").toBool(), "Overrides did not expand");
+  require(QTest::qWaitFor([&] {
+            return scrolling_page->property("contentHeight").toReal() > scrolling_page->property("height").toReal();
+          }),
+          "Expanded Appearance layout");
+  scrollAppearance(window, scrolling_page);
+  const auto navigate = [&](const char* key) {
+    const QByteArray name = QByteArray("navDelegate-") + key;
+    click(window, named(window, name.constData()));
+    require(QTest::qWaitFor(
+                [&] {
+                  auto* current = stack->property("currentItem").value<QObject*>();
+                  return current &&
+                         current->objectName() == QStringLiteral("contentPage-") + QString::fromLatin1(key) &&
+                         !stack->property("busy").toBool();
+                },
+                3000),
+            "Navigation click transition did not complete");
+    QTextStream(stdout) << "PAGE " << key << '\n';
+  };
+  navigate("bar");
+  navigate("appearance");
+  scrolling_page = objectProperty(stack, "currentItem");
+  if (!named(window, "appearanceOverridePanel")->property("expanded").toBool()) {
+    set(scrolling_page, "contentY", 0.0);
+    click(window, named(window, "appearanceOverrideToggle"));
+  }
+  scrollAppearance(window, scrolling_page);
+  navigate("bar");
   auto* workspace_slider = named(window, "workspaceCountSlider");
   origin(workspace_slider, style + "Slider.qml");
   set(shell, "workspaceCount", 8);

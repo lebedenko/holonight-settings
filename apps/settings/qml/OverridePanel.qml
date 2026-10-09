@@ -12,6 +12,7 @@ ColumnLayout {
     required property DocumentEditSession document
     property string group: ""
     property bool expanded: false
+    property alias toggleObjectName: toggle.objectName
     spacing: 8
 
     HnLabel {
@@ -21,6 +22,7 @@ ColumnLayout {
         wrapMode: Text.WordWrap
     }
     Controls.Button {
+        id: toggle
         text: root.expanded ? qsTr("Hide overrides") : qsTr("Defaults and overrides")
         onClicked: root.expanded = !root.expanded
     }

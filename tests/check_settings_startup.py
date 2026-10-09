@@ -63,6 +63,7 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
                 log.seek(0)
                 trace = log.read()
                 assert status == 0 and 'ACCEPTANCE_OK' in trace, trace
+                assert trace.count('SCROLL_APPEARANCE_OK') == 2, 'Both Appearance visits must scroll'
                 mappings = trace.split('MAPS_BEGIN\n')[1].split('MAPS_END')[0]
                 assert all('PAGE ' + page in trace for page in
                            ('appearance', 'bar', 'weather', 'integrations', 'audio', 'about')), trace
@@ -94,7 +95,8 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
     diagnostics = re.sub(r'MAPS_BEGIN\n.*?MAPS_END\n', '', trace, flags=re.S).splitlines()
     allowed_audio = 'holonight.audio.backend: PulseAudioBackend: pa_context_connect failed: Connection refused'
     errors = [line for line in diagnostics if line and not line.startswith(('qt.qml.import:', 'PAGE ', 'ORIGIN '))
-              and line not in (allowed_audio, 'This plugin does not support raise()', 'ACCEPTANCE_OK')]
+              and line not in (allowed_audio, 'This plugin does not support raise()', 'ACCEPTANCE_OK',
+                               'SCROLL_APPEARANCE_OK')]
     assert not errors, 'Unexpected diagnostics:\n' + '\n'.join(errors)
     style_path = '/Holonight/' if style == 'Holonight' else '/QtQuick/Controls/Fusion/'
     for control in ('Button', 'Switch', 'Slider'):

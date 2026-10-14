@@ -621,5 +621,27 @@
       "Taskfile loading",
       "whitespace"
     ]
+  },
+  "publication_correction": {
+    "initial_revision": "49728a88c34b1edb211dbfb2c31d64c51f5d4118",
+    "failure_run": "https://github.com/lebedenko/holonight-settings/actions/runs/38565122031",
+    "failure": "Pinned REUSE image absent on fresh runner; offline launcher correctly rejected implicit acquisition.",
+    "change": "Explicit pinned-image docker pull in Licensing workflow before offline lane",
+    "local_result": {
+      "licensing": {
+        "image": "docker.io/fsfe/reuse@sha256:85462a75c0f8efda09ddd190b92816b70e7662577c8427429e11e1b9f25a992e",
+        "exit_code": 0,
+        "log_sha256": "ea9ef1533ad48ead16d74e06e479c04c35b300d552dd9a145d8930805b8ae841"
+      }
+    },
+    "log": "build/ci/20261014T123741Z-kc7tiip3/licensing.log",
+    "log_sha256": "ea9ef1533ad48ead16d74e06e479c04c35b300d552dd9a145d8930805b8ae841",
+    "checks": [
+      "pinned image acquisition",
+      "offline REUSE lane",
+      "workflow YAML parse",
+      "workflow/launcher image equality",
+      "whitespace"
+    ]
   }
 }

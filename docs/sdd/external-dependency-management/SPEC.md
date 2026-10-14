@@ -102,3 +102,17 @@ Separate cleanup commit `b82b14f` restores typed page activation and avoids open
 with an observable Audio selection assertion. The dependency adoption commit follows separately.
 No system installation, application restart, publication or submodule pin update was performed. Fresh user-operated
 desktop review remains EDM-022; the initiative stays Accepted.
+
+## Publication correction — 2026-10-14
+
+The initial verified cleanup/adoption commits were published to canonical origin/main at
+`49728a88c34b1edb211dbfb2c31d64c51f5d4118`. The latest CI query returned completed/failure
+[Licensing run 38565122031](https://github.com/lebedenko/holonight-settings/actions/runs/38565122031).
+Failure logs show the fresh runner lacked the pinned REUSE image while the acceptance launcher
+correctly used `--pull=never`. Add an explicit acquisition step in the Licensing workflow before
+the offline lane. This does not change application code, prepared providers or acceptance isolation.
+Local verification passed the same pinned-image pull and offline licensing command in
+`build/ci/20261014T123741Z-kc7tiip3`; complete log reviewed, REUSE reports zero errors. Workflow YAML
+parsing, workflow/launcher image equality and whitespace checks pass. Unchanged
+application acceptance evidence above is retained. Publication/pin records in the umbrella ledger
+supersede the historical pending-publication status above.

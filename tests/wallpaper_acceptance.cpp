@@ -111,6 +111,8 @@ int main(int argc, char** argv) {
       require(wallpaper->isVisible(), "Closing Settings closed picker");
       activate("audio");
       require(settings->isVisible(), "Settings did not reopen");
+      require(settings->property("currentPage").toString() == QStringLiteral("audio"),
+              "Activation did not select the requested page");
       QSignalSpy last(&app, &QGuiApplication::lastWindowClosed);
       settings->close();
       wallpaper->close();

@@ -102,7 +102,7 @@ void SettingsApplication::openSettings() {
     QObject* root = engine_->rootObjects().constFirst();
     connect(
         activation_service_.get(), &SettingsActivationService::pageRequested, root,
-        [root](const QString& page_key) { QMetaObject::invokeMethod(root, "requestPage", Q_ARG(QVariant, page_key)); });
+        [root](const QString& page_key) { QMetaObject::invokeMethod(root, "requestPage", Q_ARG(QString, page_key)); });
     activation_service_->setWindow(qobject_cast<QQuickWindow*>(root));
   }
 }

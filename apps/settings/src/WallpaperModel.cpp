@@ -176,7 +176,7 @@ QVariantMap WallpaperModel::details(const QString& path) const {
   const auto found = std::ranges::find(entries_, path, &Entry::path);
   if (found == entries_.end()) {
     const QFileInfo file(path);
-    const QSize size = QImageReader(path).size();
+    const QSize size = path.isEmpty() ? QSize{} : QImageReader(path).size();
     return {
         {"title", file.completeBaseName()},
         {"dimensions", size.isValid() ? QStringLiteral("%1 × %2").arg(size.width()).arg(size.height()) : QString{}},

@@ -10,6 +10,10 @@ vars:
     sh: nproc
   PRESET: '{{default "debug" .PRESET}}'
 tasks:
+  ci:prepare:
+    desc: Explicitly acquire and prepare qualified CI inputs
+    cmds:
+    - python3 scripts/ci/run.py --prepare
   ci:
     desc: Rehearse all push validation lanes in isolated pinned containers
     cmds:
@@ -18,10 +22,6 @@ tasks:
     desc: Validate REUSE licensing metadata
     cmds:
     - reuse lint
-  build:qt-dependency:
-    desc: deps using standalone tooling
-    cmds:
-    - python3 tooling/workflow.py deps
   configure:
     desc: configure using standalone tooling
     cmds:
@@ -107,6 +107,10 @@ tasks:
     - build
     cmds:
     - bash scripts/check-qmltypes.sh build/{{.PRESET}}
+  configure-coverage:
+    desc: Configure coverage using prepared dependencies
+    cmds:
+    - python3 tooling/workflow.py configure --preset coverage
   coverage:
     desc: Build coverage report
     cmds:

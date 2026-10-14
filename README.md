@@ -6,10 +6,12 @@ Each other application retains its own configuration and settings UI.
 
 ## Build
 
-Qt 6 (Core, Gui, Quick, QML, D-Bus), CMake 3.25+, Ninja, toml++, and the sibling
-[`holonight-qt`](https://github.com/lebedenko/holonight-qt) package are required. Python 3 and GTest are required for verification.
+Qt >=6.11 (Core, Gui, Quick, QML, D-Bus), CMake 3.25+, Ninja, libpulse and toml++ are required.
+Install Python 3 and GTest >=1.14 CONFIG with GMock for verification. Prepare the sibling Config,
+System Services (with Audio), Qt (with Wayland) and Shell standalone configuration packages explicitly.
 
 ```sh
+task deps
 task build
 task test
 ```
@@ -25,7 +27,8 @@ The executable embeds `:/qtquickcontrols2.conf` with `Style=Holonight`. Qt suppo
 (`QT_QUICK_CONTROLS_STYLE=Fusion`), `-style Fusion`, or an external `QT_QUICK_CONTROLS_CONF` file; there is no
 imperative style selection.
 
-`task` stages sibling dependencies under `build/deps/prefix` with provider tests/examples disabled.
+Only `task deps` prepares supplied local providers under `build/deps/prefix`, with provider tests/demos disabled.
+Configure, build and test validate prepared providers and installed external prerequisites.
 CMake derives `SETTINGS_DEPENDENCY_QML_DIR` from the installed HolonightQt package; override that cache path for
 nonstandard layouts. Only build executables use it. Installed settings discovers `../lib/qt6/qml` (using the
 configured install libdir) relative to its executable, then Qt's ordinary module paths.
@@ -45,13 +48,13 @@ See [tooling/README.md](tooling/README.md) for presets, local dependency overrid
 
 ## Local CI rehearsal
 
-Run `task ci` with Python 3, Task and Docker (Podman fallback). It runs every push
-validation lane in fresh isolated builds with the same pinned tools and providers
-as GitHub. New non-ignored inputs are included and reported for adding before
-pushing. Complete logs and evidence live in ignored `build/ci/`; any required
-failure returns nonzero and prints its full log. Existing developer tasks remain
-available. Publication/uploads remain remote operations. See
-[local SDD](docs/sdd/local-ci/README.md).
+Run `task ci:prepare` explicitly with Python 3 and Docker (Podman fallback), then `task ci`.
+Preparation acquires exact provider revisions and pinned images and records content hashes. The four
+acceptance lanes (Debug/tests, Release staging, static/QML checks, REUSE) run with no network and no
+image pulls, caller UID/GID, private runtime directories and read-only source/installed-provider inputs.
+Changed or tampered preparation is rejected; incompatible state is archived for inspection.
+Logs and identities are retained under `build/ci/`. `scripts/ci/packages.json` and the disabled custom-image
+workflow retain historical evidence; the active workflow uses the qualified full Arch image.
 
 ## Configuration editing
 
@@ -82,3 +85,10 @@ persist in `$XDG_CONFIG_HOME/holonight/settings-wallpapers.ini`.
 
 See [the feature record](docs/sdd/dedicated-wallpaper-picker.md) for activation,
 conflict resolution, and display assignment behavior.
+
+Dependency preparation is explicit: `task deps` uses supplied local provider sources in dependency order.
+Qt >=6.11, libpulse and toml++ must be installed; tests require GTest >=1.14 CONFIG with GMock.
+`HOLONIGHT_DEPENDENCY_PREFIX` selects an existing internal installation; `HOLONIGHT_EXTERNAL_PREFIX`
+selects installed external libraries. Incompatible caches are preserved for inspection.
+Run `task ci:prepare` before `task ci`: acquisition happens only during preparation, followed by
+four offline qualified Arch/REUSE lanes. See tooling/README.md for source overrides.

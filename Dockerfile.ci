@@ -1,7 +1,1 @@
-FROM archlinux:latest
-
-RUN pacman -Syu --noconfirm && \
-    pacman -S --noconfirm \
-        base-devel clang cmake dbus git gtest libpulse ninja pkgconf python \
-        qt6-base qt6-declarative qt6-wayland tomlplusplus \
-    && pacman -Scc --noconfirm
+FROM ghcr.io/lebedenko/holonight-deps@sha256:37ca051c39d1688d6413c47d94b8c0f221152dac6981ec67d155f2c43ea17b40

@@ -10,14 +10,14 @@
   ],
   "dependencies": [
     {
-      "module": "holonight-system-services",
-      "package": "HoloNightSystemServices",
-      "source_variable": "HOLONIGHT_SYSTEM_SERVICES_SOURCE"
-    },
-    {
       "module": "holonight-config",
       "package": "HoloNightConfig",
       "source_variable": "HOLONIGHT_CONFIG_SOURCE"
+    },
+    {
+      "module": "holonight-system-services",
+      "package": "HoloNightSystemServices",
+      "source_variable": "HOLONIGHT_SYSTEM_SERVICES_SOURCE"
     },
     {
       "module": "holonight-qt",
@@ -34,5 +34,115 @@
   "qml_modules": [
     "HolonightSettings"
   ],
-  "wayland": true
+  "wayland": true,
+  "external_dependencies": [
+    {
+      "id": "qt",
+      "scope": [
+        "build"
+      ],
+      "components": [
+        "Core"
+      ]
+    },
+    {
+      "id": "qt",
+      "scope": [
+        "build"
+      ],
+      "components": [
+        "Gui",
+        "Quick",
+        "Qml",
+        "DBus"
+      ],
+      "feature": "BUILD_APP"
+    },
+    {
+      "id": "compiler",
+      "scope": [
+        "tool"
+      ]
+    },
+    {
+      "id": "cmake",
+      "scope": [
+        "tool"
+      ]
+    },
+    {
+      "id": "ninja",
+      "scope": [
+        "tool"
+      ]
+    },
+    {
+      "id": "pkgconf",
+      "scope": [
+        "tool"
+      ]
+    },
+    {
+      "id": "git",
+      "scope": [
+        "tool"
+      ]
+    },
+    {
+      "id": "python",
+      "scope": [
+        "tool"
+      ]
+    },
+    {
+      "id": "gtest",
+      "scope": [
+        "test"
+      ],
+      "targets": [
+        "GTest::gmock",
+        "GTest::gtest"
+      ]
+    },
+    {
+      "id": "qt",
+      "scope": [
+        "test"
+      ],
+      "components": [
+        "Gui",
+        "DBus",
+        "Qml",
+        "Quick",
+        "Test"
+      ]
+    },
+    {
+      "id": "fonts",
+      "scope": [
+        "runtime"
+      ]
+    },
+    {
+      "id": "mime",
+      "scope": [
+        "runtime"
+      ]
+    },
+    {
+      "id": "pulse",
+      "scope": [
+        "build"
+      ]
+    },
+    {
+      "id": "toml",
+      "scope": [
+        "build"
+      ]
+    }
+  ],
+  "external_features": {
+    "BUILD_APP": true
+  }
 }

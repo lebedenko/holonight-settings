@@ -1,0 +1,19 @@
+[
+  {
+    "name": "holonight-config",
+    "revision": "0ccd25f323662f50a47bb048be636160f2b7c135"
+  },
+  {
+    "name": "holonight-system-services",
+    "revision": "70614eb70329af7014853c2973e5624acf0b251e"
+  },
+  {
+    "name": "holonight-qt",
+    "revision": "7c3ce074a8c2e02e4ee8cad8cd19eb8627aa4f68"
+  },
+  {
+    "name": "holonight-shell",
+    "revision": "5d02583a59ed1bf9bff494c667ad6896d5fdce6e",
+    "subdirectory": "libs/holonight-shell-config"
+  }
+]

@@ -50,27 +50,57 @@ HnApplicationWindow {
                 applicationName: qsTr("Wallpapers")
                 currentPage: root.wallpapers.collection
                 pages: [
-                    {key: "", label: qsTr("All Wallpapers")},
-                    {key: "favorites", label: qsTr("Favorites")},
+                    {
+                        key: "",
+                        label: qsTr("All Wallpapers")
+                    },
+                    {
+                        key: "favorites",
+                        label: qsTr("Favorites")
+                    },
                     ...root.browser.folders.map(folder => ({
-                        key: folder,
-                        label: folder.endsWith("/wallpapers/holonight") ? qsTr("HoloNight") : folder.split("/").pop()
-                    })),
-                    {key: "add-folder", label: qsTr("Add Folder…")}
+                                key: folder,
+                                label: folder.endsWith("/wallpapers/holonight") ? qsTr("HoloNight") : folder.split("/").pop()
+                            })),
+                    {
+                        key: "add-folder",
+                        label: qsTr("Add Folder…")
+                    }
                 ]
                 onPageRequested: key => {
-                    if (key === "add-folder") folderChooser.open();
-                    else root.wallpapers.collection = key;
+                    if (key === "add-folder")
+                        folderChooser.open();
+                    else
+                        root.wallpapers.collection = key;
                 }
             }
         }
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            HnLabel { rawText: qsTr("Choose a wallpaper"); role: HnTypographyRole.Heading; Layout.fillWidth: true }
-            Controls.BusyIndicator { running: root.browser.loading; visible: running; Layout.alignment: Qt.AlignHCenter }
-            HnLabel { rawText: folderChooser.error; visible: rawText !== ""; wrapMode: Text.Wrap; Layout.fillWidth: true }
-            HnLabel { rawText: root.browser.error; visible: rawText !== ""; wrapMode: Text.Wrap; Layout.fillWidth: true }
+            HnLabel {
+                rawText: qsTr("Choose a wallpaper")
+                role: HnTypographyRole.Heading
+                Layout.fillWidth: true
+            }
+            HnLoadingState {
+                titleText: qsTr("Loading wallpapers")
+                running: root.browser.loading
+                visible: running
+                Layout.fillWidth: true
+            }
+            HnLabel {
+                rawText: folderChooser.error
+                visible: rawText !== ""
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
+            HnLabel {
+                rawText: root.browser.error
+                visible: rawText !== ""
+                wrapMode: Text.Wrap
+                Layout.fillWidth: true
+            }
             GridView {
                 id: grid
                 objectName: "wallpaperGrid"
@@ -84,9 +114,10 @@ HnApplicationWindow {
                 activeFocusOnTab: true
                 Keys.onReturnPressed: {
                     const tile = currentItem as Controls.ItemDelegate;
-                    if (tile) tile.clicked();
+                    if (tile)
+                        tile.clicked();
                 }
-                delegate: Controls.ItemDelegate {
+                delegate: HnThumbnailDelegate {
                     id: tile
                     required property string imagePath
                     required property string imageTitle
@@ -96,28 +127,29 @@ HnApplicationWindow {
                     width: grid.cellWidth - 8
                     height: grid.cellHeight - 8
                     highlighted: root.controller.selectedPath === imagePath
-                    Accessible.name: imageTitle
-                    onClicked: { grid.currentIndex = index; root.controller.select(imagePath); }
-                    contentItem: ColumnLayout {
-                        Image {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            source: tile.thumbnail
-                            sourceSize: Qt.size(320, 200)
-                            fillMode: Image.PreserveAspectFit
-                            asynchronous: true
-                            HnLabel { anchors.centerIn: parent; visible: parent.status === Image.Error; rawText: qsTr("Image unavailable") }
+                    caption: imageTitle
+                    showSelectionMarker: true
+                    onClicked: {
+                        grid.currentIndex = index;
+                        root.controller.select(imagePath);
+                    }
+                    thumbnailContent: Image {
+                        source: tile.thumbnail
+                        sourceSize: Qt.size(320, 200)
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        HnLabel {
+                            anchors.centerIn: parent
+                            visible: parent.status === Image.Error
+                            rawText: qsTr("Image unavailable")
                         }
-                        HnLabel { rawText: tile.imageTitle; elide: Text.ElideRight; Layout.fillWidth: true }
                     }
                 }
-                HnLabel {
+                HnEmptyState {
                     anchors.centerIn: parent
                     visible: grid.count === 0 && !root.browser.loading
-                    rawText: root.wallpapers.collection === "favorites" ? qsTr("No favorites yet") : qsTr("No wallpapers found. Add a folder to begin.")
+                    titleText: root.wallpapers.collection === "favorites" ? qsTr("No favorites yet") : qsTr("No wallpapers found. Add a folder to begin.")
                     width: parent.width
-                    wrapMode: Text.Wrap
-                    horizontalAlignment: Text.AlignHCenter
                 }
             }
         }
@@ -130,57 +162,109 @@ HnApplicationWindow {
                 anchors.fill: parent
                 anchors.margins: 16
                 spacing: 12
-                HnLabel { rawText: qsTr("Preview"); role: HnTypographyRole.Heading; Layout.fillWidth: true }
-                Image {
-                    objectName: "wallpaperPreviewImage"
+                HnLabel {
+                    rawText: qsTr("Preview")
+                    role: HnTypographyRole.Heading
+                    Layout.fillWidth: true
+                }
+                HnPreviewFrame {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 220
-                    source: root.controller.selectedImage
-                    sourceSize: Qt.size(720, 440)
-                    asynchronous: true
-                    fillMode: Image.PreserveAspectFit
-                    HnLabel {
-                        anchors.centerIn: parent
-                        rawText: parent.status === Image.Error ? qsTr("Image cannot be loaded") : qsTr("Select a wallpaper")
-                        visible: parent.status === Image.Error || parent.status === Image.Null
+                    // Keep the image loaded during loading/error presentation.
+                    Image {
+                        id: wallpaperImage
+                        objectName: "wallpaperPreviewImage"
+                        anchors.fill: parent
+                        anchors.margins: parent.padding
+                        source: root.controller.selectedImage
+                        sourceSize: Qt.size(720, 440)
+                        asynchronous: true
+                        fillMode: Image.PreserveAspectFit
+                        visible: status === Image.Ready
+                    }
+                    previewState: wallpaperImage.status === Image.Null ? HnPreviewFrame.Empty : wallpaperImage.status === Image.Loading ? HnPreviewFrame.Loading : wallpaperImage.status === Image.Error ? HnPreviewFrame.Error : HnPreviewFrame.Content
+                    loadingContent: HnLoadingState {
+                        titleText: qsTr("Loading wallpaper")
+                    }
+                    emptyContent: HnEmptyState {
+                        titleText: qsTr("Select a wallpaper")
+                    }
+                    errorContent: HnEmptyState {
+                        titleText: qsTr("Image cannot be loaded")
                     }
                 }
-                HnLabel { rawText: root.details.title || root.controller.selectedPath.split("/").pop(); elide: Text.ElideRight; Layout.fillWidth: true }
-                HnLabel { rawText: root.details.dimensions ? qsTr("%1 · %2 MB").arg(root.details.dimensions).arg((root.details.bytes / 1048576).toFixed(1)) : ""; Layout.fillWidth: true }
+                HnLabel {
+                    rawText: root.details.title || root.controller.selectedPath.split("/").pop()
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
+                HnLabel {
+                    rawText: root.details.dimensions ? qsTr("%1 · %2 MB").arg(root.details.dimensions).arg((root.details.bytes / 1048576).toFixed(1)) : ""
+                    Layout.fillWidth: true
+                }
                 Controls.Button {
                     text: root.details.favorite ? qsTr("Remove from Favorites") : qsTr("Add to Favorites")
                     enabled: root.controller.selectedPath !== ""
                     Layout.fillWidth: true
                     onClicked: root.browser.toggleFavorite(root.controller.selectedPath)
                 }
-                HnLabel { rawText: qsTr("Display"); Layout.fillWidth: true }
-                Controls.ComboBox {
-                    objectName: "wallpaperDisplay"
-                    model: root.controller.displays.map((name, index) => name || qsTr("Display %1").arg(index + 1))
-                    Accessible.name: qsTr("Target display")
-                    currentIndex: root.controller.target
+                HnSettingsRow {
+                    titleText: qsTr("Display")
+                    stacked: true
                     Layout.fillWidth: true
-                    onActivated: root.controller.target = currentIndex
+                    Controls.ComboBox {
+                        objectName: "wallpaperDisplay"
+                        model: root.controller.displays.map((name, index) => name || qsTr("Display %1").arg(index + 1))
+                        Accessible.name: qsTr("Target display")
+                        currentIndex: root.controller.target
+                        Layout.fillWidth: true
+                        onActivated: root.controller.target = currentIndex
+                    }
                 }
-                Controls.CheckBox {
-                    text: qsTr("Apply to all displays")
-                    checked: root.controller.allDisplays
-                    onToggled: root.controller.allDisplays = checked
+                HnSettingsRow {
+                    titleText: qsTr("Apply to all displays")
+                    Layout.fillWidth: true
+                    Controls.CheckBox {
+                        Accessible.name: qsTr("Apply to all displays")
+                        checked: root.controller.allDisplays
+                        onToggled: root.controller.allDisplays = checked
+                    }
                 }
-                Item { Layout.fillHeight: true }
-                HnLabel { rawText: root.controller.error; visible: rawText !== ""; wrapMode: Text.Wrap; Layout.fillWidth: true }
-                HnLabel { rawText: qsTr("Wallpaper configuration changed externally."); visible: root.controller.conflict; wrapMode: Text.Wrap; Layout.fillWidth: true }
+                Item {
+                    Layout.fillHeight: true
+                }
+                HnLabel {
+                    rawText: root.controller.error
+                    visible: rawText !== ""
+                    wrapMode: Text.Wrap
+                    Layout.fillWidth: true
+                }
+                HnLabel {
+                    rawText: qsTr("Wallpaper configuration changed externally.")
+                    visible: root.controller.conflict
+                    wrapMode: Text.Wrap
+                    Layout.fillWidth: true
+                }
                 RowLayout {
                     visible: root.controller.conflict
-                    Controls.Button { text: qsTr("Reload"); onClicked: root.controller.resolve(false) }
-                    Controls.Button { text: qsTr("Keep pending"); onClicked: root.controller.resolve(true) }
+                    Controls.Button {
+                        text: qsTr("Reload")
+                        onClicked: root.controller.resolve(false)
+                    }
+                    Controls.Button {
+                        text: qsTr("Keep pending")
+                        onClicked: root.controller.resolve(true)
+                    }
                 }
-                Controls.Button {
-                    objectName: "wallpaperApply"
-                    text: qsTr("Apply")
-                    enabled: root.controller.canApply
+                HnActionBar {
                     Layout.fillWidth: true
-                    onClicked: root.controller.apply()
+                    trailingContent: Controls.Button {
+                        objectName: "wallpaperApply"
+                        text: qsTr("Apply")
+                        enabled: root.controller.canApply
+                        Layout.fillWidth: true
+                        onClicked: root.controller.apply()
+                    }
                 }
             }
         }

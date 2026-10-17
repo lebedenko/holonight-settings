@@ -9,11 +9,11 @@
   },
   {
     "name": "holonight-qt",
-    "revision": "7c3ce074a8c2e02e4ee8cad8cd19eb8627aa4f68"
+    "revision": "fac34119cc2e2356a3437b5f709bb052ac04f9a8"
   },
   {
     "name": "holonight-shell",
-    "revision": "5d02583a59ed1bf9bff494c667ad6896d5fdce6e",
+    "revision": "21c73bca14b0df11bdf896f781ab8f9c8d232ee9",
     "subdirectory": "libs/holonight-shell-config"
   }
 ]

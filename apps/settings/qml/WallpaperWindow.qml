@@ -183,14 +183,46 @@ HnApplicationWindow {
                         visible: status === Image.Ready
                     }
                     previewState: wallpaperImage.status === Image.Null ? HnPreviewFrame.Empty : wallpaperImage.status === Image.Loading ? HnPreviewFrame.Loading : wallpaperImage.status === Image.Error ? HnPreviewFrame.Error : HnPreviewFrame.Content
-                    loadingContent: HnLoadingState {
-                        titleText: qsTr("Loading wallpaper")
+                    loadingContent: Item {
+                        Controls.BusyIndicator {
+                            anchors.centerIn: parent
+                            running: true
+                            Accessible.name: qsTr("Loading preview")
+                        }
                     }
-                    emptyContent: HnEmptyState {
-                        titleText: qsTr("Select a wallpaper")
-                    }
-                    errorContent: HnEmptyState {
-                        titleText: qsTr("Image cannot be loaded")
+                    errorContent: Item {
+                        Accessible.name: qsTr("No preview available")
+                        Accessible.description: qsTr("Image cannot be loaded")
+                        HoverHandler {
+                            id: wallpaperFailureHover
+                        }
+                        Controls.ToolTip.visible: wallpaperFailureHover.hovered
+                        Controls.ToolTip.text: qsTr("Image cannot be loaded")
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            width: parent.width
+                            HnIcon {
+                                id: wallpaperFileIcon
+                                Layout.alignment: Qt.AlignHCenter
+                                size: 64
+                                name: "image-x-generic"
+                                visible: !hasError
+                            }
+                            HnIcon {
+                                Layout.alignment: Qt.AlignHCenter
+                                size: 64
+                                visible: wallpaperFileIcon.hasError
+                                source: "qrc:/qt/qml/Holonight/Controls/assets/generic-file.svg"
+                            }
+                            HnLabel {
+                                Layout.fillWidth: true
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.Wrap
+                                role: HnTypographyRole.Caption
+                                color: HoloniightPalette.textMuted
+                                rawText: qsTr("No preview available")
+                            }
+                        }
                     }
                 }
                 HnLabel {

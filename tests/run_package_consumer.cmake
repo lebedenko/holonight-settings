@@ -12,3 +12,10 @@ execute_process(
 if(NOT build_result EQUAL 0)
   message(FATAL_ERROR "ACF-005 installed-provider consumer build failed")
 endif()
+
+execute_process(
+  COMMAND "${BINARY_DIR}/acf005-package-consumer"
+  RESULT_VARIABLE run_result)
+if(NOT run_result EQUAL 0)
+  message(FATAL_ERROR "ACF-005 installed-provider consumer execution failed")
+endif()

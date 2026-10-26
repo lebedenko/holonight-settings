@@ -6,6 +6,22 @@ CMake reports missing packages and never downloads them. Use `cmake --preset dev
 The development preset enables tests; `release` stages optimized builds.
 clangd uses `build/dev/compile_commands.json`.
 
+When switching an existing development build to another installed Qt provider, also update
+`HolonightQt_DIR` and `SETTINGS_DEPENDENCY_QML_DIR`: CMake retains cached package locations even
+when `CMAKE_PREFIX_PATH` changes. For example:
+
+```sh
+cmake --preset dev -DCMAKE_PREFIX_PATH=/path/to/prefix \
+  -DHolonightQt_DIR=/path/to/prefix/lib/cmake/HolonightQt \
+  -DSETTINGS_DEPENDENCY_QML_DIR=/path/to/prefix/lib/qt6/qml
+task run
+```
+
+Undefined references to `Holonight::DocumentWatcher` indicate an older Appearance library paired
+with newer headers. Rebuild and stage the Qt provider against host dependencies, then select its
+prefix as above. `acf005_package_consumer` links and runs the watcher API against the selected
+installed packages to detect this mismatch. `task run` reuses the configured development cache.
+
 `task format` uses the pinned image. `task check` is the acceptance gate: fresh provider
 builds, build, tests, format, static analysis, applicable QML checks and REUSE.
 `task check:integration` adds Release staging and project runtime checks. GitHub invokes

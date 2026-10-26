@@ -238,3 +238,84 @@ TEST(ConfigurationDocuments, UnsupportedAppearanceVersionCannotBeOverwritten) {
   EXPECT_EQ(files.save(), AppearanceFileService::SaveResult::Error);
   EXPECT_EQ(read(path), original);
 }
+
+TEST(ConfigurationDocuments, WeatherSelectionStagesCoordinatesTogetherAndPreservesOtherContent) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  write(path, "# retained\n[weather]\nprovider='open-meteo'\nlocation_source='manual'\n[unknown]\nvalue='untouched'\n");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  EXPECT_FALSE(model.weatherLatitude().isValid());
+  EXPECT_FALSE(model.weatherLongitude().isValid());
+  ASSERT_TRUE(model.selectLocation("Null Island", "", 0, 0));
+  EXPECT_EQ(model.weatherCity(), "Null Island");
+  EXPECT_EQ(model.weatherLatitude().toDouble(), 0);
+  EXPECT_EQ(model.weatherLongitude().toDouble(), 0);
+  EXPECT_TRUE(model.isDirty());
+  EXPECT_FALSE(model.selectLocation("Invalid", "", 91, 0));
+  EXPECT_EQ(model.weatherCity(), "Null Island");
+  model.setweatherCountry("Ocean");
+  model.setweatherGeoApiKey("geo");
+  model.setweatherLanguage("de");
+  ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success) << files.error().toStdString();
+  EXPECT_TRUE(read(path).startsWith("# retained\n"));
+  EXPECT_TRUE(read(path).contains("[unknown]\nvalue='untouched'\n"));
+  ShellSettingsEditModel reloaded;
+  ShellConfigFileService reload(&reloaded, path);
+  ASSERT_TRUE(reload.load());
+  EXPECT_EQ(reloaded.weatherCity(), "Null Island");
+  EXPECT_EQ(reloaded.weatherCountry(), "Ocean");
+  EXPECT_EQ(reloaded.weatherGeoApiKey(), "geo");
+  EXPECT_EQ(reloaded.weatherLanguage(), "de");
+  EXPECT_TRUE(reloaded.weatherLatitude().isValid());
+  EXPECT_EQ(reloaded.weatherLatitude().toDouble(), 0);
+  reloaded.document()->reset("weatherLatitude");
+  reloaded.document()->reset("weatherLongitude");
+  ASSERT_EQ(reload.save(), ShellConfigFileService::SaveResult::Success);
+  EXPECT_FALSE(reloaded.weatherLatitude().isValid());
+  EXPECT_FALSE(reloaded.weatherLongitude().isValid());
+  EXPECT_FALSE(read(path).contains("latitude ="));
+}
+
+TEST(ConfigurationDocuments, WeatherExternalReloadPreservesPendingEditsAndReportsConflicts) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  write(path, "[weather]\nprovider='open-meteo'\ncity='First'\nlatitude=0.0\nlongitude=0.0\n");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  model.setweatherCity("Pending");
+  write(path,
+        "[weather]\nprovider='open-meteo'\ncity='External'\nlatitude=10.0\nlongitude=20.0\nshow_location=false\n");
+  ASSERT_TRUE(QTest::qWaitFor([&] { return model.weatherLatitude().toDouble() == 10; }));
+  EXPECT_EQ(model.weatherCity(), "Pending");
+  EXPECT_FALSE(model.weatherShowLocation());
+  ASSERT_EQ(model.document()->conflicts().size(), 1);
+  EXPECT_EQ(files.save(), ShellConfigFileService::SaveResult::Conflict);
+  model.document()->resolve("weatherCity", false);
+  EXPECT_EQ(model.weatherCity(), "External");
+  EXPECT_FALSE(model.isDirty());
+}
+
+TEST(ConfigurationDocuments, WeatherLegacyDefaultsRespectIndividualUnitOverrides) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  write(path, "[weather]\nunits='imperial'\nlatitude=0.0\nlongitude=0.0\ntemp_unit='kelvin'\n");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.weatherProvider(), "openweathermap");
+  EXPECT_EQ(model.weatherLocationSource(), "manual");
+  EXPECT_EQ(model.weatherTempUnit(), "kelvin");
+  EXPECT_EQ(model.weatherWindUnit(), "mph");
+  EXPECT_EQ(model.weatherPressureUnit(), "hpa");
+  EXPECT_FALSE(model.isDirty());
+  write(path,
+        "[weather]\nunits='standard'\nprovider='open-meteo'\nlocation_source='auto'\nlatitude=0.0\nlongitude=0.0\n");
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.weatherProvider(), "open-meteo");
+  EXPECT_EQ(model.weatherLocationSource(), "auto");
+  EXPECT_EQ(model.weatherTempUnit(), "kelvin");
+  EXPECT_EQ(model.weatherWindUnit(), "ms");
+}

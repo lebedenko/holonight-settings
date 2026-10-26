@@ -1,6 +1,7 @@
 #include "ShellSettingsEditModel.h"
 
 #include <algorithm>
+#include <cmath>
 
 ShellSettingsEditModel::ShellSettingsEditModel(QObject* parent) : QObject(parent) {}
 bool ShellSettingsEditModel::taskbarEnabled() const { return current_.taskbar.enabled; }
@@ -13,6 +14,15 @@ QString ShellSettingsEditModel::weatherProvider() const { return current_.weathe
 QString ShellSettingsEditModel::weatherLocationSource() const { return current_.weather.location_source; }
 QString ShellSettingsEditModel::weatherApiKey() const { return current_.weather.api_key; }
 QString ShellSettingsEditModel::weatherCity() const { return current_.weather.city; }
+QString ShellSettingsEditModel::weatherCountry() const { return current_.weather.country; }
+QString ShellSettingsEditModel::weatherGeoApiKey() const { return current_.weather.geo_api_key; }
+QString ShellSettingsEditModel::weatherLanguage() const { return current_.weather.lang; }
+QVariant ShellSettingsEditModel::weatherLatitude() const {
+  return current_.weather.latitude ? QVariant(*current_.weather.latitude) : QVariant();
+}
+QVariant ShellSettingsEditModel::weatherLongitude() const {
+  return current_.weather.longitude ? QVariant(*current_.weather.longitude) : QVariant();
+}
 QString ShellSettingsEditModel::weatherTempUnit() const { return current_.weather.temp_unit; }
 QString ShellSettingsEditModel::weatherWindUnit() const { return current_.weather.wind_unit; }
 QString ShellSettingsEditModel::weatherPressureUnit() const { return current_.weather.pressure_unit; }
@@ -57,6 +67,9 @@ STRING_SETTER(weatherProvider, current_.weather.provider)
 STRING_SETTER(weatherLocationSource, current_.weather.location_source)
 STRING_SETTER(weatherApiKey, current_.weather.api_key)
 STRING_SETTER(weatherCity, current_.weather.city)
+STRING_SETTER(weatherCountry, current_.weather.country)
+STRING_SETTER(weatherGeoApiKey, current_.weather.geo_api_key)
+STRING_SETTER(weatherLanguage, current_.weather.lang)
 STRING_SETTER(weatherTempUnit, current_.weather.temp_unit)
 STRING_SETTER(weatherWindUnit, current_.weather.wind_unit)
 STRING_SETTER(weatherPressureUnit, current_.weather.pressure_unit)
@@ -102,6 +115,11 @@ void ShellSettingsEditModel::load(const HoloNight::ShellConfig::ProductConfig& v
   emit weatherLocationSourceChanged();
   emit weatherApiKeyChanged();
   emit weatherCityChanged();
+  emit weatherCountryChanged();
+  emit weatherGeoApiKeyChanged();
+  emit weatherLanguageChanged();
+  emit weatherLatitudeChanged();
+  emit weatherLongitudeChanged();
   emit weatherTempUnitChanged();
   emit weatherWindUnitChanged();
   emit weatherPressureUnitChanged();
@@ -125,4 +143,32 @@ void ShellSettingsEditModel::markSaved() {
 void ShellSettingsEditModel::attachDocument(DocumentEditSession* document) {
   document_ = document;
   connect(document_, &DocumentEditSession::dirtyChanged, this, &ShellSettingsEditModel::isDirtyChanged);
+}
+
+void ShellSettingsEditModel::setweatherLatitude(const QVariant& value) {
+  const bool was_dirty = isDirty();
+  current_.weather.latitude = value.isValid() ? std::optional<double>(value.toDouble()) : std::nullopt;
+  changed(&ShellSettingsEditModel::weatherLatitudeChanged, was_dirty);
+}
+void ShellSettingsEditModel::setweatherLongitude(const QVariant& value) {
+  const bool was_dirty = isDirty();
+  current_.weather.longitude = value.isValid() ? std::optional<double>(value.toDouble()) : std::nullopt;
+  changed(&ShellSettingsEditModel::weatherLongitudeChanged, was_dirty);
+}
+bool ShellSettingsEditModel::selectLocation(const QString& city, const QString& country, double latitude,
+                                            double longitude) {
+  if (!std::isfinite(latitude) || !std::isfinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 ||
+      longitude > 180) {
+    return false;
+  }
+  const bool was_dirty = isDirty();
+  current_.weather.city = city;
+  current_.weather.country = country;
+  current_.weather.latitude = latitude;
+  current_.weather.longitude = longitude;
+  changed(&ShellSettingsEditModel::weatherCityChanged, was_dirty);
+  emit weatherCountryChanged();
+  emit weatherLatitudeChanged();
+  emit weatherLongitudeChanged();
+  return true;
 }

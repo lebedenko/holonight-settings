@@ -13,6 +13,8 @@ endfunction()
 if(BUILD_APP)
   holonight_add_test_exe(test_holonight_settings
     main.cpp
+    test_weather_location_search.cpp
+    ../apps/settings/src/WeatherLocationSearch.cpp
     test_configuration_documents.cpp
     test_acf005.cpp
     test_acf005_qml_contract.cpp
@@ -39,7 +41,7 @@ if(BUILD_APP)
   target_link_libraries(test_holonight_settings PRIVATE
     HoloNight::Config HoloNightShellConfig::Config HolonightQt::Appearance HolonightQt::Theme
     GTest::gtest GTest::gmock Qt6::Gui Qt6::DBus
-    Qt6::Qml Qt6::Quick Qt6::Test)
+    Qt6::Qml Qt6::Quick Qt6::Test Qt6::Network)
 endif()
 
 add_test(NAME acf005_package_consumer
@@ -120,4 +122,11 @@ if(BUILD_APP)
         $<TARGET_FILE:wallpaper_acceptance> ${wallpaper_args})
     set_tests_properties(wallpaper_opening_order_${order} PROPERTIES TIMEOUT 30)
   endforeach()
+endif()
+
+if(BUILD_APP)
+  add_test(NAME settings_weather_save_reload
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_settings_startup.py
+      $<TARGET_FILE:settings_controls_acceptance> ${SETTINGS_DEPENDENCY_QML_DIR} default --acceptance --weather)
+  set_tests_properties(settings_weather_save_reload PROPERTIES TIMEOUT 45)
 endif()

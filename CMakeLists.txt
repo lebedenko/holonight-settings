@@ -45,7 +45,7 @@ if(BUILD_APP OR BUILD_TESTS)
 endif()
 
 if(BUILD_APP)
-  find_package(Qt6 6.11 REQUIRED COMPONENTS Gui Quick Qml DBus)
+  find_package(Qt6 6.11 REQUIRED COMPONENTS Gui Quick Qml DBus Network)
   find_package(HolonightQt REQUIRED)
   if(BUILD_TESTS)
     find_package(Qt6 6.11 REQUIRED COMPONENTS Test)

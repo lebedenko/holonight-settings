@@ -20,6 +20,21 @@ Flickable {
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
 
+    WeatherLocationSearch { id: locationSearch }
+    property string coordinateError: ""
+
+    function findLocation(text: string) {
+        root.coordinateError = ""
+        const match = text.trim().match(/^([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*,\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))$/)
+        if (match) {
+            locationSearch.search("")
+            if (!root.editModel.selectLocation("", "", Number(match[1]), Number(match[2])))
+                root.coordinateError = qsTr("Latitude must be −90…90 and longitude −180…180.")
+        } else {
+            locationSearch.search(text, root.editModel.weatherLanguage)
+        }
+    }
+
     contentHeight: contentItem.implicitHeight
     contentWidth: width
     clip: true
@@ -144,7 +159,7 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             placeholderText: qsTr("Enter OWM API Key...")
                             text: root.editModel.weatherApiKey
-                            onTextChanged: root.editModel.weatherApiKey = text
+                            onTextEdited: root.editModel.weatherApiKey = text
                         }
                     }
                 }
@@ -194,6 +209,7 @@ Flickable {
                     id: weatherCityRow
 
                     objectName: "weatherCityRow"
+                    visible: root.editModel.weatherLocationSource === "manual"
                     titleText: qsTr("City / Coordinates")
                     descriptionText: qsTr("Search for a city or enter coordinates")
                     sizeRole: HnControlSize.Hero
@@ -210,10 +226,48 @@ Flickable {
                             implicitWidth: root.inlineControlWidth
                             placeholderText: qsTr("e.g. Warsaw, Poland or 52.2297, 21.0122")
                             text: root.editModel.weatherCity
-                            onTextChanged: root.editModel.weatherCity = text
+                            onTextEdited: { locationSearch.search(""); root.coordinateError = "" }
+                            onAccepted: root.findLocation(text)
                         }
                     }
                 }
+            }
+
+            HnSettingsRow {
+                visible: root.editModel.weatherLocationSource === "auto"
+                titleText: qsTr("IP geolocation API key")
+                descriptionText: qsTr("An ipgeolocation.io API key is required for automatic location.")
+                Layout.fillWidth: true
+                control: Component {
+                    Controls.TextField {
+                        implicitWidth: root.inlineControlWidth
+                        text: root.editModel.weatherGeoApiKey
+                        onTextEdited: root.editModel.weatherGeoApiKey = text
+                    }
+                }
+            }
+            HnLabel {
+                Layout.fillWidth: true
+                visible: root.editModel.weatherLocationSource === "manual"
+                rawText: locationSearch.loading ? qsTr("Searching…") : root.coordinateError || locationSearch.status || qsTr("Press Enter to search, then select a result. Coordinates are staged on Enter.")
+                wrapMode: Text.WordWrap
+            }
+            Repeater {
+                model: root.editModel.weatherLocationSource === "manual" ? locationSearch.results : []
+                delegate: Controls.Button {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    text: [modelData.city, modelData.region, modelData.country].filter(value => value.length > 0).join(", ")
+                    onClicked: {
+                        root.editModel.selectLocation(modelData.city, modelData.country, modelData.latitude, modelData.longitude)
+                        locationSearch.search("")
+                    }
+                }
+            }
+            HnLabel {
+                Layout.fillWidth: true
+                visible: root.editModel.weatherLocationSource === "manual" && root.editModel.weatherLatitude !== undefined && root.editModel.weatherLongitude !== undefined
+                rawText: qsTr("Selected: %1, %2").arg(root.editModel.weatherLatitude).arg(root.editModel.weatherLongitude)
             }
 
             // Units Section
@@ -349,7 +403,7 @@ Flickable {
 
                             objectName: "weatherShowInBarSwitch"
                             checked: root.editModel.weatherShowInBar
-                            onCheckedChanged: root.editModel.weatherShowInBar = checked
+                            onClicked: root.editModel.weatherShowInBar = checked
                         }
                     }
                 }
@@ -372,7 +426,7 @@ Flickable {
 
                             objectName: "weatherCompactModeSwitch"
                             checked: root.editModel.weatherCompactMode
-                            onCheckedChanged: root.editModel.weatherCompactMode = checked
+                            onClicked: root.editModel.weatherCompactMode = checked
                         }
                     }
                 }
@@ -395,7 +449,7 @@ Flickable {
 
                             objectName: "weatherShowFeelsLikeSwitch"
                             checked: root.editModel.weatherShowFeelsLike
-                            onCheckedChanged: root.editModel.weatherShowFeelsLike = checked
+                            onClicked: root.editModel.weatherShowFeelsLike = checked
                         }
                     }
                 }
@@ -418,7 +472,7 @@ Flickable {
 
                             objectName: "weatherShowLocationSwitch"
                             checked: root.editModel.weatherShowLocation
-                            onCheckedChanged: root.editModel.weatherShowLocation = checked
+                            onClicked: root.editModel.weatherShowLocation = checked
                         }
                     }
                 }

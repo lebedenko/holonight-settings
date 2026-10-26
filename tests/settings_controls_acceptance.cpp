@@ -13,6 +13,7 @@
 #include <QTextStream>
 #include <QWheelEvent>
 
+#include <holonight_shell_config/config_schema.h>
 #include <stdexcept>
 
 namespace {
@@ -115,6 +116,59 @@ void scrollAppearance(QQuickWindow* window, QObject* page) {
             "Appearance wheel scrolling did not settle");
   }
   QTextStream(stdout) << "SCROLL_APPEARANCE_OK\n";
+}
+
+void verifyWeather(QQuickWindow* window) {
+  require(QTest::qWaitForWindowExposed(window), "Settings window was not exposed");
+  auto* shell = objectProperty(window, "shellModel");
+  auto* coordinator = objectProperty(window, "saveCoordinator");
+  set(window, "currentPage", QStringLiteral("weather"));
+  require(QTest::qWaitFor([&] {
+            auto* stack = named(window, "settingsContentStack");
+            auto* current = stack->property("currentItem").value<QObject*>();
+            return current && current->objectName() == QStringLiteral("contentPage-weather") &&
+                   !stack->property("busy").toBool();
+          }),
+          "Weather page transition");
+  auto* city = named(window, "weatherCityTextField");
+  require(!shell->property("isDirty").toBool(), "Loading weather created edits");
+  set(shell, "weatherProvider", QStringLiteral("open-meteo"));
+  set(shell, "weatherLocationSource", QStringLiteral("manual"));
+  set(city, "text", QStringLiteral("0, 0"));
+  invoke(city, "accepted");
+  require(shell->property("weatherLatitude").isValid() && shell->property("weatherLatitude").toDouble() == 0,
+          "Zero latitude not staged");
+  require(shell->property("weatherLongitude").isValid() && shell->property("weatherLongitude").toDouble() == 0,
+          "Zero longitude not staged");
+  set(city, "text", QStringLiteral("91, 0"));
+  invoke(city, "accepted");
+  require(shell->property("weatherLatitude").toDouble() == 0, "Invalid coordinates changed location");
+  invoke(coordinator, "save");
+  require(!shell->property("isDirty").toBool(), "Weather save did not complete");
+  const auto path = qEnvironmentVariable("XDG_CONFIG_HOME") + QStringLiteral("/holonight/config.toml");
+  QFile file(path);
+  require(file.open(QIODevice::ReadOnly), "Saved weather document missing");
+  const auto bytes = file.readAll();
+  file.close();
+  const auto snapshot = HoloNight::Config::parseDocument(bytes.toStdString());
+  require(static_cast<bool>(snapshot), "Saved document is invalid");
+  const auto decoded = HoloNight::ShellConfig::decodeDocument(*snapshot.value);
+  require(decoded && decoded.value->weather.latitude == 0.0 && decoded.value->weather.longitude == 0.0,
+          "Saved coordinate pair missing");
+  require(file.open(QIODevice::WriteOnly | QIODevice::Truncate), "Cannot edit disposable config");
+  file.write(
+      "# external weather "
+      "edit\n[weather]\nprovider='open-meteo'\nlocation_source='manual'\ncity='External'\nlatitude=50.0\nlongitude=30."
+      "0\nshow_location=false\n");
+  file.close();
+  require(QTest::qWaitFor([&] { return shell->property("weatherCity").toString() == "External"; }),
+          "Weather external edit did not reload");
+  require(city->property("text").toString() == "External", "Weather UI did not reload");
+  require(!shell->property("isDirty").toBool(), "Reloading weather created edits");
+  require(!shell->property("weatherShowLocation").toBool(), "Weather display switch did not reload");
+  QFile mappings(QStringLiteral("/proc/self/maps"));
+  require(mappings.open(QIODevice::ReadOnly), "Cannot inspect mappings");
+  QTextStream(stdout) << "PAGE weather\nMAPS_BEGIN\n" << mappings.readAll() << "MAPS_END\nACCEPTANCE_OK\n";
 }
 
 void verify(QQuickWindow* window) {
@@ -230,12 +284,17 @@ void verify(QQuickWindow* window) {
   require(shell->property("workspaceCount").toInt() == 7, "Workspace editor binding");
 
   auto* weather = page("weather");
+  set(shell, "weatherLocationSource", QStringLiteral("manual"));
   auto* city = named(window, "weatherCityTextField");
   origin(city, style + "TextField.qml");
   set(shell, "weatherCity", QStringLiteral("Test City"));
   require(city->property("text").toString() == QStringLiteral("Test City"), "City model binding");
   set(city, "text", QStringLiteral("Disposable City"));
-  require(shell->property("weatherCity").toString() == QStringLiteral("Disposable City"), "City editor binding");
+  require(shell->property("weatherCity").toString() == QStringLiteral("Test City"),
+          "Search text must not stage a city");
+  set(city, "text", QStringLiteral("0, 0"));
+  invoke(city, "accepted");
+  require(shell->property("weatherLatitude").isValid(), "Coordinate pair not staged");
   origin(named(window, "weatherProviderComboBox"), style + "ComboBox.qml");
   require(weather->property("contentHeight").toReal() > weather->property("height").toReal(), "Weather overflow");
   set(weather, "contentY", 100.0);
@@ -295,7 +354,10 @@ int main(int argc, char* argv[]) {
               return false;
             }),
             "Settings window missing");
-    verify(window);
+    if (qEnvironmentVariableIsSet("HOLONIGHT_WEATHER_ACCEPTANCE"))
+      verifyWeather(window);
+    else
+      verify(window);
   } catch (const std::exception& error) {
     QTextStream(stderr) << "ACCEPTANCE_FAILED: " << error.what() << '\n';
     return 1;

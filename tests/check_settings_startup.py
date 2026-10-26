@@ -14,6 +14,7 @@ parser.add_argument('executable', type=Path)
 parser.add_argument('qml_root', type=Path)
 parser.add_argument('mode', choices=['default', 'environment', 'command-line', 'configuration'])
 parser.add_argument('--acceptance', action='store_true')
+parser.add_argument('--weather', action='store_true')
 parser.add_argument('--forbid-qml-root', type=Path)
 parser.add_argument('--evidence-dir', type=Path, default=os.environ.get('HOLONIGHT_CI_STARTUP_LOG_DIR'))
 args = parser.parse_args()
@@ -35,6 +36,8 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
                XDG_DATA_HOME=str(root / 'data'), XDG_DATA_DIRS=str(root / 'data'),
                XDG_CACHE_HOME=str(root / 'cache'), XDG_RUNTIME_DIR=str(root / 'runtime'),
                PULSE_SERVER='unix:' + str(root / 'unavailable-audio'))
+    if args.weather:
+        env['HOLONIGHT_WEATHER_ACCEPTANCE'] = '1'
     command = [str(args.executable.resolve())]
     style = 'Holonight' if args.mode == 'default' else 'Fusion'
     if args.mode == 'environment':
@@ -63,10 +66,11 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
                 log.seek(0)
                 trace = log.read()
                 assert status == 0 and 'ACCEPTANCE_OK' in trace, trace
-                assert trace.count('SCROLL_APPEARANCE_OK') == 2, 'Both Appearance visits must scroll'
+                if not args.weather:
+                    assert trace.count('SCROLL_APPEARANCE_OK') == 2, 'Both Appearance visits must scroll'
                 mappings = trace.split('MAPS_BEGIN\n')[1].split('MAPS_END')[0]
                 assert all('PAGE ' + page in trace for page in
-                           ('appearance', 'bar', 'weather', 'integrations', 'audio', 'about')), trace
+                           (('weather',) if args.weather else ('appearance', 'bar', 'weather', 'integrations', 'audio', 'about'))), trace
             else:
                 try:
                     status = process.wait(timeout=3)

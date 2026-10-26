@@ -23,6 +23,11 @@ class ShellSettingsEditModel : public QObject {
   SHELL_PROPERTY(QString, weatherLocationSource)
   SHELL_PROPERTY(QString, weatherApiKey)
   SHELL_PROPERTY(QString, weatherCity)
+  SHELL_PROPERTY(QString, weatherCountry)
+  SHELL_PROPERTY(QString, weatherGeoApiKey)
+  SHELL_PROPERTY(QString, weatherLanguage)
+  SHELL_PROPERTY(QVariant, weatherLatitude)
+  SHELL_PROPERTY(QVariant, weatherLongitude)
   SHELL_PROPERTY(QString, weatherTempUnit)
   SHELL_PROPERTY(QString, weatherWindUnit)
   SHELL_PROPERTY(QString, weatherPressureUnit)
@@ -50,6 +55,13 @@ class ShellSettingsEditModel : public QObject {
   SHELL_ACCESSORS(QString, weatherLocationSource)
   SHELL_ACCESSORS(QString, weatherApiKey)
   SHELL_ACCESSORS(QString, weatherCity)
+  SHELL_ACCESSORS(QString, weatherCountry)
+  SHELL_ACCESSORS(QString, weatherGeoApiKey)
+  SHELL_ACCESSORS(QString, weatherLanguage)
+  [[nodiscard]] QVariant weatherLatitude() const;
+  void setweatherLatitude(const QVariant& value);
+  [[nodiscard]] QVariant weatherLongitude() const;
+  void setweatherLongitude(const QVariant& value);
   SHELL_ACCESSORS(QString, weatherTempUnit)
   SHELL_ACCESSORS(QString, weatherWindUnit)
   SHELL_ACCESSORS(QString, weatherPressureUnit)
@@ -63,6 +75,7 @@ class ShellSettingsEditModel : public QObject {
   [[nodiscard]] const HoloNight::ShellConfig::ProductConfig& value() const { return current_; }
   void load(const HoloNight::ShellConfig::ProductConfig& value);
   void markSaved();
+  Q_INVOKABLE bool selectLocation(const QString& city, const QString& country, double latitude, double longitude);
   [[nodiscard]] DocumentEditSession* document() const { return document_; }
   void attachDocument(DocumentEditSession* document);
 
@@ -78,6 +91,11 @@ class ShellSettingsEditModel : public QObject {
   SHELL_SIGNAL(weatherLocationSource)
   SHELL_SIGNAL(weatherApiKey)
   SHELL_SIGNAL(weatherCity)
+  SHELL_SIGNAL(weatherCountry)
+  SHELL_SIGNAL(weatherGeoApiKey)
+  SHELL_SIGNAL(weatherLanguage)
+  SHELL_SIGNAL(weatherLatitude)
+  SHELL_SIGNAL(weatherLongitude)
   SHELL_SIGNAL(weatherTempUnit)
   SHELL_SIGNAL(weatherWindUnit)
   SHELL_SIGNAL(weatherPressureUnit)

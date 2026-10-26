@@ -13,7 +13,7 @@
   },
   {
     "name": "holonight-shell",
-    "revision": "21c73bca14b0df11bdf896f781ab8f9c8d232ee9",
+    "revision": "a984188ad0f631c01f099fc5dfd6a8796ecdc79a",
     "subdirectory": "libs/holonight-shell-config"
   }
 ]

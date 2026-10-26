@@ -81,7 +81,8 @@ std::optional<Config::Value> DocumentEditSession::controlValue(const Field& fiel
   if (!field.enabled_property.isEmpty() && !model_->property(field.enabled_property.constData()).toBool()) {
     return std::nullopt;
   }
-  return value(model_->property(field.property.constData()));
+  const auto item = model_->property(field.property.constData());
+  return item.isValid() ? std::optional<Config::Value>(value(item)) : std::nullopt;
 }
 void DocumentEditSession::notify() {
   emit stateChanged();

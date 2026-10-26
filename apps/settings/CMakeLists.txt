@@ -54,6 +54,8 @@ function(add_settings_application target main_source)
           src/DocumentEditSession.cpp
           src/AppearanceEditModel.h
           src/AppearanceEditModel.cpp
+          src/WeatherLocationSearch.h
+          src/WeatherLocationSearch.cpp
           src/ShellSettingsEditModel.h
           src/ShellSettingsEditModel.cpp
           src/AppearanceFileService.h
@@ -97,6 +99,7 @@ function(add_settings_application target main_source)
       Qt6::Gui
       Qt6::Quick
       Qt6::Qml
+      Qt6::Network
       Qt6::DBus
   )
 

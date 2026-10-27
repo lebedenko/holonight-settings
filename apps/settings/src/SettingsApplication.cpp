@@ -4,6 +4,7 @@
 #include "AppearanceEditModel.h"
 #include "AppearanceFileService.h"
 #include "AudioControllerQml.h"
+#include "BluetoothControllerQml.h"
 #include "SettingsActivationService.h"
 #include "SettingsSaveCoordinator.h"
 #include "SettingsSessionContext.h"
@@ -82,6 +83,7 @@ void SettingsApplication::openSettings() {
   shell_status_ = std::make_unique<ShellStatusService>();
   audio_controller_ = std::make_unique<AudioControllerQml>();
   audio_controller_->start();
+  bluetooth_controller_ = std::make_unique<BluetoothControllerQml>();
 
   static_cast<void>(appearance_files_->load());
   static_cast<void>(shell_files_->load());
@@ -95,6 +97,7 @@ void SettingsApplication::openSettings() {
       {QStringLiteral("saveCoordinator"), QVariant::fromValue(save_coordinator_.get())},
       {QStringLiteral("appearanceAdapter"), QVariant::fromValue(appearance_adapter_.get())},
       {QStringLiteral("shellStatus"), QVariant::fromValue(shell_status_.get())},
+      {QStringLiteral("bluetoothController"), QVariant::fromValue(bluetooth_controller_.get())},
       {QStringLiteral("audioController"), QVariant::fromValue(audio_controller_.get())},
       {QStringLiteral("appVersion"), applicationVersion()},
       {QStringLiteral("wallpaperController"), QVariant::fromValue(wallpaper_controller_.get())},

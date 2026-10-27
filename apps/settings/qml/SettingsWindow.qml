@@ -14,10 +14,16 @@ HnApplicationWindow {
     required property SettingsSaveCoordinator saveCoordinator
     required property AppearanceAdapterClient appearanceAdapter
     required property ShellStatusService shellStatus
+    required property BluetoothController bluetoothController
     required property AudioController audioController
     required property string appVersion
     property WallpaperController wallpaperController: null
     property string currentPage: "appearance"
+
+    onCurrentPageChanged: bluetoothController.setActive(root.visible && root.visibility !== Window.Minimized && currentPage === "bluetooth")
+    onVisibleChanged: bluetoothController.setActive(root.visible && root.visibility !== Window.Minimized && currentPage === "bluetooth")
+    onVisibilityChanged: bluetoothController.setActive(root.visible && root.visibility !== Window.Minimized && currentPage === "bluetooth")
+    onClosing: bluetoothController.setActive(false)
 
     visible: true
     minimumWidth: 1244
@@ -94,6 +100,7 @@ HnApplicationWindow {
                     shellModel: root.shellModel
                     saveCoordinator: root.saveCoordinator
                     appearanceAdapter: root.appearanceAdapter
+                    bluetoothController: root.bluetoothController
                     audioController: root.audioController
                     currentPage: root.currentPage
                     currentPageTitle: navPanel.currentPageTitle
@@ -103,6 +110,8 @@ HnApplicationWindow {
 
             HnSurfaceFrame {
                 id: previewFrame
+                objectName: "settingsPreviewFrame"
+                visible: root.currentPage !== "bluetooth"
 
                 surfaceRole: HnSurfaceRole.Panel
                 chamferedCornersOverride: HnCornerMask.TopLeft | HnCornerMask.BottomLeft

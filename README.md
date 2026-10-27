@@ -76,3 +76,9 @@ show common controls only. Defaults and overrides follows the same filtering.
 All sessions share the existing configuration file and schema. Hidden settings retain
 their saved values and are preserved when saving other settings. Temporary compositor
 IPC failures do not change which controls are available.
+
+Bluetooth is an immediately applied device-management page, independent of Save.
+It uses BlueZ through installed `HoloNightSystem::Bluetooth`, works without shell,
+and owns its pairing dialog. Scanning stops when the page/window is hidden, and
+leaving cancels pairing. Visibility expires after three minutes. The application
+never powers adapters at startup or changes rfkill, host services, or Blueman.

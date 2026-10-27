@@ -12,6 +12,8 @@ set(SETTINGS_QML_FILES
     qml/BarPage.qml
     qml/WeatherPage.qml
     qml/IntegrationsPage.qml
+    qml/BluetoothPage.qml
+    qml/BluetoothPairing.qml
     qml/AudioPage.qml
     qml/PreviewPanel/PreviewPanel.qml
 )
@@ -76,6 +78,8 @@ function(add_settings_application target main_source)
           src/FontListModel.cpp
           src/ShellStatusService.h
           src/ShellStatusService.cpp
+          src/BluetoothControllerQml.h
+          src/BluetoothControllerQml.cpp
           src/AudioControllerQml.h
           src/AudioControllerQml.cpp
   )
@@ -95,6 +99,7 @@ function(add_settings_application target main_source)
       HoloNight::Config
       HoloNightShellConfig::Config
       HoloNightSystem::Compositor
+      HoloNightSystem::Bluetooth
       HoloNightSystem::Audio
       HolonightQt::Appearance
       HolonightQt::Theme

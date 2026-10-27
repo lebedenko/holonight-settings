@@ -32,6 +32,7 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
     for key in ('HYPRLAND_INSTANCE_SIGNATURE', 'SWAYSOCK', 'LABWC_PID'):
         env.pop(key, None)
     env['XDG_CURRENT_DESKTOP'] = args.compositor
+    env['DBUS_SYSTEM_BUS_ADDRESS'] = 'unix:path=' + str(root / 'unavailable-system-bus')
     env.update(QT_QPA_PLATFORM='offscreen', QT_QPA_PLATFORMTHEME='', QT_STYLE_OVERRIDE='',
                QT_QUICK_BACKEND='software', QT_FORCE_STDERR_LOGGING='1', QML_IMPORT_TRACE='1',
                QT_LOGGING_RULES='*.debug=false;qt.qml.import.debug=true;*.warning=true;*.critical=true',
@@ -74,7 +75,7 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
                     assert trace.count('SCROLL_APPEARANCE_OK') == 2, 'Both Appearance visits must scroll'
                 mappings = trace.split('MAPS_BEGIN\n')[1].split('MAPS_END')[0]
                 assert all('PAGE ' + page in trace for page in
-                           (('weather',) if args.weather else ('appearance', 'bar', 'weather', 'integrations', 'audio', 'about'))), trace
+                           (('weather',) if args.weather else ('appearance', 'bar', 'weather', 'integrations', 'bluetooth', 'audio', 'about'))), trace
             else:
                 try:
                     status = process.wait(timeout=3)

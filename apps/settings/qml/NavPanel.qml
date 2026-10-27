@@ -22,6 +22,7 @@ Item {
         {key: "weather",       label: qsTr("Weather"),       icon: "weather"},
         {key: "notifications", label: qsTr("Notifications"), icon: "notifications"},
         {key: "calendar",      label: qsTr("Calendar"),      icon: "calendar"},
+        {key: "bluetooth",     label: qsTr("Bluetooth"),     icon: "bluetooth"},
         {key: "audio",         label: qsTr("Audio"),         icon: "audio"},
         {key: "workspaces",    label: qsTr("Workspaces"),    icon: "workspaces"},
         {key: "keybindings",   label: qsTr("Keybindings"),   icon: "keybindings"},

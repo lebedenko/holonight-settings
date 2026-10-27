@@ -141,3 +141,13 @@ if(BUILD_APP)
     set_tests_properties(settings_session_${compositor} PROPERTIES TIMEOUT 45)
   endforeach()
 endif()
+
+if(BUILD_APP)
+add_executable(test_bluetooth_presentation bluetooth_main.cpp test_bluetooth_presentation.cpp
+  ../apps/settings/src/BluetoothControllerQml.cpp ../apps/settings/src/BluetoothControllerQml.h)
+target_include_directories(test_bluetooth_presentation PRIVATE ${PROJECT_SOURCE_DIR}/apps/settings/src)
+target_link_libraries(test_bluetooth_presentation PRIVATE HoloNightSystem::Bluetooth Qt6::Qml Qt6::Gui Qt6::Quick Qt6::Test GTest::gtest GTest::gmock)
+target_compile_definitions(test_bluetooth_presentation PRIVATE TEST_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
+add_test(NAME bluetooth_presentation COMMAND test_bluetooth_presentation)
+set_tests_properties(bluetooth_presentation PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_CONTROLS_STYLE=Holonight;QML_IMPORT_PATH=${SETTINGS_DEPENDENCY_QML_DIR}")
+endif()

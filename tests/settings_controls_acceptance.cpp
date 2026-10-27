@@ -328,6 +328,9 @@ void verify(QQuickWindow* window) {
 
   page("integrations");
   origin(named(window, "refreshIntegrationsButton"), style + "Button.qml");
+  page("bluetooth");
+  require(!named(window, "settingsPreviewFrame")->property("visible").toBool(), "Bluetooth must hide generic preview");
+  require(named(window, "bluetoothPower") != nullptr, "Bluetooth power control missing");
   page("audio");
   require(!objectProperty(window, "audioController")->property("available").toBool(),
           "Audio endpoint must be unavailable");

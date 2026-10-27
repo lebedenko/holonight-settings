@@ -15,6 +15,7 @@ class ShellStatusService;
 class SettingsActivationService;
 class AppearanceAdapterClient;
 class AudioControllerQml;
+class BluetoothControllerQml;
 class WallpaperController;
 class WallpaperModel;
 class WallpaperFilter;
@@ -48,6 +49,7 @@ class SettingsApplication : public QGuiApplication {
   std::unique_ptr<SettingsSaveCoordinator> save_coordinator_;
   std::unique_ptr<ShellStatusService> shell_status_;
   std::unique_ptr<AudioControllerQml> audio_controller_;
+  std::unique_ptr<BluetoothControllerQml> bluetooth_controller_;
   std::unique_ptr<QQmlApplicationEngine> engine_;
   std::unique_ptr<WallpaperController> wallpaper_controller_;
   std::unique_ptr<WallpaperModel> wallpaper_model_;

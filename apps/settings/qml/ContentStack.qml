@@ -13,6 +13,7 @@ Item {
     required property ShellSettingsEditModel shellModel
     required property SettingsSaveCoordinator saveCoordinator
     required property AppearanceAdapterClient appearanceAdapter
+    required property BluetoothController bluetoothController
     required property AudioController audioController
     required property string currentPage
     required property string currentPageTitle
@@ -33,6 +34,8 @@ Item {
             return Qt.resolvedUrl("WeatherPage.qml");
         case "integrations":
             return Qt.resolvedUrl("IntegrationsPage.qml");
+        case "bluetooth":
+            return Qt.resolvedUrl("BluetoothPage.qml");
         case "audio":
             return Qt.resolvedUrl("AudioPage.qml");
         default:
@@ -41,7 +44,7 @@ Item {
     }
 
     function pageIndex(pageKey) {
-        const pageKeys = ["appearance", "bar", "sidebar", "launcher", "weather", "notifications", "calendar", "audio", "workspaces", "keybindings", "integrations", "advanced", "about"];
+        const pageKeys = ["appearance", "bar", "sidebar", "launcher", "weather", "notifications", "calendar", "bluetooth", "audio", "workspaces", "keybindings", "integrations", "advanced", "about"];
         return pageKeys.indexOf(pageKey);
     }
 
@@ -61,6 +64,9 @@ Item {
             properties.adapter = root.appearanceAdapter;
         } else if (pageKey === "audio")
             properties.audioController = root.audioController;
+
+        if (pageKey === "bluetooth")
+            properties.bluetoothController = root.bluetoothController;
 
         if (pageKey === "bar")
             properties.sessionContext = root.sessionContext;

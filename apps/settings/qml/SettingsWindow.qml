@@ -8,6 +8,7 @@ import "PreviewPanel"
 HnApplicationWindow {
     id: root
 
+    required property SettingsSessionContext sessionContext
     required property AppearanceEditModel appearanceModel
     required property ShellSettingsEditModel shellModel
     required property SettingsSaveCoordinator saveCoordinator
@@ -89,6 +90,7 @@ HnApplicationWindow {
                     anchors.margins: contentFrame.normalizedBorderWidth
                     appearanceModel: root.appearanceModel
                     wallpaperController: root.wallpaperController
+                    sessionContext: root.sessionContext
                     shellModel: root.shellModel
                     saveCoordinator: root.saveCoordinator
                     appearanceAdapter: root.appearanceAdapter

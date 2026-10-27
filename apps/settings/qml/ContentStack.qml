@@ -8,6 +8,7 @@ import Holonight.Controls
 Item {
     id: root
 
+    required property SettingsSessionContext sessionContext
     required property AppearanceEditModel appearanceModel
     required property ShellSettingsEditModel shellModel
     required property SettingsSaveCoordinator saveCoordinator
@@ -60,6 +61,9 @@ Item {
             properties.adapter = root.appearanceAdapter;
         } else if (pageKey === "audio")
             properties.audioController = root.audioController;
+
+        if (pageKey === "bar")
+            properties.sessionContext = root.sessionContext;
 
         return properties;
     }

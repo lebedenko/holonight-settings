@@ -35,7 +35,7 @@ option(ENABLE_COVERAGE "Instrument tests for gcov/gcovr coverage" OFF)
 find_package(Qt6 6.11 REQUIRED COMPONENTS Core)
 find_package(HoloNightConfig REQUIRED)
 find_package(HoloNightShellConfig 0.2 REQUIRED)
-find_package(HoloNightSystemServices REQUIRED)
+find_package(HoloNightSystemServices REQUIRED COMPONENTS Audio Compositor)
 
 if(BUILD_APP OR BUILD_TESTS)
   find_package(HolonightQt REQUIRED)

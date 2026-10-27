@@ -6,6 +6,7 @@
 #include "AudioControllerQml.h"
 #include "SettingsActivationService.h"
 #include "SettingsSaveCoordinator.h"
+#include "SettingsSessionContext.h"
 #include "ShellConfigFileService.h"
 #include "ShellSettingsEditModel.h"
 #include "ShellStatusService.h"
@@ -38,6 +39,7 @@ SettingsApplication::SettingsApplication(int& argc, char** argv) : QGuiApplicati
   }
   should_run_ = true;
 
+  session_context_ = std::make_unique<SettingsSessionContext>();
   wallpaper_controller_ = std::make_unique<WallpaperController>();
   connect(activation_service_.get(), &SettingsActivationService::settingsRequested, this,
           &SettingsApplication::openSettings);
@@ -87,6 +89,7 @@ void SettingsApplication::openSettings() {
   engine_ = std::make_unique<QQmlApplicationEngine>();
   configureEngine(engine_.get());
   engine_->setInitialProperties({
+      {QStringLiteral("sessionContext"), QVariant::fromValue(session_context_.get())},
       {QStringLiteral("appearanceModel"), QVariant::fromValue(appearance_model_.get())},
       {QStringLiteral("shellModel"), QVariant::fromValue(shell_model_.get())},
       {QStringLiteral("saveCoordinator"), QVariant::fromValue(save_coordinator_.get())},

@@ -275,6 +275,32 @@ void verify(QQuickWindow* window) {
   }
   scrollAppearance(window, scrolling_page);
   navigate("bar");
+  const auto desktop = qEnvironmentVariable("XDG_CURRENT_DESKTOP");
+  const bool labwc = desktop == "labwc";
+  const bool supported = labwc || desktop == "hyprland" || desktop == "sway";
+  const auto visible = [&](const char* name) { return named(window, name)->property("visible").toBool(); };
+  require(visible("workspaceCountRow") == supported, "Workspace applicability");
+  require(visible("trayMaxItemsRow"), "Common tray control unavailable");
+  require(visible("windowManagementSection") == labwc, "Window management section applicability");
+  for (const auto* name :
+       {"taskbarEnabledSwitch", "taskbarGroupedSwitch", "windowOverviewAccessSwitch", "desktopMenuEnabledSwitch"}) {
+    require(visible(name) == labwc, "Window management control applicability");
+  }
+  if (!labwc) {
+    auto* bar = objectProperty(stack, "currentItem");
+    auto* general = named(window, "generalSectionFrame");
+    require(bar->property("contentHeight").toReal() < general->property("height").toReal() + 160,
+            "Hidden section retained layout space");
+  }
+  set(named(window, "barOverrides"), "expanded", true);
+  require(QTest::qWaitFor([&] { return visible("override-trayMaxItems"); }), "Common override unavailable");
+  require(visible("override-workspaceCount") == supported, "Workspace override applicability");
+  for (const auto* name : {"override-taskbarEnabled", "override-taskbarGrouped", "override-windowOverviewAccess",
+                           "override-desktopMenuEnabled"}) {
+    require(visible(name) == labwc, "Window management override applicability");
+  }
+  set(named(window, "barOverrides"), "expanded", false);
+  require(!shell->property("isDirty").toBool(), "Visibility filtering staged a shell edit");
   auto* workspace_slider = named(window, "workspaceCountSlider");
   origin(workspace_slider, style + "Slider.qml");
   set(shell, "workspaceCount", 8);

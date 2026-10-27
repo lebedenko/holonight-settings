@@ -11,12 +11,13 @@ import HolonightSettings
 Flickable {
     id: root
 
+    required property SettingsSessionContext sessionContext
     required property ShellSettingsEditModel editModel
 
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
 
-    contentHeight: contentItem.implicitHeight
+    contentHeight: barContent.implicitHeight
     contentWidth: width
     clip: true
 
@@ -57,7 +58,7 @@ Flickable {
     }
 
     Item {
-        id: contentItem
+        id: barContent
 
         width: root.width
         implicitHeight: content.implicitHeight + 48
@@ -77,6 +78,8 @@ Flickable {
                 Layout.fillWidth: true
                 document: root.editModel.document
                 group: "bar"
+                sessionContext: root.sessionContext
+                objectName: "barOverrides"
             }
 
             SectionGroup {
@@ -87,9 +90,10 @@ Flickable {
                 HnSettingsRow {
                     id: workspaceCountRow
 
+                    visible: root.sessionContext.isApplicable("workspaceCount")
                     objectName: "workspaceCountRow"
-                    titleText: qsTr("Workspace Count")
-                    descriptionText: qsTr("Set the total number of available workspaces")
+                    titleText: qsTr("Visible workspace count")
+                    descriptionText: qsTr("Maximum number of workspace labels shown in the bar.")
                     sizeRole: HnControlSize.Hero
                     stacked: false
                     dividerVisible: true
@@ -177,10 +181,13 @@ Flickable {
             }
 
             SectionGroup {
+                objectName: "windowManagementSection"
+                visible: root.sessionContext.isApplicable("taskbarEnabled")
                 frameObjectName: "taskbarSectionFrame"
                 label: qsTr("Window management (labwc)")
                 Layout.fillWidth: true
                 HnSettingsRow {
+                    visible: root.sessionContext.isApplicable("taskbarEnabled")
                     titleText: qsTr("Taskbar")
                     descriptionText: qsTr("Show advertised windows on every bar")
                     contentHorizontalPadding: root.rowHorizontalPadding
@@ -194,6 +201,7 @@ Flickable {
                     }
                 }
                 HnSettingsRow {
+                    visible: root.sessionContext.isApplicable("taskbarGrouped")
                     titleText: qsTr("Group by application")
                     descriptionText: qsTr("Turn off to show one button per window")
                     contentHorizontalPadding: root.rowHorizontalPadding
@@ -207,6 +215,7 @@ Flickable {
                     }
                 }
                 HnSettingsRow {
+                    visible: root.sessionContext.isApplicable("windowOverviewAccess")
                     titleText: qsTr("Window overview")
                     descriptionText: qsTr("Enable the overview button and optional keyboard binding")
                     contentHorizontalPadding: root.rowHorizontalPadding
@@ -220,6 +229,7 @@ Flickable {
                     }
                 }
                 HnSettingsRow {
+                    visible: root.sessionContext.isApplicable("desktopMenuEnabled")
                     titleText: qsTr("Desktop menu")
                     descriptionText: qsTr("Let HoloNight own desktop input; disabled by default")
                     contentHorizontalPadding: root.rowHorizontalPadding

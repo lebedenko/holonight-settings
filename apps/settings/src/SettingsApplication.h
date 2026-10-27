@@ -4,6 +4,7 @@
 
 #include <memory>
 
+class SettingsSessionContext;
 class QQmlApplicationEngine;
 class AppearanceEditModel;
 class AppearanceFileService;
@@ -37,6 +38,7 @@ class SettingsApplication : public QGuiApplication {
   void openSettings();
   void openWallpaper(const QString& connector);
   void configureEngine(QQmlApplicationEngine* engine);
+  std::unique_ptr<SettingsSessionContext> session_context_;
   std::unique_ptr<SettingsActivationService> activation_service_;
   std::unique_ptr<AppearanceEditModel> appearance_model_;
   std::unique_ptr<ShellSettingsEditModel> shell_model_;

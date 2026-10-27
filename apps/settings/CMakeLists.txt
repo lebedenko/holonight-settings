@@ -50,6 +50,8 @@ function(add_settings_application target main_source)
           src/WallpaperController.cpp
           src/WallpaperModel.h
           src/WallpaperModel.cpp
+          src/SettingsSessionContext.h
+          src/SettingsSessionContext.cpp
           src/DocumentEditSession.h
           src/DocumentEditSession.cpp
           src/AppearanceEditModel.h
@@ -92,6 +94,7 @@ function(add_settings_application target main_source)
   target_link_libraries(${target} PRIVATE
       HoloNight::Config
       HoloNightShellConfig::Config
+      HoloNightSystem::Compositor
       HoloNightSystem::Audio
       HolonightQt::Appearance
       HolonightQt::Theme

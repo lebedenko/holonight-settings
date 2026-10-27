@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 HoloNight contributors
 #include "AppearanceEditModel.h"
 #include "AppearanceFileService.h"
+#include "SettingsSessionContext.h"
 #include "ShellConfigFileService.h"
 #include "ShellSettingsEditModel.h"
 
@@ -318,4 +319,36 @@ TEST(ConfigurationDocuments, WeatherLegacyDefaultsRespectIndividualUnitOverrides
   EXPECT_EQ(model.weatherLocationSource(), "auto");
   EXPECT_EQ(model.weatherTempUnit(), "kelvin");
   EXPECT_EQ(model.weatherWindUnit(), "ms");
+}
+
+TEST(ConfigurationDocuments, CommonSavePreservesHiddenCompositorValuesAndUnrelatedContent) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  const QByteArray retained =
+      "# retained\n[bar.taskbar]\nenabled = true # custom\ngrouped = false\n"
+      "overview_access = false\ndesktop_menu = true\n[unknown]\nvalue = 'untouched'\n";
+  write(path, retained + "[bar.systemtray]\nmax_items = 3\n");
+  QProcessEnvironment environment;
+  environment.insert("XDG_CURRENT_DESKTOP", "Hyprland");
+  SettingsSessionContext context(environment);
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  EXPECT_FALSE(context.isApplicable("taskbarEnabled"));
+  EXPECT_FALSE(model.isDirty());
+  EXPECT_TRUE(model.taskbarEnabled());
+  EXPECT_FALSE(model.taskbarGrouped());
+  EXPECT_FALSE(model.windowOverviewAccess());
+  EXPECT_TRUE(model.desktopMenuEnabled());
+  model.settrayMaxItems(4);
+  ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+  EXPECT_TRUE(read(path).startsWith(retained));
+  EXPECT_TRUE(read(path).contains("max_items = 4"));
+  ShellSettingsEditModel reloaded;
+  ShellConfigFileService reload(&reloaded, path);
+  ASSERT_TRUE(reload.load());
+  EXPECT_TRUE(reloaded.taskbarEnabled());
+  EXPECT_FALSE(reloaded.taskbarGrouped());
+  EXPECT_FALSE(reloaded.windowOverviewAccess());
+  EXPECT_TRUE(reloaded.desktopMenuEnabled());
 }

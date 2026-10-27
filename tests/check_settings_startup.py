@@ -14,6 +14,7 @@ parser.add_argument('executable', type=Path)
 parser.add_argument('qml_root', type=Path)
 parser.add_argument('mode', choices=['default', 'environment', 'command-line', 'configuration'])
 parser.add_argument('--acceptance', action='store_true')
+parser.add_argument('--compositor', default='labwc', choices=['hyprland', 'sway', 'labwc', 'unknown'])
 parser.add_argument('--weather', action='store_true')
 parser.add_argument('--forbid-qml-root', type=Path)
 parser.add_argument('--evidence-dir', type=Path, default=os.environ.get('HOLONIGHT_CI_STARTUP_LOG_DIR'))
@@ -28,6 +29,9 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
         env.pop(key, None)
     for name in ('config', 'cache', 'data', 'runtime', 'empty-path'):
         (root / name).mkdir(mode=0o700)
+    for key in ('HYPRLAND_INSTANCE_SIGNATURE', 'SWAYSOCK', 'LABWC_PID'):
+        env.pop(key, None)
+    env['XDG_CURRENT_DESKTOP'] = args.compositor
     env.update(QT_QPA_PLATFORM='offscreen', QT_QPA_PLATFORMTHEME='', QT_STYLE_OVERRIDE='',
                QT_QUICK_BACKEND='software', QT_FORCE_STDERR_LOGGING='1', QML_IMPORT_TRACE='1',
                QT_LOGGING_RULES='*.debug=false;qt.qml.import.debug=true;*.warning=true;*.critical=true',

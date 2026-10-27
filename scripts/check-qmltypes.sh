@@ -13,7 +13,7 @@ if [[ ! -s "${qmltypes_file}" ]]; then
   exit 1
 fi
 
-for type_name in AppearanceEditModel ShellSettingsEditModel SettingsSaveCoordinator ThemeSwatchTokens FontListModel ShellStatusService WallpaperController WallpaperModel WallpaperFilter PortalFolderChooser WeatherLocationSearch; do
+for type_name in SettingsSessionContext AppearanceEditModel ShellSettingsEditModel SettingsSaveCoordinator ThemeSwatchTokens FontListModel ShellStatusService WallpaperController WallpaperModel WallpaperFilter PortalFolderChooser WeatherLocationSearch; do
   grep -q "name: \"${type_name}\"" "${qmltypes_file}" || {
     echo "Missing QML type metadata for ${type_name}" >&2
     exit 1

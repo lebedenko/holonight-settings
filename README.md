@@ -66,3 +66,13 @@ See [the feature record](docs/sdd/dedicated-wallpaper-picker.md) for activation,
 conflict resolution, and display assignment behavior.
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for current native and container commands.
+
+Settings detects the session compositor once at startup using the installed System Services
+selector. The Bar page shows **Visible workspace count** on Hyprland, Sway and labwc;
+it limits the number of workspace labels shown in the bar. Taskbar, grouping, window
+overview and desktop-menu controls appear only on labwc. Unknown or ambiguous sessions
+show common controls only. Defaults and overrides follows the same filtering.
+
+All sessions share the existing configuration file and schema. Hidden settings retain
+their saved values and are preserved when saving other settings. Temporary compositor
+IPC failures do not change which controls are available.

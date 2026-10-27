@@ -15,6 +15,8 @@ if(BUILD_APP)
     main.cpp
     test_weather_location_search.cpp
     ../apps/settings/src/WeatherLocationSearch.cpp
+    test_settings_session_context.cpp
+    ../apps/settings/src/SettingsSessionContext.cpp
     test_configuration_documents.cpp
     test_acf005.cpp
     test_acf005_qml_contract.cpp
@@ -39,7 +41,7 @@ if(BUILD_APP)
   )
   target_include_directories(test_holonight_settings PRIVATE ${CMAKE_SOURCE_DIR}/apps/settings/src)
   target_link_libraries(test_holonight_settings PRIVATE
-    HoloNight::Config HoloNightShellConfig::Config HolonightQt::Appearance HolonightQt::Theme
+    HoloNightSystem::Compositor HoloNight::Config HoloNightShellConfig::Config HolonightQt::Appearance HolonightQt::Theme
     GTest::gtest GTest::gmock Qt6::Gui Qt6::DBus
     Qt6::Qml Qt6::Quick Qt6::Test Qt6::Network)
 endif()
@@ -129,4 +131,13 @@ if(BUILD_APP)
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_settings_startup.py
       $<TARGET_FILE:settings_controls_acceptance> ${SETTINGS_DEPENDENCY_QML_DIR} default --acceptance --weather)
   set_tests_properties(settings_weather_save_reload PROPERTIES TIMEOUT 45)
+endif()
+
+if(BUILD_APP)
+  foreach(compositor IN ITEMS hyprland sway unknown)
+    add_test(NAME settings_session_${compositor}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/check_settings_startup.py
+        $<TARGET_FILE:settings_controls_acceptance> ${SETTINGS_DEPENDENCY_QML_DIR} default --acceptance --compositor ${compositor})
+    set_tests_properties(settings_session_${compositor} PROPERTIES TIMEOUT 45)
+  endforeach()
 endif()

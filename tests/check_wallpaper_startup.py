@@ -12,6 +12,9 @@ with tempfile.TemporaryDirectory(prefix='wallpaper-acceptance-') as directory:
     env = os.environ.copy()
     for name in ('config', 'data', 'runtime', 'cache'):
         (root / name).mkdir(mode=0o700)
+    for key in ('HYPRLAND_INSTANCE_SIGNATURE', 'SWAYSOCK', 'LABWC_PID'):
+        env.pop(key, None)
+    env['XDG_CURRENT_DESKTOP'] = 'labwc'
     env.update(QT_QPA_PLATFORM='offscreen', QT_QUICK_BACKEND='software',
                XDG_CONFIG_HOME=str(root / 'config'), XDG_DATA_HOME=str(root / 'data'),
                XDG_DATA_DIRS=str(root / 'data'), XDG_CONFIG_DIRS=str(root / 'config'),

@@ -10,6 +10,7 @@ import HolonightSettings
 ColumnLayout {
     id: root
     required property DocumentEditSession document
+    property SettingsSessionContext sessionContext: null
     property string group: ""
     property bool expanded: false
     property alias toggleObjectName: toggle.objectName
@@ -31,11 +32,12 @@ ColumnLayout {
         delegate: RowLayout {
             id: row
             required property var modelData
-            visible: root.group === "" || (root.group === "weather") === row.modelData.property.startsWith("weather")
+            objectName: "override-" + row.modelData.property
+            visible: (root.group === "" || (root.group === "weather") === row.modelData.property.startsWith("weather")) && (!root.sessionContext || root.sessionContext.isApplicable(row.modelData.property))
             Layout.fillWidth: true
             HnLabel {
                 Layout.fillWidth: true
-                rawText: row.modelData.label + (row.modelData.overridden ? qsTr(" — Override") : qsTr(" — Default")) + (row.modelData.pending ? qsTr(" (pending)") : "")
+                rawText: (row.modelData.property === "workspaceCount" ? qsTr("Visible workspace count") : row.modelData.label) + (row.modelData.overridden ? qsTr(" — Override") : qsTr(" — Default")) + (row.modelData.pending ? qsTr(" (pending)") : "")
                 wrapMode: Text.WordWrap
             }
             Controls.Button {

@@ -42,10 +42,9 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
       setConflict(remaining.isEmpty() ? QString{}
                                       : remaining.first().toMap().value(QStringLiteral("domain")).toString());
       ++succeeded_;
-      outcomes_ << QStringLiteral("Appearance saved");
-      finishSave(response.result == QStringLiteral("degraded")
-                     ? QStringLiteral("Appearance saved with limited native toolkit propagation")
-                     : QString{});
+      outcomes_ << (response.result == QStringLiteral("degraded") ? adapter_->resultText()
+                                                                  : QStringLiteral("Appearance saved"));
+      finishSave();
     });
     connect(adapter_, &AppearanceAdapterClient::failed, this, [this](const QString& diagnostic) {
       if (!busy_) {

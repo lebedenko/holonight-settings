@@ -169,6 +169,14 @@ void AppearanceAdapterClient::finish(int exit_code, QProcess::ExitStatus exit_st
   active_ = false;
   result_text_ = degraded ? tr("Appearance saved with limited native toolkit propagation")
                           : tr("Appearance propagated successfully");
+  for (const auto& output : response_.outputs) {
+    if (output.name.startsWith(QStringLiteral("labwc/")) &&
+        (output.status == QStringLiteral("conflict") || output.status == QStringLiteral("unavailable") ||
+         output.status == QStringLiteral("error"))) {
+      result_text_ +=
+          QStringLiteral("; ") + output.name + QStringLiteral(": ") + output.diagnostic + tr(" See Integrations.");
+    }
+  }
   emit resultChanged();
   emit completed(response_);
 }

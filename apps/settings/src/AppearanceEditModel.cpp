@@ -81,6 +81,20 @@ void AppearanceEditModel::setThemeScheme(const QString& value) {
     return;
   }
   current_.theme.scheme = toStd(value);
+  const bool dark = themeMode() == QStringLiteral("dark");
+  auto normalize = [dark](std::string& theme) {
+    for (const auto* base : {"HoloNight", "Papirus"}) {
+      if (theme == base || theme == std::string(base) + "-Dark") {
+        theme = std::string(base) + (dark ? "-Dark" : "");
+        return;
+      }
+    }
+  };
+  const auto previous_icons = current_.icons;
+  normalize(current_.icons.theme);
+  normalize(current_.icons.fallback);
+  if (previous_icons.theme != current_.icons.theme) emit iconThemeChanged();
+  if (previous_icons.fallback != current_.icons.fallback) emit fallbackIconThemeChanged();
   emit themeSchemeChanged();
   emit themeModeChanged();
   if (document_ == nullptr && dirty != isDirty()) {

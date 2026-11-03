@@ -542,3 +542,73 @@ TEST(ShellSettingsEditModelTest, TaskbarSettingsTrackDirtyAndReload) {
   EXPECT_FALSE(model.windowOverviewAccess());
   EXPECT_TRUE(model.desktopMenuEnabled());
 }
+
+TEST(AppearanceEditModelTest, SchemeSelectionCoordinatesBuiltInIconsAndPreservesCustomSettings) {
+  AppearanceEditModel model;
+  model.setIconTheme("HoloNight");
+  model.setFallbackIconTheme("Papirus");
+  model.setThemeScheme("holonight-mocha");
+  EXPECT_EQ(model.iconTheme(), "HoloNight-Dark");
+  EXPECT_EQ(model.fallbackIconTheme(), "Papirus-Dark");
+  model.setThemeMode("light");
+  EXPECT_EQ(model.iconTheme(), "HoloNight");
+  EXPECT_EQ(model.fallbackIconTheme(), "Papirus");
+  model.setIconTheme("Custom");
+  model.setCursorTheme("CustomCursor");
+  model.setThemeMode("dark");
+  EXPECT_EQ(model.iconTheme(), "Custom");
+  EXPECT_EQ(model.fallbackIconTheme(), "Papirus-Dark");
+  EXPECT_EQ(model.cursorTheme(), "CustomCursor");
+}
+
+TEST(AppearanceEditModelTest, CoordinatedIconsDiscardAndSaveWithDocument) {
+  QTemporaryDir directory;
+  AppearanceEditModel model;
+  AppearanceFileService files(&model, directory.filePath("appearance.toml"));
+  ASSERT_TRUE(files.load());
+  model.setThemeScheme("holonight-light");
+  ASSERT_EQ(files.save(), AppearanceFileService::SaveResult::Success);
+  model.setThemeMode("dark");
+  EXPECT_EQ(model.iconTheme(), "HoloNight-Dark");
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.themeMode(), "light");
+  EXPECT_EQ(model.iconTheme(), "HoloNight");
+  model.setThemeMode("dark");
+  ASSERT_EQ(files.stage(), AppearanceFileService::SaveResult::Success);
+  ASSERT_TRUE(files.rollback());
+  EXPECT_EQ(model.iconTheme(), "HoloNight-Dark");
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.iconTheme(), "HoloNight");
+  model.setThemeMode("dark");
+  ASSERT_EQ(files.save(), AppearanceFileService::SaveResult::Success);
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.iconTheme(), "HoloNight-Dark");
+  EXPECT_EQ(model.fallbackIconTheme(), "Papirus-Dark");
+}
+
+TEST(SettingsSaveCoordinatorTest, LabwcConflictIsReportedOnceWithRecoveryGuidance) {
+  QTemporaryDir directory;
+  const QString adapter_path = writeAdapter(
+      directory,
+      QByteArrayLiteral(
+          "cat <<'RESPONSE'\n"
+          R"({"protocol_version":1,"operation":"apply","result":"degraded","success":true,"degraded":true,"outputs":[{"name":"labwc/font/ActiveWindow/size","status":"conflict","apply_mode":"live","diagnostic":"Whole labwc update skipped: field ActiveWindow/size at /test/rc.xml; expected last-written value [13], actual [12]."}]})"
+          "\nRESPONSE\n"));
+  AppearanceEditModel appearance;
+  ShellSettingsEditModel shell;
+  AppearanceFileService appearance_files(&appearance, directory.filePath("appearance.toml"));
+  ShellConfigFileService shell_files(&shell, directory.filePath("config.toml"));
+  ASSERT_TRUE(appearance_files.load());
+  ASSERT_TRUE(shell_files.load());
+  appearance.setThemeScheme("holonight-light");
+  AppearanceAdapterClient adapter(adapter_path);
+  SettingsSaveCoordinator coordinator(&appearance, &appearance_files, &shell, &shell_files, &adapter);
+  QSignalSpy busy(&coordinator, &SettingsSaveCoordinator::isBusyChanged);
+  coordinator.save();
+  ASSERT_TRUE(busy.wait());
+  EXPECT_FALSE(appearance.isDirty());
+  EXPECT_EQ(coordinator.resultText().count("Appearance saved"), 1);
+  EXPECT_TRUE(coordinator.resultText().contains("ActiveWindow/size at /test/rc.xml"));
+  EXPECT_TRUE(coordinator.resultText().contains("[13], actual [12]"));
+  EXPECT_TRUE(coordinator.resultText().contains("Integrations"));
+}

@@ -28,6 +28,8 @@ Item {
         switch (pageKey) {
         case "appearance":
             return Qt.resolvedUrl("AppearancePage.qml");
+        case "keybindings":
+            return Qt.resolvedUrl("KeyboardPage.qml");
         case "bar":
             return Qt.resolvedUrl("BarPage.qml");
         case "weather":
@@ -56,7 +58,7 @@ Item {
             properties.editModel = root.appearanceModel;
             properties.wallpaperController = root.wallpaperController;
         }
-        else if (pageKey === "bar" || pageKey === "weather")
+        else if (pageKey === "bar" || pageKey === "weather" || pageKey === "keybindings")
             properties.editModel = root.shellModel;
         else if (pageKey === "integrations") {
             properties.appearanceModel = root.appearanceModel;

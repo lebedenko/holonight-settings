@@ -9,6 +9,7 @@ set(SETTINGS_QML_FILES
     qml/AppearancePage.qml
     qml/ColorSchemeSwatchCard.qml
     qml/EdgeFadeOverlay.qml
+    qml/KeyboardPage.qml
     qml/BarPage.qml
     qml/WeatherPage.qml
     qml/IntegrationsPage.qml

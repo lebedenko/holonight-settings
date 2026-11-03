@@ -352,3 +352,48 @@ TEST(ConfigurationDocuments, CommonSavePreservesHiddenCompositorValuesAndUnrelat
   EXPECT_FALSE(reloaded.windowOverviewAccess());
   EXPECT_TRUE(reloaded.desktopMenuEnabled());
 }
+
+TEST(ConfigurationDocuments, SharedNavigationSaveDiscardResetAndPreservation) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  write(path, "# shared preferences\n[bar.workspaces]\ncount = 7 # retained\n[unknown]\nfoo = 'bar'\n");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.navigationStyle(), "standard");
+  model.setnavigationStyle("vim-navigation");
+  EXPECT_TRUE(model.isDirty());
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.navigationStyle(), "standard");
+  model.setnavigationStyle("vim-navigation");
+  model.setworkspaceCount(8);
+  ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success) << files.error().toStdString();
+  EXPECT_TRUE(read(path).contains("# retained"));
+  EXPECT_TRUE(read(path).contains("foo = 'bar'"));
+  EXPECT_TRUE(read(path).contains("vim-navigation"));
+  model.setworkspaceCount(9);
+  ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+  EXPECT_EQ(model.navigationStyle(), "vim-navigation");
+  model.document()->reset("navigationStyle");
+  EXPECT_EQ(model.navigationStyle(), "standard");
+  ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+  EXPECT_FALSE(read(path).contains("navigation ="));
+  EXPECT_EQ(model.workspaceCount(), 9);
+}
+TEST(ConfigurationDocuments, SharedNavigationConflictsAndInvalidUpdates) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  write(path, "[input]\nnavigation = 'standard'\n");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  model.setnavigationStyle("vim-navigation");
+  write(path, "# external reset\n");
+  EXPECT_EQ(files.save(), ShellConfigFileService::SaveResult::Conflict);
+  model.document()->resolve("navigationStyle", true);
+  ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+  write(path, "[input]\nnavigation = 'broken'\n");
+  EXPECT_FALSE(files.load());
+  EXPECT_EQ(model.navigationStyle(), "vim-navigation");
+  EXPECT_FALSE(model.document()->diagnostics().isEmpty());
+}

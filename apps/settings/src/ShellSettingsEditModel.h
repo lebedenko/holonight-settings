@@ -13,6 +13,7 @@ class ShellSettingsEditModel : public QObject {
   QML_UNCREATABLE("ShellSettingsEditModel is created by SettingsApplication")
 
 #define SHELL_PROPERTY(type, name) Q_PROPERTY(type name READ name WRITE set##name NOTIFY name##Changed)
+  SHELL_PROPERTY(QString, navigationStyle)
   SHELL_PROPERTY(bool, taskbarEnabled)
   SHELL_PROPERTY(bool, taskbarGrouped)
   SHELL_PROPERTY(bool, windowOverviewAccess)
@@ -45,6 +46,7 @@ class ShellSettingsEditModel : public QObject {
 #define SHELL_ACCESSORS(type, name) \
   type name() const;                \
   void set##name(type value);
+  SHELL_ACCESSORS(QString, navigationStyle)
   SHELL_ACCESSORS(bool, taskbarEnabled)
   SHELL_ACCESSORS(bool, taskbarGrouped)
   SHELL_ACCESSORS(bool, windowOverviewAccess)
@@ -81,6 +83,7 @@ class ShellSettingsEditModel : public QObject {
 
  Q_SIGNALS:
 #define SHELL_SIGNAL(name) void name##Changed();
+  SHELL_SIGNAL(navigationStyle)
   SHELL_SIGNAL(taskbarEnabled)
   SHELL_SIGNAL(taskbarGrouped)
   SHELL_SIGNAL(windowOverviewAccess)
@@ -108,6 +111,7 @@ class ShellSettingsEditModel : public QObject {
   void isDirtyChanged();
 
  private:
+  QString navigation_style_{"standard"};
   DocumentEditSession* document_{nullptr};
   void changed(void (ShellSettingsEditModel::*signal)(), bool was_dirty);
   HoloNight::ShellConfig::ProductConfig current_;

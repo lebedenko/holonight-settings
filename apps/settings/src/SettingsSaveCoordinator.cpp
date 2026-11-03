@@ -119,13 +119,13 @@ void SettingsSaveCoordinator::save() {
     const auto result = shell_files_->save();
     if (result == ShellConfigFileService::SaveResult::Success) {
       ++succeeded_;
-      outcomes_ << QStringLiteral("Shell settings saved");
+      outcomes_ << QStringLiteral("Preferences saved");
     } else {
       ++failed_;
       if (result == ShellConfigFileService::SaveResult::Conflict && conflict_domain_.isEmpty()) {
-        setConflict(QStringLiteral("Shell settings"));
+        setConflict(QStringLiteral("Preferences"));
       }
-      outcomes_ << QStringLiteral("Shell settings: ") + shell_files_->error();
+      outcomes_ << QStringLiteral("Preferences: ") + shell_files_->error();
     }
   }
   if (appearance_staged_) {
@@ -154,7 +154,7 @@ void SettingsSaveCoordinator::discard() {
     errors << QStringLiteral("Appearance: ") + appearance_files_->error();
   }
   if (!shell_files_->load()) {
-    errors << QStringLiteral("Shell settings: ") + shell_files_->error();
+    errors << QStringLiteral("Preferences: ") + shell_files_->error();
   }
   setResult(errors.isEmpty() ? QStringLiteral("Changes discarded") : errors.join(QStringLiteral("; ")));
   setConflict({});
@@ -162,7 +162,7 @@ void SettingsSaveCoordinator::discard() {
 }
 QVariantList SettingsSaveCoordinator::conflicts() const {
   QVariantList result;
-  for (const auto& domain : {QStringLiteral("Appearance"), QStringLiteral("Shell settings")}) {
+  for (const auto& domain : {QStringLiteral("Appearance"), QStringLiteral("Preferences")}) {
     const auto* document = domain == QStringLiteral("Appearance") ? appearance_->document() : shell_->document();
     for (const auto& item : document->conflicts()) {
       auto row = item.toMap();

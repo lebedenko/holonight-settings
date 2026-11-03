@@ -25,7 +25,7 @@ Item {
         {key: "bluetooth",     label: qsTr("Bluetooth"),     icon: "bluetooth"},
         {key: "audio",         label: qsTr("Audio"),         icon: "audio"},
         {key: "workspaces",    label: qsTr("Workspaces"),    icon: "workspaces"},
-        {key: "keybindings",   label: qsTr("Keybindings"),   icon: "keybindings"},
+        {key: "keybindings",   label: qsTr("Keyboard"),   icon: "keybindings"},
         {key: "integrations",  label: qsTr("Integrations"),  icon: "integrations"},
         {key: "advanced",      label: qsTr("Advanced"),      icon: "advanced"},
         {key: "about",         label: qsTr("About"),         icon: "about"}

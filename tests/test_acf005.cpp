@@ -346,7 +346,7 @@ TEST(SettingsSaveCoordinatorTest, AdapterFailureRollsBackAppearanceButSavesShell
   EXPECT_EQ(restored.readAll(), original);
   EXPECT_TRUE(appearance.isDirty());
   EXPECT_FALSE(shell.isDirty());
-  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Shell settings")));
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Preferences")));
 }
 
 TEST(ShellConfigFileServiceTest, ProductSaveDoesNotCreateAppearanceFile) {
@@ -395,7 +395,7 @@ TEST(SettingsSaveCoordinatorTest, AppearanceSuccessAndShellFailureAreIndependent
 
   EXPECT_FALSE(appearance.isDirty());
   EXPECT_TRUE(shell.isDirty());
-  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Shell settings")));
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Preferences")));
   const QByteArray appearance_hash = fileHash(appearance_path);
   ASSERT_TRUE(QDir().rmdir(shell_path));
   coordinator.save();
@@ -422,7 +422,7 @@ TEST(SettingsSaveCoordinatorTest, AppearanceFailureDoesNotPreventShellSuccess) {
   EXPECT_TRUE(appearance.isDirty());
   EXPECT_FALSE(shell.isDirty());
   EXPECT_TRUE(QFile::exists(shell_path));
-  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Shell settings")));
+  EXPECT_TRUE(coordinator.resultText().contains(QStringLiteral("Preferences")));
 }
 
 TEST(SettingsSaveCoordinatorTest, DiscardReloadsDirtyDomainsIndependently) {

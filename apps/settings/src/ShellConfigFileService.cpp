@@ -2,11 +2,18 @@
 
 #include "ShellSettingsEditModel.h"
 
+#include <holonight/config/input.h>
 #include <holonight_shell_config/config_path.h>
 #include <holonight_shell_config/config_schema.h>
 
 namespace Config = HoloNight::Config;
 namespace {
+Config::DocumentSchema preferencesSchema() {
+  auto schema = HoloNight::ShellConfig::documentSchema();
+  const auto input = Config::inputDocumentSchema();
+  schema.fields.insert(schema.fields.end(), input.fields.begin(), input.fields.end());
+  return schema;
+}
 std::vector<DocumentEditSession::Field> shellFields() {
   using Field = DocumentEditSession::Field;
   std::vector<Field> result{
@@ -63,6 +70,12 @@ std::vector<DocumentEditSession::Field> shellFields() {
       field.constraints["choices"] = choices;
     }
   }
+  result.push_back(Field{.property = "navigationStyle",
+                         .key = {"input", "navigation"},
+                         .label = "Navigation style",
+                         .enabled_property = {},
+                         .sensitive = false,
+                         .constraints = {{"choices", QStringList{"standard", "vim-navigation"}}}});
   return result;
 }
 }  // namespace
@@ -70,13 +83,17 @@ ShellConfigFileService::ShellConfigFileService(ShellSettingsEditModel* model, QS
     : model_(model), path_(path.isEmpty() ? HoloNight::ShellConfig::resolveProductConfigPath() : std::move(path)) {
   auto fields = shellFields();
   document_ = std::make_unique<DocumentEditSession>(
-      model_, path_, fields, HoloNight::ShellConfig::documentSchema(),
+      model_, path_, fields, preferencesSchema(),
       [fields](const Config::DocumentSnapshot& snapshot) -> Config::Result<QVariantMap> {
         const auto decoded = HoloNight::ShellConfig::decodeDocument(snapshot);
         if (!decoded) {
           return Config::Result<QVariantMap>::failure(decoded.diagnostics);
         }
+        const auto input = Config::decodeInputDocument(snapshot);
+        if (!input) return Config::Result<QVariantMap>::failure(input.diagnostics);
         ShellSettingsEditModel temporary;
+        temporary.setnavigationStyle(*input.value == Config::InputProfile::VimNavigation ? "vim-navigation"
+                                                                                         : "standard");
         temporary.load(*decoded.value);
         return Config::Result<QVariantMap>::success(DocumentEditSession::properties(temporary, fields),
                                                     decoded.diagnostics);
@@ -94,8 +111,7 @@ ShellConfigFileService::SaveResult ShellConfigFileService::save() {
     error_ = document_->diagnostics();
     return SaveResult::Error;
   }
-  const auto result =
-      Config::saveDocument(path_.toStdString(), document_->edits(), HoloNight::ShellConfig::documentSchema());
+  const auto result = Config::saveDocument(path_.toStdString(), document_->edits(), preferencesSchema());
   if (result.status != Config::SaveStatus::Success) {
     document_->report(result);
     error_ = document_->diagnostics();

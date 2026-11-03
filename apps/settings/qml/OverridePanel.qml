@@ -33,7 +33,7 @@ ColumnLayout {
             id: row
             required property var modelData
             objectName: "override-" + row.modelData.property
-            visible: (root.group === "" || (root.group === "weather") === row.modelData.property.startsWith("weather")) && (!root.sessionContext || root.sessionContext.isApplicable(row.modelData.property))
+            visible: (row.modelData.property !== "navigationStyle") && (root.group === "" || (root.group === "weather") === row.modelData.property.startsWith("weather")) && (!root.sessionContext || root.sessionContext.isApplicable(row.modelData.property))
             Layout.fillWidth: true
             HnLabel {
                 Layout.fillWidth: true

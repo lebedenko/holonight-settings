@@ -326,6 +326,17 @@ void verify(QQuickWindow* window) {
   set(weather, "contentY", 100.0);
   require(weather->property("contentY").toReal() == 100.0, "Weather scrolling");
 
+  page("keybindings");
+  auto* navigation = named(window, "navigationStyleSelector");
+  origin(navigation, style + "ComboBox.qml");
+  require(navigation->property("currentIndex").toInt() == 0, "Navigation must default to Standard");
+  set(navigation, "currentIndex", 1);
+  require(QMetaObject::invokeMethod(navigation, "activated", Q_ARG(int, 1)), "Navigation activation");
+  require(shell->property("navigationStyle").toString() == QStringLiteral("vim-navigation"),
+          "Navigation selector did not stage Vim");
+  invoke(named(window, "resetNavigationStyle"), "clicked");
+  require(navigation->property("currentIndex").toInt() == 0, "Navigation reset did not restore Standard");
+
   page("integrations");
   origin(named(window, "refreshIntegrationsButton"), style + "Button.qml");
   page("bluetooth");

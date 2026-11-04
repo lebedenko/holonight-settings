@@ -22,7 +22,7 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
           &SettingsSaveCoordinator::conflictsChanged);
   connect(shell_->document(), &DocumentEditSession::stateChanged, this, &SettingsSaveCoordinator::conflictsChanged);
   if (adapter_ != nullptr) {
-    connect(adapter_, &AppearanceAdapterClient::completed, this, [this](const AppearanceAdapterResponse& response) {
+    connect(adapter_, &AppearanceAdapterClient::completed, this, [this](const AppearanceAdapterResponse&) {
       if (!busy_) {
         return;
       }
@@ -42,8 +42,7 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
       setConflict(remaining.isEmpty() ? QString{}
                                       : remaining.first().toMap().value(QStringLiteral("domain")).toString());
       ++succeeded_;
-      outcomes_ << (response.result == QStringLiteral("degraded") ? adapter_->resultText()
-                                                                  : QStringLiteral("Appearance saved"));
+      outcomes_ << adapter_->resultText();
       finishSave();
     });
     connect(adapter_, &AppearanceAdapterClient::failed, this, [this](const QString& diagnostic) {
@@ -203,5 +202,6 @@ void SettingsSaveCoordinator::restoreNativeDefaults() {
   if (busy_ || adapter_ == nullptr || appearance_->isDirty()) {
     return;
   }
+  setBusy(true);
   adapter_->revert();
 }

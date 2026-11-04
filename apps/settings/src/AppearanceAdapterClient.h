@@ -28,6 +28,7 @@ class AppearanceAdapterClient : public QObject {
   QML_UNCREATABLE("AppearanceAdapterClient is created by SettingsApplication")
   Q_PROPERTY(bool busy READ busy NOTIFY busyChanged)
   Q_PROPERTY(QString resultText READ resultText NOTIFY resultChanged)
+  Q_PROPERTY(QString backupLocation READ backupLocation NOTIFY resultChanged)
   Q_PROPERTY(QVariantList outputs READ outputs NOTIFY resultChanged)
 
  public:
@@ -35,6 +36,7 @@ class AppearanceAdapterClient : public QObject {
   [[nodiscard]] bool busy() const { return process_.state() != QProcess::NotRunning; }
   [[nodiscard]] QString resultText() const { return result_text_; }
   [[nodiscard]] QVariantList outputs() const;
+  [[nodiscard]] QString backupLocation() const { return backup_location_; }
   void apply(const QString& appearance_path);
   Q_INVOKABLE void status(const QString& appearance_path = {});
   Q_INVOKABLE void revert();
@@ -49,6 +51,8 @@ class AppearanceAdapterClient : public QObject {
   void start(QString operation, const QStringList& arguments);
   void finish(int exit_code, QProcess::ExitStatus exit_status);
   void fail(QString diagnostic);
+  QString pending_path_;
+  QString backup_location_;
   QString executable_;
   QString operation_;
   QByteArray output_;

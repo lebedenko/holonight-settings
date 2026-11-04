@@ -29,8 +29,15 @@ Flickable {
             rawText: root.adapter.resultText === "" ? qsTr("Refresh to inspect native toolkit propagation.") : root.adapter.resultText
         }
 
+        HnLabel { Layout.fillWidth: true; wrapMode: Text.WordWrap; role: HnTypographyRole.Body; rawText: qsTr("Restore the appearance from before HoloNight applied it. Later manual edits remain.") }
+        Controls.Button {
+            visible: root.adapter.backupLocation !== ""
+            text: qsTr("Open Appearance Backups")
+            onClicked: Qt.openUrlExternally("file://" + root.adapter.backupLocation)
+        }
+        Controls.CheckBox { id: technical; text: qsTr("Show technical details") }
         Repeater {
-            model: root.adapter.outputs
+            model: technical.checked ? root.adapter.outputs : []
             delegate: HnSurfaceFrame {
                 required property var modelData
                 Layout.fillWidth: true
@@ -56,7 +63,7 @@ Flickable {
             }
             Controls.Button {
                 objectName: "restoreNativeDefaultsButton"
-                text: qsTr("Restore Native Toolkit Defaults")
+                text: qsTr("Restore Previous Native Appearance")
                 enabled: !root.saveCoordinator.isBusy && !root.adapter.busy && !root.appearanceModel.isDirty
                 onClicked: root.saveCoordinator.restoreNativeDefaults()
             }

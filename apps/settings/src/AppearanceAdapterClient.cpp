@@ -60,8 +60,8 @@ QVariantList AppearanceAdapterClient::outputs() const {
 }
 
 void AppearanceAdapterClient::apply(const QString& path) {
-  start(QStringLiteral("apply"),
-        {QStringLiteral("apply"), QStringLiteral("--appearance"), path, QStringLiteral("--json")});
+  pending_path_ = path;
+  start(QStringLiteral("capabilities"), {QStringLiteral("capabilities"), QStringLiteral("--json")});
 }
 void AppearanceAdapterClient::status(const QString& appearance_path) {
   QStringList arguments{QStringLiteral("status"), QStringLiteral("--json")};
@@ -84,6 +84,10 @@ void AppearanceAdapterClient::start(QString operation, const QStringList& argume
   QString executable = executable_;
   if (executable.isEmpty()) {
     executable = QStandardPaths::findExecutable(QStringLiteral("holonight-appearance-adapter"));
+  }
+  if (executable.isEmpty() && operation_ == QStringLiteral("capabilities")) {
+    fail(tr("Install or update the appearance adapter to apply Settings changes"));
+    return;
   }
   if (executable.isEmpty()) {
     response_ = {.operation = operation_, .result = QStringLiteral("degraded"), .outputs = {}};
@@ -126,10 +130,26 @@ void AppearanceAdapterClient::finish(int exit_code, QProcess::ExitStatus exit_st
   QJsonParseError parse_error;
   const auto document = QJsonDocument::fromJson(output_, &parse_error);
   if (exit_status != QProcess::NormalExit || parse_error.error != QJsonParseError::NoError || !document.isObject()) {
-    fail(tr("Appearance propagation returned an invalid response"));
+    fail(operation_ == QStringLiteral("capabilities") ? tr("Update the appearance adapter to apply Settings changes")
+                                                      : tr("Appearance propagation returned an invalid response"));
     return;
   }
   const QJsonObject root = document.object();
+  if (operation_ == QStringLiteral("capabilities")) {
+    if (exit_code != 0 || !root.value(QStringLiteral("success")).toBool() ||
+        root.value(QStringLiteral("operation")).toString() != QStringLiteral("capabilities") ||
+        root.value(QStringLiteral("protocol_version")).toInt() != 1 ||
+        !root.value(QStringLiteral("capabilities")).toArray().contains(QStringLiteral("replace-policy"))) {
+      fail(tr("Update the appearance adapter to apply Settings changes"));
+      return;
+    }
+    active_ = false;
+    start(QStringLiteral("apply"), {QStringLiteral("apply"), QStringLiteral("--appearance"), pending_path_,
+                                    QStringLiteral("--policy"), QStringLiteral("replace"), QStringLiteral("--json")});
+    return;
+  }
+  const auto backup = root.value(QStringLiteral("backup_location")).toString();
+  if (!backup.isEmpty()) backup_location_ = backup;
   const QString result = root.value(QStringLiteral("result")).toString();
   const bool success = root.value(QStringLiteral("success")).toBool();
   const bool degraded = root.value(QStringLiteral("degraded")).toBool();
@@ -162,20 +182,29 @@ void AppearanceAdapterClient::finish(int exit_code, QProcess::ExitStatus exit_st
     });
   }
   if (!success) {
-    fail(tr("Appearance propagation failed; the appearance file was restored"));
+    response_ = parsed;
+    QString diagnostic = tr("Appearance propagation failed");
+    for (const auto& output : parsed.outputs) {
+      if (output.status == QStringLiteral("error") && !output.diagnostic.isEmpty()) {
+        diagnostic = output.diagnostic;
+        break;
+      }
+    }
+    fail(diagnostic);
     return;
   }
   response_ = std::move(parsed);
   active_ = false;
-  result_text_ = degraded ? tr("Appearance saved with limited native toolkit propagation")
-                          : tr("Appearance propagated successfully");
+  result_text_ =
+      operation_ == QStringLiteral("apply")
+          ? (backup_location_.isEmpty() ? tr("Appearance applied") : tr("Applied; custom settings backed up"))
+          : (degraded ? tr("Native appearance has limited integration; see technical details")
+                      : tr("Native appearance updated"));
   for (const auto& output : response_.outputs) {
-    if (output.name.startsWith(QStringLiteral("labwc/")) &&
-        (output.status == QStringLiteral("conflict") || output.status == QStringLiteral("unavailable") ||
-         output.status == QStringLiteral("error"))) {
-      result_text_ +=
-          QStringLiteral("; ") + output.name + QStringLiteral(": ") + output.diagnostic + tr(" See Integrations.");
-    }
+    if (output.name == QStringLiteral("labwc/reload") && output.status == QStringLiteral("unavailable"))
+      result_text_ = tr("Appearance written; compositor reload unavailable. See Integrations.");
+    if (output.name == QStringLiteral("labwc/selection") && output.status == QStringLiteral("delegated"))
+      result_text_ += tr(" Window decorations use a custom theme.");
   }
   emit resultChanged();
   emit completed(response_);

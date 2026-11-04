@@ -111,3 +111,8 @@ For manual migration from the unreleased `input.toml` contract, copy its `profil
 value into `[input].navigation` in `config.toml`. The old `version` and `profile`
 keys are no longer read. Old files are never deleted automatically. There are no
 application-specific navigation overrides.
+
+Save and Reapply recover native appearance changes, including manual font and
+color edits, after checking adapter replacement support. Integrations provides
+backup access and **Restore Previous Native Appearance**; later manual edits remain.
+See [recoverable appearance](docs/sdd/recoverable-appearance/DESIGN.md).

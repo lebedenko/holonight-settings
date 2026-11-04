@@ -586,7 +586,7 @@ TEST(AppearanceEditModelTest, CoordinatedIconsDiscardAndSaveWithDocument) {
   EXPECT_EQ(model.fallbackIconTheme(), "Papirus-Dark");
 }
 
-TEST(SettingsSaveCoordinatorTest, LabwcConflictIsReportedOnceWithRecoveryGuidance) {
+TEST(SettingsSaveCoordinatorTest, OlderAdapterRequiresUpdateAndRetainsEdits) {
   QTemporaryDir directory;
   const QString adapter_path = writeAdapter(
       directory,
@@ -606,9 +606,31 @@ TEST(SettingsSaveCoordinatorTest, LabwcConflictIsReportedOnceWithRecoveryGuidanc
   QSignalSpy busy(&coordinator, &SettingsSaveCoordinator::isBusyChanged);
   coordinator.save();
   ASSERT_TRUE(busy.wait());
-  EXPECT_FALSE(appearance.isDirty());
-  EXPECT_EQ(coordinator.resultText().count("Appearance saved"), 1);
-  EXPECT_TRUE(coordinator.resultText().contains("ActiveWindow/size at /test/rc.xml"));
-  EXPECT_TRUE(coordinator.resultText().contains("[13], actual [12]"));
-  EXPECT_TRUE(coordinator.resultText().contains("Integrations"));
+  EXPECT_TRUE(appearance.isDirty());
+  EXPECT_TRUE(coordinator.resultText().contains("Update the appearance adapter"));
+}
+
+TEST(AppearanceAdapterClientTest, ReplacementRequiresCapabilityAndReportsBackup) {
+  QTemporaryDir directory;
+  const QString arguments_path = directory.filePath("arguments");
+  const QString adapter = writeAdapter(
+      directory,
+      QByteArrayLiteral("if [ \"$1\" = capabilities ]; then\n"
+                        "printf '%s\\n' "
+                        "'{\"protocol_version\":1,\"operation\":\"capabilities\",\"success\":true,\"capabilities\":["
+                        "\"replace-policy\"]}'\n"
+                        "exit 0\nfi\nprintf '%s\\n' \"$@\" >'") +
+          arguments_path.toUtf8() +
+          QByteArrayLiteral("'\nprintf '%s\\n' "
+                            "'{\"protocol_version\":1,\"operation\":\"apply\",\"result\":\"success\",\"success\":true,"
+                            "\"degraded\":false,\"outputs\":[],\"backup_location\":\"/test/backups/one\"}'\n"));
+  AppearanceAdapterClient client(adapter);
+  QSignalSpy completed(&client, &AppearanceAdapterClient::completed);
+  client.apply("/test/appearance.toml");
+  ASSERT_TRUE(completed.wait());
+  QFile arguments(arguments_path);
+  ASSERT_TRUE(arguments.open(QIODevice::ReadOnly));
+  EXPECT_EQ(arguments.readAll(), "apply\n--appearance\n/test/appearance.toml\n--policy\nreplace\n--json\n");
+  EXPECT_EQ(client.backupLocation(), "/test/backups/one");
+  EXPECT_EQ(client.resultText(), "Applied; custom settings backed up");
 }

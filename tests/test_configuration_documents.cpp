@@ -306,7 +306,7 @@ TEST(ConfigurationDocuments, WeatherLegacyDefaultsRespectIndividualUnitOverrides
   ShellSettingsEditModel model;
   ShellConfigFileService files(&model, path);
   ASSERT_TRUE(files.load());
-  EXPECT_EQ(model.weatherProvider(), "openweathermap");
+  EXPECT_TRUE(model.weatherProvider().isEmpty());
   EXPECT_EQ(model.weatherLocationSource(), "manual");
   EXPECT_EQ(model.weatherTempUnit(), "kelvin");
   EXPECT_EQ(model.weatherWindUnit(), "mph");
@@ -396,4 +396,101 @@ TEST(ConfigurationDocuments, SharedNavigationConflictsAndInvalidUpdates) {
   EXPECT_FALSE(files.load());
   EXPECT_EQ(model.navigationStyle(), "vim-navigation");
   EXPECT_FALSE(model.document()->diagnostics().isEmpty());
+}
+
+TEST(ConfigurationDocuments, WeatherProviderProjectionDistinguishesUnconfiguredAndLegacy) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  EXPECT_TRUE(model.weatherProvider().isEmpty());
+  for (const auto& bytes : {QByteArray{}, QByteArray{"[weather]\n"}, QByteArray{"[weather]\napi_key=''\n"}}) {
+    write(path, bytes);
+    ASSERT_TRUE(files.load());
+    EXPECT_TRUE(model.weatherProvider().isEmpty());
+    EXPECT_FALSE(model.isDirty());
+  }
+  for (const auto& provider : {QString{"open-meteo"}, QString{"openweathermap"}}) {
+    write(path, "[weather]\nprovider='" + provider.toUtf8() + "'\n");
+    ASSERT_TRUE(files.load());
+    EXPECT_EQ(model.weatherProvider(), provider);
+    EXPECT_FALSE(model.isDirty());
+  }
+  write(path, "[weather]\napi_key='legacy'\n");
+  ASSERT_TRUE(files.load());
+  EXPECT_EQ(model.weatherProvider(), "openweathermap");
+  EXPECT_FALSE(model.isDirty());
+  model.selectWeatherProvider("open-meteo");
+  EXPECT_EQ(model.weatherApiKey(), "legacy");
+  model.selectWeatherProvider("openweathermap");
+  EXPECT_EQ(model.weatherApiKey(), "legacy");
+  EXPECT_TRUE(model.isDirty());
+}
+
+TEST(ConfigurationDocuments, WeatherFirstProviderSelectionSavesDiscardsResetsAndReloads) {
+  for (const auto& provider : {QString{"open-meteo"}, QString{"openweathermap"}}) {
+    QTemporaryDir directory;
+    const auto path = directory.filePath("config.toml");
+    ShellSettingsEditModel model;
+    ShellConfigFileService files(&model, path);
+    ASSERT_TRUE(files.load());
+    bool observed = false;
+    QObject::connect(&model, &ShellSettingsEditModel::weatherProviderChanged, &model, [&] {
+      if (model.weatherProvider() == provider) {
+        observed = true;
+        EXPECT_EQ(model.weatherLocationSource(), "manual");
+      }
+    });
+    model.selectWeatherProvider(provider);
+    EXPECT_TRUE(observed);
+    EXPECT_TRUE(model.isDirty());
+    EXPECT_EQ(model.weatherTempUnit(), "celsius");
+    EXPECT_EQ(model.weatherWindUnit(), "kmh");
+    EXPECT_EQ(model.weatherPressureUnit(), "hpa");
+    EXPECT_EQ(model.weatherRefreshInterval(), 1800);
+    EXPECT_TRUE(model.weatherShowInBar());
+    EXPECT_FALSE(model.weatherCompactMode());
+    EXPECT_TRUE(model.weatherShowFeelsLike());
+    EXPECT_TRUE(model.weatherShowLocation());
+    ASSERT_TRUE(files.load());
+    EXPECT_TRUE(model.weatherProvider().isEmpty());
+    EXPECT_FALSE(model.isDirty());
+    model.selectWeatherProvider(provider);
+    ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+    EXPECT_TRUE(read(path).contains("provider"));
+    ASSERT_TRUE(files.load());
+    EXPECT_EQ(model.weatherProvider(), provider);
+    EXPECT_EQ(model.weatherLocationSource(), "manual");
+    model.document()->reset("weatherProvider");
+    EXPECT_TRUE(model.weatherProvider().isEmpty());
+    ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+    write(path, "[weather]\nprovider='open-meteo'\n");
+    ASSERT_TRUE(QTest::qWaitFor([&] { return model.weatherProvider() == "open-meteo"; }));
+    EXPECT_FALSE(model.isDirty());
+  }
+}
+
+TEST(ConfigurationDocuments, WeatherProviderSwitchPreservesExplicitPreferencesAndLocation) {
+  QTemporaryDir directory;
+  const auto path = directory.filePath("config.toml");
+  write(path,
+        "[weather]\nlocation_source='auto'\ntemp_unit='fahrenheit'\nwind_unit='mph'\n"
+        "city='Saved'\nlatitude=10.0\nlongitude=20.0\ngeo_api_key='geo'\nshow_in_bar=false\n");
+  ShellSettingsEditModel model;
+  ShellConfigFileService files(&model, path);
+  ASSERT_TRUE(files.load());
+  for (const auto& provider : {QString{"openweathermap"}, QString{"open-meteo"}}) {
+    model.selectWeatherProvider(provider);
+    EXPECT_EQ(model.weatherLocationSource(), "auto");
+    EXPECT_EQ(model.weatherTempUnit(), "fahrenheit");
+    EXPECT_EQ(model.weatherWindUnit(), "mph");
+    EXPECT_EQ(model.weatherCity(), "Saved");
+    EXPECT_EQ(model.weatherLatitude().toDouble(), 10);
+    EXPECT_EQ(model.weatherGeoApiKey(), "geo");
+    EXPECT_FALSE(model.weatherShowInBar());
+    ASSERT_EQ(files.save(), ShellConfigFileService::SaveResult::Success);
+    ASSERT_TRUE(files.load());
+    EXPECT_EQ(model.weatherProvider(), provider);
+  }
 }

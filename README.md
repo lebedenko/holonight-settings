@@ -52,6 +52,15 @@ change is preserved and reported as an application failure. Cooperating writers 
 arbitrary editors retain a race between the final revision check and replacement. No daemon or running Shell is needed
 for document editing. Files, Viewer and other applications are outside this settings migration.
 
+Weather settings initially show only “Choose a provider…” when no provider or nonempty
+legacy weather API key is saved. A saved provider remains selected even if setup is
+incomplete; legacy API keys select OpenWeatherMap. Selecting a provider immediately
+reveals its settings and stages the choice through Save/Discard. First selection
+uses manual location unless a location source override exists. Existing units,
+display preferences, credentials and location values are preserved when switching
+providers. OpenWeatherMap shows its API key field; automatic location shows the
+IP geolocation credentials.
+
 ## Wallpaper picker
 
 Run `holonight-settings --wallpaper` to open the dedicated Wallpaper window.

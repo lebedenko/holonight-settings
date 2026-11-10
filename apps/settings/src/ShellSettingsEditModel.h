@@ -77,6 +77,7 @@ class ShellSettingsEditModel : public QObject {
   [[nodiscard]] const HoloNight::ShellConfig::ProductConfig& value() const { return current_; }
   void load(const HoloNight::ShellConfig::ProductConfig& value);
   void markSaved();
+  Q_INVOKABLE void selectWeatherProvider(QString provider);
   Q_INVOKABLE bool selectLocation(const QString& city, const QString& country, double latitude, double longitude);
   [[nodiscard]] DocumentEditSession* document() const { return document_; }
   void attachDocument(DocumentEditSession* document);

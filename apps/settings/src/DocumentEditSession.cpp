@@ -170,6 +170,27 @@ void DocumentEditSession::show() {
   }
   refreshing_ = false;
 }
+void DocumentEditSession::stageOverrides(const QStringList& properties) {
+  for (const auto& property : properties) {
+    const auto field = std::ranges::find(fields_, property.toUtf8(), &Field::property);
+    if (field == fields_.end()) {
+      continue;
+    }
+    const auto pending = controlValue(*field);
+    auto edit = std::ranges::find(edits_, field->key, &Config::Edit::key);
+    if (pending == snapshot_.value(field->key)) {
+      if (edit != edits_.end()) {
+        edits_.erase(edit);
+      }
+    } else if (edit == edits_.end()) {
+      edits_.push_back({.key = field->key, .baseline = snapshot_.value(field->key), .pending = pending});
+    } else {
+      edit->pending = pending;
+    }
+  }
+  show();
+  notify();
+}
 void DocumentEditSession::capture() {
   if (refreshing_) {
     return;

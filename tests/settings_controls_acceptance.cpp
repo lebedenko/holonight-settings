@@ -132,7 +132,27 @@ void verifyWeather(QQuickWindow* window) {
           "Weather page transition");
   auto* city = named(window, "weatherCityTextField");
   require(!shell->property("isDirty").toBool(), "Loading weather created edits");
-  set(shell, "weatherProvider", QStringLiteral("open-meteo"));
+  auto* provider = named(window, "weatherProviderComboBox");
+  require(provider->property("currentIndex").toInt() == -1, "Weather provider should be unselected");
+  require(provider->property("displayText").toString() == QStringLiteral("Choose a provider…"), "Provider placeholder");
+  for (const auto* name : {"weatherOverridePanel", "locationSectionFrame", "unitsSectionFrame", "displaySectionFrame",
+                           "weatherApiKeyRow", "weatherGeoApiKeyRow"}) {
+    require(!named(window, name)->property("visible").toBool(), "Unconfigured weather section visible");
+  }
+  for (int index : {0, 1}) {
+    set(provider, "currentIndex", index);
+    require(QMetaObject::invokeMethod(provider, "activated", Q_ARG(int, index)), "Select weather provider");
+    require(shell->property("isDirty").toBool(), "Provider selection not staged");
+    require(shell->property("weatherLocationSource").toString() == "manual", "Initial location source");
+    require(named(window, "weatherApiKeyRow")->property("visible").toBool() ==
+                (shell->property("weatherProvider").toString() == "openweathermap"),
+            "Provider API key visibility");
+  }
+  require(named(window, "unitsSectionFrame")->property("visible").toBool(), "Units remain hidden");
+  require(shell->property("weatherTempUnit").toString() == "celsius", "Temperature default");
+  require(shell->property("weatherRefreshInterval").toInt() == 1800, "Refresh default");
+  set(shell, "weatherLocationSource", QStringLiteral("auto"));
+  require(named(window, "weatherGeoApiKeyRow")->property("visible").toBool(), "Automatic credentials hidden");
   set(shell, "weatherLocationSource", QStringLiteral("manual"));
   set(city, "text", QStringLiteral("0, 0"));
   invoke(city, "accepted");
@@ -310,6 +330,8 @@ void verify(QQuickWindow* window) {
   require(shell->property("workspaceCount").toInt() == 7, "Workspace editor binding");
 
   auto* weather = page("weather");
+  require(QMetaObject::invokeMethod(shell, "selectWeatherProvider", Q_ARG(QString, QStringLiteral("open-meteo"))),
+          "Select provider before weather controls");
   set(shell, "weatherLocationSource", QStringLiteral("manual"));
   auto* city = named(window, "weatherCityTextField");
   origin(city, style + "TextField.qml");
@@ -322,7 +344,9 @@ void verify(QQuickWindow* window) {
   invoke(city, "accepted");
   require(shell->property("weatherLatitude").isValid(), "Coordinate pair not staged");
   origin(named(window, "weatherProviderComboBox"), style + "ComboBox.qml");
-  require(weather->property("contentHeight").toReal() > weather->property("height").toReal(), "Weather overflow");
+  require(QTest::qWaitFor(
+              [&] { return weather->property("contentHeight").toReal() > weather->property("height").toReal(); }),
+          "Weather overflow");
   set(weather, "contentY", 100.0);
   require(weather->property("contentY").toReal() == 100.0, "Weather scrolling");
 

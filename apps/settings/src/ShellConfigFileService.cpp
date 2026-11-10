@@ -95,6 +95,9 @@ ShellConfigFileService::ShellConfigFileService(ShellSettingsEditModel* model, QS
         temporary.setnavigationStyle(*input.value == Config::InputProfile::VimNavigation ? "vim-navigation"
                                                                                          : "standard");
         temporary.load(*decoded.value);
+        if (!snapshot.value({"weather", "provider"}) && temporary.weatherApiKey().isEmpty()) {
+          temporary.setweatherProvider({});
+        }
         return Config::Result<QVariantMap>::success(DocumentEditSession::properties(temporary, fields),
                                                     decoded.diagnostics);
       },

@@ -17,6 +17,8 @@ Flickable {
         return root.editModel.document.metadata(property).choices.map(value => ({ text: labels[value] || value, value: value }));
     }
 
+    readonly property bool providerSelected: root.editModel.weatherProvider.length > 0
+
     readonly property real rowHorizontalPadding: 16
     readonly property real inlineControlWidth: Math.max(180, Math.min(420, (width - 80) * 0.55))
 
@@ -93,6 +95,8 @@ Flickable {
             spacing: 20
 
             OverridePanel {
+                objectName: "weatherOverridePanel"
+                visible: root.providerSelected
                 Layout.fillWidth: true
                 document: root.editModel.document
                 group: "weather"
@@ -129,10 +133,11 @@ Flickable {
                                 for (let i = 0; i < model.length; ++i) {
                                     if (model[i].value === root.editModel.weatherProvider) return i;
                                 }
-                                return 0;
+                                return -1;
                             }
+                            displayText: currentIndex < 0 ? qsTr("Choose a provider…") : currentText
                             onActivated: (index) => {
-                                root.editModel.weatherProvider = model[index].value;
+                                root.editModel.selectWeatherProvider(model[index].value);
                             }
                         }
                     }
@@ -167,6 +172,7 @@ Flickable {
 
             // Location Section
             SectionGroup {
+                visible: root.providerSelected
                 frameObjectName: "locationSectionFrame"
                 label: qsTr("Location")
                 Layout.fillWidth: true
@@ -209,7 +215,7 @@ Flickable {
                     id: weatherCityRow
 
                     objectName: "weatherCityRow"
-                    visible: root.editModel.weatherLocationSource === "manual"
+                    visible: root.providerSelected && root.editModel.weatherLocationSource === "manual"
                     titleText: qsTr("City / Coordinates")
                     descriptionText: qsTr("Search for a city or enter coordinates")
                     sizeRole: HnControlSize.Hero
@@ -234,7 +240,8 @@ Flickable {
             }
 
             HnSettingsRow {
-                visible: root.editModel.weatherLocationSource === "auto"
+                visible: root.providerSelected && root.editModel.weatherLocationSource === "auto"
+                objectName: "weatherGeoApiKeyRow"
                 titleText: qsTr("IP geolocation API key")
                 descriptionText: qsTr("An ipgeolocation.io API key is required for automatic location.")
                 Layout.fillWidth: true
@@ -248,12 +255,12 @@ Flickable {
             }
             HnLabel {
                 Layout.fillWidth: true
-                visible: root.editModel.weatherLocationSource === "manual"
+                visible: root.providerSelected && root.editModel.weatherLocationSource === "manual"
                 rawText: locationSearch.loading ? qsTr("Searching…") : root.coordinateError || locationSearch.status || qsTr("Press Enter to search, then select a result. Coordinates are staged on Enter.")
                 wrapMode: Text.WordWrap
             }
             Repeater {
-                model: root.editModel.weatherLocationSource === "manual" ? locationSearch.results : []
+                model: root.providerSelected && root.editModel.weatherLocationSource === "manual" ? locationSearch.results : []
                 delegate: Controls.Button {
                     required property var modelData
                     Layout.fillWidth: true
@@ -266,12 +273,13 @@ Flickable {
             }
             HnLabel {
                 Layout.fillWidth: true
-                visible: root.editModel.weatherLocationSource === "manual" && root.editModel.weatherLatitude !== undefined && root.editModel.weatherLongitude !== undefined
+                visible: root.providerSelected && root.editModel.weatherLocationSource === "manual" && root.editModel.weatherLatitude !== undefined && root.editModel.weatherLongitude !== undefined
                 rawText: qsTr("Selected: %1, %2").arg(root.editModel.weatherLatitude).arg(root.editModel.weatherLongitude)
             }
 
             // Units Section
             SectionGroup {
+                visible: root.providerSelected
                 frameObjectName: "unitsSectionFrame"
                 label: qsTr("Units")
                 Layout.fillWidth: true
@@ -381,6 +389,7 @@ Flickable {
 
             // Display Section
             SectionGroup {
+                visible: root.providerSelected
                 frameObjectName: "displaySectionFrame"
                 label: qsTr("Display")
                 Layout.fillWidth: true

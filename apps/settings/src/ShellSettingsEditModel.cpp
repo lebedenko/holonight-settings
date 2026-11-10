@@ -155,6 +155,37 @@ void ShellSettingsEditModel::setweatherLongitude(const QVariant& value) {
   current_.weather.longitude = value.isValid() ? std::optional<double>(value.toDouble()) : std::nullopt;
   changed(&ShellSettingsEditModel::weatherLongitudeChanged, was_dirty);
 }
+void ShellSettingsEditModel::selectWeatherProvider(QString provider) {
+  if (provider != "open-meteo" && provider != "openweathermap") {
+    return;
+  }
+  const bool was_dirty = isDirty();
+  bool initialize_source = current_.weather.provider.isEmpty();
+  if (initialize_source && document_ != nullptr) {
+    for (const auto& field : document_->fields()) {
+      const auto row = field.toMap();
+      if (row.value("property").toString() == "weatherLocationSource" && row.value("overridden").toBool()) {
+        initialize_source = false;
+      }
+    }
+  }
+  current_.weather.provider = std::move(provider);
+  if (initialize_source) {
+    current_.weather.location_source = "manual";
+  }
+  if (document_ != nullptr) {
+    QStringList overrides{"weatherProvider"};
+    if (initialize_source) {
+      overrides << "weatherLocationSource";
+    }
+    document_->stageOverrides(overrides);
+  }
+  changed(&ShellSettingsEditModel::weatherProviderChanged, was_dirty);
+  if (initialize_source) {
+    emit weatherLocationSourceChanged();
+  }
+}
+
 bool ShellSettingsEditModel::selectLocation(const QString& city, const QString& country, double latitude,
                                             double longitude) {
   if (!std::isfinite(latitude) || !std::isfinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 ||

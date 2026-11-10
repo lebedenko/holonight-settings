@@ -39,6 +39,7 @@ class DocumentEditSession : public QObject {
   [[nodiscard]] QVariantList conflicts() const;
   [[nodiscard]] const HoloNight::Config::EditBatch& edits() const { return edits_; }
   void accept(const HoloNight::Config::DocumentSnapshot& snapshot, const HoloNight::Config::EditBatch& saved = {});
+  void stageOverrides(const QStringList& properties);
   void suspend(bool value);
   void retry();
   void report(const HoloNight::Config::SaveResult& result);

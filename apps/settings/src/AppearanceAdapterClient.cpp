@@ -144,12 +144,24 @@ void AppearanceAdapterClient::finish(int exit_code, QProcess::ExitStatus exit_st
       return;
     }
     active_ = false;
-    start(QStringLiteral("apply"), {QStringLiteral("apply"), QStringLiteral("--appearance"), pending_path_,
-                                    QStringLiteral("--policy"), QStringLiteral("replace"), QStringLiteral("--json")});
+    start(QStringLiteral("apply"), {
+                                       QStringLiteral("apply"),
+                                       QStringLiteral("--appearance"),
+                                       pending_path_,
+                                       QStringLiteral("--policy"),
+                                       QStringLiteral("replace"),
+                                       QStringLiteral("--json"),
+                                   });
     return;
   }
+  processResponse(root, exit_code);
+}
+
+void AppearanceAdapterClient::processResponse(const QJsonObject& root, int exit_code) {
   const auto backup = root.value(QStringLiteral("backup_location")).toString();
-  if (!backup.isEmpty()) backup_location_ = backup;
+  if (!backup.isEmpty()) {
+    backup_location_ = backup;
+  }
   const QString result = root.value(QStringLiteral("result")).toString();
   const bool success = root.value(QStringLiteral("success")).toBool();
   const bool degraded = root.value(QStringLiteral("degraded")).toBool();
@@ -195,17 +207,24 @@ void AppearanceAdapterClient::finish(int exit_code, QProcess::ExitStatus exit_st
   }
   response_ = std::move(parsed);
   active_ = false;
-  result_text_ =
-      operation_ == QStringLiteral("apply")
-          ? (backup_location_.isEmpty() ? tr("Appearance applied") : tr("Applied; custom settings backed up"))
-          : (degraded ? tr("Native appearance has limited integration; see technical details")
-                      : tr("Native appearance updated"));
-  for (const auto& output : response_.outputs) {
-    if (output.name == QStringLiteral("labwc/reload") && output.status == QStringLiteral("unavailable"))
-      result_text_ = tr("Appearance written; compositor reload unavailable. See Integrations.");
-    if (output.name == QStringLiteral("labwc/selection") && output.status == QStringLiteral("delegated"))
-      result_text_ += tr(" Window decorations use a custom theme.");
-  }
+  updateResultText(degraded);
   emit resultChanged();
   emit completed(response_);
+}
+
+void AppearanceAdapterClient::updateResultText(bool degraded) {
+  if (operation_ == QStringLiteral("apply")) {
+    result_text_ = backup_location_.isEmpty() ? tr("Appearance applied") : tr("Applied; custom settings backed up");
+  } else {
+    result_text_ = degraded ? tr("Native appearance has limited integration; see technical details")
+                            : tr("Native appearance updated");
+  }
+  for (const auto& output : response_.outputs) {
+    if (output.name == QStringLiteral("labwc/reload") && output.status == QStringLiteral("unavailable")) {
+      result_text_ = tr("Appearance written; compositor reload unavailable. See Integrations.");
+    }
+    if (output.name == QStringLiteral("labwc/selection") && output.status == QStringLiteral("delegated")) {
+      result_text_ += tr(" Window decorations use a custom theme.");
+    }
+  }
 }

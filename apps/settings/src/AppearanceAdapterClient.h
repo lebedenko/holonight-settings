@@ -6,6 +6,8 @@
 #include <QTimer>
 #include <QtQml/qqml.h>
 
+class QJsonObject;
+
 struct AppearanceAdapterOutput {
   QString name{};
   QString status{};
@@ -51,6 +53,8 @@ class AppearanceAdapterClient : public QObject {
   void start(QString operation, const QStringList& arguments);
   void finish(int exit_code, QProcess::ExitStatus exit_status);
   void fail(QString diagnostic);
+  void processResponse(const QJsonObject& root, int exit_code);
+  void updateResultText(bool degraded);
   QString pending_path_;
   QString backup_location_;
   QString executable_;

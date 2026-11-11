@@ -24,6 +24,10 @@ class BluetoothControllerQml : public QObject {
  public:
   explicit BluetoothControllerQml(QObject* parent = nullptr);
   ~BluetoothControllerQml() override;
+  BluetoothControllerQml(const BluetoothControllerQml&) = delete;
+  BluetoothControllerQml& operator=(const BluetoothControllerQml&) = delete;
+  BluetoothControllerQml(BluetoothControllerQml&&) = delete;
+  BluetoothControllerQml& operator=(BluetoothControllerQml&&) = delete;
   BluetoothControllerQml(HoloNight::System::BluetoothBackend* backend, QObject* parent);
   QVariantList adapters() const;
   QVariantList devices() const;
@@ -35,13 +39,13 @@ class BluetoothControllerQml : public QObject {
   QVariantMap interaction() const { return interaction_; }
   int connectedCount() const;
   QString tooltip() const;
-  Q_INVOKABLE void selectAdapter(const QString& id);
+  Q_INVOKABLE void selectAdapter(const QString& identifier);
   Q_INVOKABLE void setActive(bool active);
   Q_INVOKABLE void scan(bool enabled);
   Q_INVOKABLE void power(bool enabled);
   Q_INVOKABLE void discoverable(bool enabled);
   Q_INVOKABLE void renameAdapter(const QString& alias);
-  Q_INVOKABLE void action(const QString& id, const QString& action, const QVariant& value = {});
+  Q_INVOKABLE void action(const QString& identifier, const QString& action, const QVariant& value = {});
   Q_INVOKABLE void respond(bool accept, const QString& input = {});
   Q_INVOKABLE void cancelPairing();
   Q_INVOKABLE void clearError() {
@@ -57,6 +61,9 @@ class BluetoothControllerQml : public QObject {
  private:
   void update();
   void reconcileDiscovery();
+  [[nodiscard]] bool deviceLess(const HoloNight::System::BluetoothDevice& adapter,
+                                const HoloNight::System::BluetoothDevice& other) const;
+  void recordFailure(const HoloNight::System::BluetoothResult& result);
   void completed(const HoloNight::System::BluetoothResult& result);
   std::unique_ptr<HoloNight::System::BluetoothController> controller_;
   QString selected_, error_, pairing_, chain_request_, discovery_request_, discovery_target_;

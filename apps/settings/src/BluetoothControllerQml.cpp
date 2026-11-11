@@ -3,16 +3,27 @@
 #include <algorithm>
 using namespace HoloNight::System;
 namespace {
-QString label(const BluetoothDevice& d) {
-  return !d.alias.isEmpty() ? d.alias : !d.name.isEmpty() ? d.name : d.address;
+QString label(const BluetoothDevice& device) {
+  if (!device.alias.isEmpty()) {
+    return device.alias;
+  }
+  return !device.name.isEmpty() ? device.name : device.address;
 }
-QVariantMap adapterMap(const BluetoothAdapter& a) {
-  return {{"id", a.id},
-          {"alias", a.alias},
-          {"address", a.address},
-          {"powered", a.powered},
-          {"discoverable", a.discoverable},
-          {"discovering", a.discovering}};
+int deviceSection(const BluetoothDevice& device) {
+  if (device.connected) {
+    return 0;
+  }
+  return device.paired ? 1 : 2;
+}
+QVariantMap adapterMap(const BluetoothAdapter& adapter) {
+  return {
+      {"id", adapter.id},
+      {"alias", adapter.alias},
+      {"address", adapter.address},
+      {"powered", adapter.powered},
+      {"discoverable", adapter.discoverable},
+      {"discovering", adapter.discovering},
+  };
 }
 QString interactionName(BluetoothInteraction kind) {
   switch (kind) {
@@ -35,20 +46,35 @@ QString interactionName(BluetoothInteraction kind) {
 }
 QString serviceName(const QString& uuid) {
   const auto shortId = uuid.toLower().left(8);
-  if (shortId == "0000110b") return QObject::tr("Audio sink");
-  if (shortId == "0000110a") return QObject::tr("Audio source");
-  if (shortId == "0000110e") return QObject::tr("Media remote control");
-  if (shortId == "0000111e") return QObject::tr("Hands-free audio");
-  if (shortId == "00001124" || shortId == "00001812") return QObject::tr("Keyboard / pointing device");
-  if (shortId == "0000180f") return QObject::tr("Battery service");
-  if (shortId == "0000180a") return QObject::tr("Device information");
+  if (shortId == "0000110b") {
+    return QObject::tr("Audio sink");
+  }
+  if (shortId == "0000110a") {
+    return QObject::tr("Audio source");
+  }
+  if (shortId == "0000110e") {
+    return QObject::tr("Media remote control");
+  }
+  if (shortId == "0000111e") {
+    return QObject::tr("Hands-free audio");
+  }
+  if (shortId == "00001124" || shortId == "00001812") {
+    return QObject::tr("Keyboard / pointing device");
+  }
+  if (shortId == "0000180f") {
+    return QObject::tr("Battery service");
+  }
+  if (shortId == "0000180a") {
+    return QObject::tr("Device information");
+  }
   return QObject::tr("Other service");
 }
 }  // namespace
 BluetoothControllerQml::BluetoothControllerQml(QObject* parent) : BluetoothControllerQml(nullptr, parent) {}
 BluetoothControllerQml::BluetoothControllerQml(BluetoothBackend* backend, QObject* parent)
     : QObject(parent),
-      controller_(backend ? std::make_unique<BluetoothController>(backend) : std::make_unique<BluetoothController>()) {
+      controller_((backend != nullptr) ? std::make_unique<BluetoothController>(backend)
+                                       : std::make_unique<BluetoothController>()) {
   release_.setSingleShot(true);
   release_.setInterval(0);
   connect(&release_, &QTimer::timeout, this, [this] {
@@ -68,18 +94,20 @@ BluetoothControllerQml::BluetoothControllerQml(BluetoothBackend* backend, QObjec
             error_ = tr("Bluetooth agent: %1 (%2)").arg(message, name);
             emit changed();
           });
-  connect(controller_.get(), &BluetoothController::agentRequested, this, [this](const BluetoothAgentRequest& r) {
-    interaction_ = {{"id", r.requestId},
-                    {"deviceId", r.deviceId},
-                    {"kind", interactionName(r.interaction)},
-                    {"code", r.code},
-                    {"service", serviceName(r.serviceUuid)},
-                    {"entered", r.entered}};
+  connect(controller_.get(), &BluetoothController::agentRequested, this, [this](const BluetoothAgentRequest& request) {
+    interaction_ = {
+        {"id", request.requestId},
+        {"deviceId", request.deviceId},
+        {"kind", interactionName(request.interaction)},
+        {"code", request.code},
+        {"service", serviceName(request.serviceUuid)},
+        {"entered", request.entered},
+    };
     emit changed();
     emit pairingRequested();
   });
-  connect(controller_.get(), &BluetoothController::agentCanceled, this, [this](const QString& id) {
-    if (interaction_.value("id").toString() == id) {
+  connect(controller_.get(), &BluetoothController::agentCanceled, this, [this](const QString& identifier) {
+    if (interaction_.value("id").toString() == identifier) {
       interaction_.clear();
       emit changed();
     }
@@ -93,116 +121,164 @@ BluetoothControllerQml::~BluetoothControllerQml() {
 }
 QVariantList BluetoothControllerQml::adapters() const {
   QVariantList out;
-  for (const auto& a : controller_->adapters()->items()) out.append(adapterMap(a));
+  for (const auto& adapter : controller_->adapters()->items()) {
+    out.append(adapterMap(adapter));
+  }
   return out;
 }
 QVariantMap BluetoothControllerQml::selectedAdapter() const {
-  const auto a = controller_->adapters()->find(selected_);
-  auto result = a ? adapterMap(*a) : QVariantMap{};
+  const auto adapter = controller_->adapters()->find(selected_);
+  auto result = adapter ? adapterMap(*adapter) : QVariantMap{};
   result.insert("busy", controller_->busy(selected_));
   return result;
 }
+bool BluetoothControllerQml::deviceLess(const BluetoothDevice& adapter, const BluetoothDevice& other) const {
+  const int left_section = deviceSection(adapter);
+  const int right_section = deviceSection(other);
+  if (left_section != right_section) {
+    return left_section < right_section;
+  }
+  if (active_) {
+    const auto left_key = QString::number(left_section) + adapter.id;
+    const auto right_key = QString::number(right_section) + other.id;
+    const auto left_index = display_order_.indexOf(left_key);
+    const auto right_index = display_order_.indexOf(right_key);
+    if (left_index >= 0 || right_index >= 0) {
+      if (left_index < 0) {
+        return false;
+      }
+      if (right_index < 0) {
+        return true;
+      }
+      return left_index < right_index;
+    }
+  }
+  if (left_section == 2 && adapter.rssi != other.rssi) {
+    return adapter.rssi.value_or(-32768) > other.rssi.value_or(-32768);
+  }
+  const int comparison = QString::localeAwareCompare(label(adapter), label(other));
+  return comparison != 0 ? comparison < 0 : adapter.id < other.id;
+}
+
 QVariantList BluetoothControllerQml::devices() const {
   auto items = controller_->devices()->items();
-  std::stable_sort(items.begin(), items.end(), [this](const auto& a, const auto& b) {
-    const int sa = a.connected ? 0 : a.paired ? 1 : 2, sb = b.connected ? 0 : b.paired ? 1 : 2;
-    if (sa != sb) return sa < sb;
-    if (active_) {
-      const auto ka = QString::number(sa) + a.id, kb = QString::number(sb) + b.id;
-      const int ia = display_order_.indexOf(ka), ib = display_order_.indexOf(kb);
-      if (ia >= 0 || ib >= 0) {
-        if (ia < 0) return false;
-        if (ib < 0) return true;
-        return ia < ib;
-      }
-    }
-    if (sa == 2 && a.rssi != b.rssi) return a.rssi.value_or(-32768) > b.rssi.value_or(-32768);
-    const int comparison = QString::localeAwareCompare(label(a), label(b));
-    return comparison ? comparison < 0 : a.id < b.id;
-  });
+  std::ranges::stable_sort(items, [this](const auto& left, const auto& right) { return deviceLess(left, right); });
   QVariantList out;
   display_order_.clear();
-  for (const auto& d : items) {
-    if (d.adapterId != selected_) continue;
-    display_order_.append(QString::number(d.connected ? 0 : d.paired ? 1 : 2) + d.id);
-    QStringList services;
-    for (const auto& id : d.uuids) {
-      const auto name = serviceName(id);
-      if (!services.contains(name)) services.append(name);
+  for (const auto& device : items) {
+    if (device.adapterId != selected_) {
+      continue;
     }
-    out.append(QVariantMap{{"id", d.id},
-                           {"name", label(d)},
-                           {"originalName", d.name},
-                           {"alias", d.alias},
-                           {"address", d.address},
-                           {"addressType", d.addressType},
-                           {"paired", d.paired},
-                           {"bonded", d.bonded},
-                           {"connected", d.connected},
-                           {"trusted", d.trusted},
-                           {"blocked", d.blocked},
-                           {"icon", d.icon.isEmpty() ? QStringLiteral("bluetooth") : d.icon},
-                           {"battery", d.battery ? QVariant(*d.battery) : QVariant{}},
-                           {"rssi", d.rssi ? QVariant(*d.rssi) : QVariant{}},
-                           {"uuids", d.uuids},
-                           {"services", services},
-                           {"deviceClass", d.deviceClass},
-                           {"appearance", d.appearance},
-                           {"busy", controller_->busy(d.id)},
-                           {"section", d.connected ? tr("Connected")
-                                       : d.paired  ? tr("Paired")
-                                                   : tr("Available")}});
+    display_order_.append(QString::number(deviceSection(device)) + device.id);
+    QStringList services;
+    for (const auto& identifier : device.uuids) {
+      const auto name = serviceName(identifier);
+      if (!services.contains(name)) {
+        services.append(name);
+      }
+    }
+    QString section = tr("Available");
+    if (device.connected) {
+      section = tr("Connected");
+    } else if (device.paired) {
+      section = tr("Paired");
+    }
+    out.append(QVariantMap{
+        {"id", device.id},
+        {"name", label(device)},
+        {"originalName", device.name},
+        {"alias", device.alias},
+        {"address", device.address},
+        {"addressType", device.addressType},
+        {"paired", device.paired},
+        {"bonded", device.bonded},
+        {"connected", device.connected},
+        {"trusted", device.trusted},
+        {"blocked", device.blocked},
+        {"icon", device.icon.isEmpty() ? QStringLiteral("bluetooth") : device.icon},
+        {"battery", device.battery ? QVariant(*device.battery) : QVariant{}},
+        {"rssi", device.rssi ? QVariant(*device.rssi) : QVariant{}},
+        {"uuids", device.uuids},
+        {"services", services},
+        {"deviceClass", device.deviceClass},
+        {"appearance", device.appearance},
+        {"busy", controller_->busy(device.id)},
+        {
+            "section",
+            section,
+        },
+    });
   }
   return out;
 }
 int BluetoothControllerQml::connectedCount() const {
   int count = 0;
-  for (const auto& d : controller_->devices()->items())
-    if (d.connected) ++count;
+  for (const auto& device : controller_->devices()->items()) {
+    if (device.connected) {
+      ++count;
+    }
+  }
   return count;
 }
 QString BluetoothControllerQml::tooltip() const {
   QStringList lines;
-  for (const auto& d : controller_->devices()->items())
-    if (d.connected) lines.append(d.battery ? tr("%1 — %2%").arg(label(d)).arg(*d.battery) : label(d));
-  return lines.isEmpty() ? (selectedAdapter().value("powered").toBool() ? tr("Bluetooth enabled") : tr("Bluetooth off"))
-                         : lines.join(QLatin1Char('\n'));
+  for (const auto& device : controller_->devices()->items()) {
+    if (device.connected) {
+      lines.append(device.battery ? tr("%1 — %2%").arg(label(device)).arg(*device.battery) : label(device));
+    }
+  }
+  if (lines.isEmpty()) {
+    return selectedAdapter().value("powered").toBool() ? tr("Bluetooth enabled") : tr("Bluetooth off");
+  }
+  return lines.join(QLatin1Char('\n'));
 }
 void BluetoothControllerQml::update() {
   if (!explicit_selection_ || !controller_->adapters()->find(selected_)) {
     explicit_selection_ = false;
     const auto items = controller_->adapters()->items();
     selected_.clear();
-    for (const auto& a : items)
-      if (a.powered) {
-        selected_ = a.id;
+    for (const auto& adapter : items) {
+      if (adapter.powered) {
+        selected_ = adapter.id;
         break;
       }
-    if (selected_.isEmpty() && !items.isEmpty()) selected_ = items.first().id;
+    }
+    if (selected_.isEmpty() && !items.isEmpty()) {
+      selected_ = items.first().id;
+    }
   }
   for (auto it = owned_.begin(); it != owned_.end();) {
     const auto adapter = controller_->adapters()->find(*it);
-    if (!adapter || !adapter->powered)
+    if (!adapter || !adapter->powered) {
       it = owned_.erase(it);
-    else
+    } else {
       ++it;
+    }
   }
-  if (!pairing_.isEmpty() && !controller_->devices()->find(pairing_)) cancelPairing();
+  if (!pairing_.isEmpty() && !controller_->devices()->find(pairing_)) {
+    cancelPairing();
+  }
   reconcileDiscovery();
   emit changed();
 }
-void BluetoothControllerQml::selectAdapter(const QString& id) {
-  if (!controller_->adapters()->find(id)) return;
+void BluetoothControllerQml::selectAdapter(const QString& identifier) {
+  if (!controller_->adapters()->find(identifier)) {
+    return;
+  }
   explicit_selection_ = true;
-  if (selected_ == id) return;
+  if (selected_ == identifier) {
+    return;
+  }
   cancelPairing();
-  selected_ = id;
+  selected_ = identifier;
   explicit_selection_ = true;
   reconcileDiscovery();
   emit changed();
 }
 void BluetoothControllerQml::setActive(bool active) {
-  if (active_ == active) return;
+  if (active_ == active) {
+    return;
+  }
   active_ = active;
   if (active) {
     release_.stop();
@@ -221,16 +297,21 @@ void BluetoothControllerQml::scan(bool enabled) {
   emit changed();
 }
 void BluetoothControllerQml::reconcileDiscovery() {
-  if (!discovery_request_.isEmpty()) return;
+  if (!discovery_request_.isEmpty()) {
+    return;
+  }
   QString desired;
-  const auto a = controller_->adapters()->find(selected_);
-  if (scan_requested_ && a && a->powered) desired = selected_;
-  for (const auto& id : owned_)
-    if (id != desired && !controller_->busy(id)) {
-      discovery_target_ = id;
-      discovery_request_ = controller_->execute(BluetoothOperation::StopDiscovery, id);
+  const auto adapter = controller_->adapters()->find(selected_);
+  if (scan_requested_ && adapter && adapter->powered) {
+    desired = selected_;
+  }
+  for (const auto& identifier : owned_) {
+    if (identifier != desired && !controller_->busy(identifier)) {
+      discovery_target_ = identifier;
+      discovery_request_ = controller_->execute(BluetoothOperation::StopDiscovery, identifier);
       return;
     }
+  }
   if (!desired.isEmpty() && !owned_.contains(desired) && !controller_->busy(desired)) {
     discovery_target_ = desired;
     discovery_request_ = controller_->execute(BluetoothOperation::StartDiscovery, desired);
@@ -248,50 +329,57 @@ void BluetoothControllerQml::renameAdapter(const QString& alias) {
   error_.clear();
   controller_->execute(BluetoothOperation::AdapterAlias, selected_, alias);
 }
-void BluetoothControllerQml::action(const QString& id, const QString& action, const QVariant& value) {
+void BluetoothControllerQml::action(const QString& identifier, const QString& action, const QVariant& value) {
   error_.clear();
-  BluetoothOperation operation;
+  BluetoothOperation operation = BluetoothOperation::Pair;
   if (action == "pair") {
     cancelPairing();
-    pairing_ = id;
+    pairing_ = identifier;
     operation = BluetoothOperation::Pair;
-  } else if (action == "connect")
+  } else if (action == "connect") {
     operation = BluetoothOperation::Connect;
-  else if (action == "disconnect")
+  } else if (action == "disconnect") {
     operation = BluetoothOperation::Disconnect;
-  else if (action == "rename")
+  } else if (action == "rename") {
     operation = BluetoothOperation::DeviceAlias;
-  else if (action == "trust")
+  } else if (action == "trust") {
     operation = BluetoothOperation::Trust;
-  else if (action == "block")
+  } else if (action == "block") {
     operation = BluetoothOperation::Block;
-  else if (action == "forget")
+  } else if (action == "forget") {
     operation = BluetoothOperation::Forget;
-  else
+  } else {
     return;
-  const auto request = controller_->execute(operation, id, value);
+  }
+  const auto request = controller_->execute(operation, identifier, value);
   if (operation == BluetoothOperation::Pair) {
     chain_request_ = request;
     chain_operation_ = operation;
   }
 }
+void BluetoothControllerQml::recordFailure(const BluetoothResult& result) {
+  QString advice = tr("Try the operation again.");
+  if (result.errorName.endsWith("NotReady")) {
+    advice = tr("Turn Bluetooth on and try again.");
+  } else if (result.errorName.contains("Authentication")) {
+    advice = tr("Put the device in pairing mode and check the pairing code.");
+  } else if (result.errorName.endsWith("Busy") || result.errorName.endsWith("InProgress")) {
+    advice = tr("Wait for the current operation to finish.");
+  } else if (result.errorName.endsWith("NotAuthorized")) {
+    advice = tr("Bluetooth permission was denied.");
+  }
+  error_ = tr("Bluetooth operation failed. %1\n%2 (%3)").arg(advice, result.errorMessage, result.errorName);
+  if (result.requestId == chain_request_ && chain_operation_ != BluetoothOperation::Pair) {
+    error_ =
+        (chain_operation_ == BluetoothOperation::Trust ? tr("Device paired, but trusting failed. ")
+                                                       : tr("Device paired and trusted, but connecting failed. ")) +
+        error_;
+  }
+}
+
 void BluetoothControllerQml::completed(const BluetoothResult& result) {
   if (!result.succeeded()) {
-    QString advice = tr("Try the operation again.");
-    if (result.errorName.endsWith("NotReady"))
-      advice = tr("Turn Bluetooth on and try again.");
-    else if (result.errorName.contains("Authentication"))
-      advice = tr("Put the device in pairing mode and check the pairing code.");
-    else if (result.errorName.endsWith("Busy") || result.errorName.endsWith("InProgress"))
-      advice = tr("Wait for the current operation to finish.");
-    else if (result.errorName.endsWith("NotAuthorized"))
-      advice = tr("Bluetooth permission was denied.");
-    error_ = tr("Bluetooth operation failed. %1\n%2 (%3)").arg(advice, result.errorMessage, result.errorName);
-    if (result.requestId == chain_request_ && chain_operation_ != BluetoothOperation::Pair)
-      error_ =
-          (chain_operation_ == BluetoothOperation::Trust ? tr("Device paired, but trusting failed. ")
-                                                         : tr("Device paired and trusted, but connecting failed. ")) +
-          error_;
+    recordFailure(result);
   }
   if (result.requestId == chain_request_) {
     chain_request_.clear();
@@ -300,16 +388,20 @@ void BluetoothControllerQml::completed(const BluetoothResult& result) {
           chain_operation_ == BluetoothOperation::Pair ? BluetoothOperation::Trust : BluetoothOperation::Connect;
       chain_request_ = controller_->execute(
           chain_operation_, pairing_, chain_operation_ == BluetoothOperation::Trust ? QVariant(true) : QVariant{});
-    } else
-      pairing_.clear();
+    } else {
+      {
+        pairing_.clear();
+      }
+    }
   }
   if (result.requestId == discovery_request_) {
     discovery_request_.clear();
     if (result.succeeded()) {
-      if (result.operation == BluetoothOperation::StartDiscovery)
+      if (result.operation == BluetoothOperation::StartDiscovery) {
         owned_.insert(discovery_target_);
-      else
+      } else {
         owned_.remove(discovery_target_);
+      }
     } else {
       scan_requested_ = false;
       owned_.remove(discovery_target_);
@@ -324,9 +416,12 @@ void BluetoothControllerQml::respond(bool accept, const QString& input) {
 void BluetoothControllerQml::cancelPairing() {
   QString target = pairing_;
   const auto kind = interaction_.value("kind").toString();
-  if (target.isEmpty() && (kind == "pin-display" || kind == "passkey-display"))
+  if (target.isEmpty() && (kind == "pin-display" || kind == "passkey-display")) {
     target = interaction_.value("deviceId").toString();
-  if (!interaction_.isEmpty()) respond(false);
+  }
+  if (!interaction_.isEmpty()) {
+    respond(false);
+  }
   if (!target.isEmpty()) {
     controller_->execute(BluetoothOperation::CancelPairing, target);
     pairing_.clear();

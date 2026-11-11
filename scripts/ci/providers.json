@@ -15,5 +15,9 @@
     "name": "holonight-shell",
     "revision": "9d5734145d88e6d4ce44f997307071251df6adf8",
     "subdirectory": "libs/holonight-shell-config"
+  },
+  {
+    "name": "holonightd",
+    "revision": "af9c28553e3acb554111123bbd72fb90338040dc"
   }
 ]

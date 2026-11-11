@@ -40,13 +40,15 @@ Item {
             return Qt.resolvedUrl("BluetoothPage.qml");
         case "audio":
             return Qt.resolvedUrl("AudioPage.qml");
+        case "trash":
+            return Qt.resolvedUrl("TrashPage.qml");
         default:
             return Qt.resolvedUrl("PlaceholderPage.qml");
         }
     }
 
     function pageIndex(pageKey) {
-        const pageKeys = ["appearance", "bar", "sidebar", "launcher", "weather", "notifications", "calendar", "bluetooth", "audio", "workspaces", "keybindings", "integrations", "advanced", "about"];
+        const pageKeys = ["appearance", "bar", "sidebar", "launcher", "weather", "notifications", "calendar", "bluetooth", "audio", "workspaces", "keybindings", "integrations", "trash", "advanced", "about"];
         return pageKeys.indexOf(pageKey);
     }
 
@@ -66,6 +68,9 @@ Item {
             properties.adapter = root.appearanceAdapter;
         } else if (pageKey === "audio")
             properties.audioController = root.audioController;
+
+        if (pageKey === "trash")
+            properties.editModel = root.saveCoordinator.trash;
 
         if (pageKey === "bluetooth")
             properties.bluetoothController = root.bluetoothController;

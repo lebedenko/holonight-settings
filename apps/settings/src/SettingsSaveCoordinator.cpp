@@ -63,7 +63,14 @@ SettingsSaveCoordinator::SettingsSaveCoordinator(AppearanceEditModel* appearance
     });
   }
 }
-bool SettingsSaveCoordinator::isDirty() const { return appearance_->isDirty() || shell_->isDirty(); }
+void SettingsSaveCoordinator::initializeTrash() {
+  trash_ = new TrashSettingsModel(this);
+  connect(trash_, &TrashSettingsModel::changed, this, &SettingsSaveCoordinator::isDirtyChanged);
+}
+
+bool SettingsSaveCoordinator::isDirty() const {
+  return appearance_->isDirty() || shell_->isDirty() || (trash_ != nullptr && trash_->isDirty());
+}
 void SettingsSaveCoordinator::setBusy(bool value) {
   if (busy_ == value) {
     return;
@@ -126,11 +133,24 @@ void SettingsSaveCoordinator::save() {
       outcomes_ << QStringLiteral("Preferences: ") + shell_files_->error();
     }
   }
+  saveTrash();
   if (appearance_staged_) {
     adapter_->apply(appearance_files_->path());
     return;
   }
   finishSave();
+}
+
+void SettingsSaveCoordinator::saveTrash() {
+  if (trash_ != nullptr && trash_->isDirty()) {
+    if (trash_->save()) {
+      ++succeeded_;
+      outcomes_ << tr("Trash settings saved");
+    } else {
+      ++failed_;
+      outcomes_ << tr("Trash settings could not be saved. %1").arg(trash_->error());
+    }
+  }
 }
 
 void SettingsSaveCoordinator::finishSave(const QString& appearance_result) {
@@ -153,6 +173,12 @@ void SettingsSaveCoordinator::discard() {
   }
   if (!shell_files_->load()) {
     errors << QStringLiteral("Preferences: ") + shell_files_->error();
+  }
+  if (trash_ != nullptr) {
+    trash_->load();
+    if (!trash_->error().isEmpty()) {
+      errors << tr("Trash settings could not be loaded. %1").arg(trash_->error());
+    }
   }
   setResult(errors.isEmpty() ? QStringLiteral("Changes discarded") : errors.join(QStringLiteral("; ")));
   setConflict({});

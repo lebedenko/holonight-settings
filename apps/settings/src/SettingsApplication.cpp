@@ -80,6 +80,7 @@ void SettingsApplication::openSettings() {
   save_coordinator_ =
       std::make_unique<SettingsSaveCoordinator>(appearance_model_.get(), appearance_files_.get(), shell_model_.get(),
                                                 shell_files_.get(), appearance_adapter_.get());
+  save_coordinator_->initializeTrash();
   shell_status_ = std::make_unique<ShellStatusService>();
   audio_controller_ = std::make_unique<AudioControllerQml>();
   audio_controller_->start();

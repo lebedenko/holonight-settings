@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TrashSettingsModel.h"
+
 #include <QObject>
 #include <QString>
 #include <QVariantList>
@@ -16,6 +18,7 @@ class SettingsSaveCoordinator : public QObject {
   Q_OBJECT
   QML_ELEMENT
   QML_UNCREATABLE("SettingsSaveCoordinator is created by SettingsApplication")
+  Q_PROPERTY(TrashSettingsModel* trash READ trash CONSTANT)
   Q_PROPERTY(bool isDirty READ isDirty NOTIFY isDirtyChanged)
   Q_PROPERTY(bool isBusy READ isBusy NOTIFY isBusyChanged)
   Q_PROPERTY(QString resultText READ resultText NOTIFY resultTextChanged)
@@ -26,6 +29,8 @@ class SettingsSaveCoordinator : public QObject {
   SettingsSaveCoordinator(AppearanceEditModel* appearance, AppearanceFileService* appearance_files,
                           ShellSettingsEditModel* shell, ShellConfigFileService* shell_files,
                           AppearanceAdapterClient* adapter = nullptr, QObject* parent = nullptr);
+  void initializeTrash();
+  [[nodiscard]] TrashSettingsModel* trash() const { return trash_; }
   [[nodiscard]] bool isDirty() const;
   [[nodiscard]] bool isBusy() const { return busy_; }
   [[nodiscard]] QString resultText() const { return result_text_; }
@@ -51,12 +56,14 @@ class SettingsSaveCoordinator : public QObject {
   void setResult(QString value);
   void setConflict(QString value);
   QStringList outcomes_;
+  void saveTrash();
   void finishSave(const QString& appearance_result = {});
   AppearanceEditModel* appearance_;
   AppearanceFileService* appearance_files_;
   ShellSettingsEditModel* shell_;
   ShellConfigFileService* shell_files_;
   AppearanceAdapterClient* adapter_;
+  TrashSettingsModel* trash_ = nullptr;
   bool busy_{false};
   int succeeded_{0};
   int failed_{0};

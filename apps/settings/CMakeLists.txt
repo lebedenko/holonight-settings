@@ -16,6 +16,7 @@ set(SETTINGS_QML_FILES
     qml/BluetoothPage.qml
     qml/BluetoothPairing.qml
     qml/AudioPage.qml
+    qml/TrashPage.qml
     qml/PreviewPanel/PreviewPanel.qml
 )
 
@@ -71,6 +72,8 @@ function(add_settings_application target main_source)
           src/ShellConfigFileService.cpp
           src/SettingsSaveCoordinator.h
           src/SettingsSaveCoordinator.cpp
+          src/TrashSettingsModel.h
+          src/TrashSettingsModel.cpp
           src/FileRevision.h
           src/FileRevision.cpp
           src/theme_swatch_tokens.h
@@ -97,6 +100,7 @@ function(add_settings_application target main_source)
   )
 
   target_link_libraries(${target} PRIVATE
+      Holonight::Trash
       HoloNight::Config
       HoloNightShellConfig::Config
       HoloNightSystem::Compositor

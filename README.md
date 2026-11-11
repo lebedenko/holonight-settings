@@ -61,6 +61,13 @@ display preferences, credentials and location values are preserved when switchin
 providers. OpenWeatherMap shows its API key field; automatic location shows the
 IP geolocation credentials.
 
+## Trash retention
+
+The **Trash** page controls automatic deletion, which starts disabled. Choose
+a retention period from 1 through 365 days and opt in any NFS exports you want
+included. Save and Discard use the application footer. See the
+[Trash settings guide](docs/sdd/trash/README.md).
+
 ## Wallpaper picker
 
 Run `holonight-settings --wallpaper` to open the dedicated Wallpaper window.

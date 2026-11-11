@@ -14,6 +14,7 @@
 #include <QWheelEvent>
 
 #include <holonight_shell_config/config_schema.h>
+#include <holonightd/Trash.h>
 #include <stdexcept>
 
 namespace {
@@ -213,6 +214,22 @@ void verify(QQuickWindow* window) {
     QTextStream(stdout) << "PAGE " << key << '\n';
     return objectProperty(stack, "currentItem");
   };
+
+  page("trash");
+  auto* retention = named(window, "trashRetentionEnabled");
+  auto* days = named(window, "trashRetentionDays");
+  require(!retention->property("checked").toBool() && days->property("value").toInt() == 7, "Trash defaults");
+  click(window, retention);
+  set(days, "value", 14);
+  invoke(days, "valueModified");
+  require(coordinator->property("isDirty").toBool(), "Trash edits did not enable Save");
+  click(window, named(window, "saveButton"));
+  const auto policy = holonightd::trash::readPolicy(holonightd::trash::policyPath());
+  require(policy && policy->enabled && policy->retention_days == 14, "Trash Save did not write the policy");
+  click(window, retention);
+  click(window, named(window, "discardChangesButton"));
+  require(retention->property("checked").toBool(), "Trash Discard did not reload the policy");
+  require(!coordinator->property("isDirty").toBool(), "Trash Discard left unsaved edits");
 
   page("appearance");
   origin(named(window, "saveButton"), style + "Button.qml");

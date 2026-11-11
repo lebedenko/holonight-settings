@@ -27,6 +27,7 @@ Item {
         {key: "workspaces",    label: qsTr("Workspaces"),    icon: "workspaces"},
         {key: "keybindings",   label: qsTr("Keyboard"),   icon: "keybindings"},
         {key: "integrations",  label: qsTr("Integrations"),  icon: "integrations"},
+        {key: "trash",         label: qsTr("Trash"),         icon: "trash"},
         {key: "advanced",      label: qsTr("Advanced"),      icon: "advanced"},
         {key: "about",         label: qsTr("About"),         icon: "about"}
     ]

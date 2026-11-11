@@ -75,7 +75,7 @@ with tempfile.TemporaryDirectory(prefix='uqc-settings-') as directory:
                     assert trace.count('SCROLL_APPEARANCE_OK') == 2, 'Both Appearance visits must scroll'
                 mappings = trace.split('MAPS_BEGIN\n')[1].split('MAPS_END')[0]
                 assert all('PAGE ' + page in trace for page in
-                           (('weather',) if args.weather else ('appearance', 'bar', 'weather', 'integrations', 'bluetooth', 'audio', 'about'))), trace
+                           (('weather',) if args.weather else ('appearance', 'bar', 'weather', 'integrations', 'bluetooth', 'audio', 'trash', 'about'))), trace
             else:
                 try:
                     status = process.wait(timeout=3)

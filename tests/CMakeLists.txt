@@ -18,6 +18,7 @@ if(BUILD_APP)
     test_settings_session_context.cpp
     ../apps/settings/src/SettingsSessionContext.cpp
     test_configuration_documents.cpp
+    test_trash_settings.cpp
     test_acf005.cpp
     test_acf005_qml_contract.cpp
     test_settings_activation.cpp
@@ -33,6 +34,7 @@ if(BUILD_APP)
     ../apps/settings/src/AppearanceAdapterClient.cpp
     ../apps/settings/src/ShellConfigFileService.cpp
     ../apps/settings/src/SettingsSaveCoordinator.cpp
+    ../apps/settings/src/TrashSettingsModel.cpp
     ../apps/settings/src/FileRevision.cpp
     ../apps/settings/src/theme_swatch_tokens.cpp
     ../apps/settings/src/ShellStatusService.cpp
@@ -41,7 +43,7 @@ if(BUILD_APP)
   )
   target_include_directories(test_holonight_settings PRIVATE ${CMAKE_SOURCE_DIR}/apps/settings/src)
   target_link_libraries(test_holonight_settings PRIVATE
-    HoloNightSystem::Compositor HoloNight::Config HoloNightShellConfig::Config HolonightQt::Appearance HolonightQt::Theme
+    Holonight::Trash HoloNightSystem::Compositor HoloNight::Config HoloNightShellConfig::Config HolonightQt::Appearance HolonightQt::Theme
     GTest::gtest GTest::gmock Qt6::Gui Qt6::DBus
     Qt6::Qml Qt6::Quick Qt6::Test Qt6::Network)
 endif()

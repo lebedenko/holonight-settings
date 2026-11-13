@@ -1,23 +1,23 @@
 [
   {
     "name": "holonight-config",
-    "revision": "b115286c67561bcb34c8009da5098e3cb215f874"
+    "revision": "39dd3b68947b6be19364fdf147aaf49f5b95c9c2"
   },
   {
     "name": "holonight-system-services",
-    "revision": "cb7a1dd88b5327daff5cd08a90171b9386f2cb1a"
+    "revision": "4ebc39cc3709133c3f3b1bed59ba3b150d6846a3"
   },
   {
     "name": "holonight-qt",
-    "revision": "e9b5f79b9ab69a0d22ba6d326dc04f12055a45ab"
+    "revision": "1a1c106b042ca079bd54ad75498407e2923bc61a"
   },
   {
     "name": "holonight-shell",
-    "revision": "9d5734145d88e6d4ce44f997307071251df6adf8",
+    "revision": "785e50577c08f6bb7a205fc3defd8b803bd6a277",
     "subdirectory": "libs/holonight-shell-config"
   },
   {
     "name": "holonightd",
-    "revision": "af9c28553e3acb554111123bbd72fb90338040dc"
+    "revision": "4725f27f6b974306aa083e46ff543553e7bec962"
   }
 ]

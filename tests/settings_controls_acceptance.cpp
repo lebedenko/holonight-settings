@@ -136,8 +136,14 @@ void verifyWeather(QQuickWindow* window) {
   auto* provider = named(window, "weatherProviderComboBox");
   require(provider->property("currentIndex").toInt() == -1, "Weather provider should be unselected");
   require(provider->property("displayText").toString() == QStringLiteral("Choose a provider…"), "Provider placeholder");
-  for (const auto* name : {"weatherOverridePanel", "locationSectionFrame", "unitsSectionFrame", "displaySectionFrame",
-                           "weatherApiKeyRow", "weatherGeoApiKeyRow"}) {
+  for (const auto* name : {
+           "weatherOverridePanel",
+           "locationSectionFrame",
+           "unitsSectionFrame",
+           "displaySectionFrame",
+           "weatherApiKeyRow",
+           "weatherGeoApiKeyRow",
+       }) {
     require(!named(window, name)->property("visible").toBool(), "Unconfigured weather section visible");
   }
   for (int index : {0, 1}) {
@@ -332,8 +338,12 @@ void verify(QQuickWindow* window) {
   set(named(window, "barOverrides"), "expanded", true);
   require(QTest::qWaitFor([&] { return visible("override-trayMaxItems"); }), "Common override unavailable");
   require(visible("override-workspaceCount") == supported, "Workspace override applicability");
-  for (const auto* name : {"override-taskbarEnabled", "override-taskbarGrouped", "override-windowOverviewAccess",
-                           "override-desktopMenuEnabled"}) {
+  for (const auto* name : {
+           "override-taskbarEnabled",
+           "override-taskbarGrouped",
+           "override-windowOverviewAccess",
+           "override-desktopMenuEnabled",
+       }) {
     require(visible(name) == labwc, "Window management override applicability");
   }
   set(named(window, "barOverrides"), "expanded", false);
@@ -435,10 +445,11 @@ int main(int argc, char* argv[]) {
               return false;
             }),
             "Settings window missing");
-    if (qEnvironmentVariableIsSet("HOLONIGHT_WEATHER_ACCEPTANCE"))
+    if (qEnvironmentVariableIsSet("HOLONIGHT_WEATHER_ACCEPTANCE")) {
       verifyWeather(window);
-    else
+    } else {
       verify(window);
+    }
   } catch (const std::exception& error) {
     QTextStream(stderr) << "ACCEPTANCE_FAILED: " << error.what() << '\n';
     return 1;

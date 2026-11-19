@@ -12,15 +12,22 @@ using namespace HoloNight::System;
 namespace {
 class BluetoothFake : public BluetoothBackend {
  public:
-  QList<BluetoothAdapter> adapters{{"off", "AA", "Off"}, {"on", "BB", "On", true}};
+  QList<BluetoothAdapter> adapters{
+      {.id = "off", .address = "AA", .alias = "Off"},
+      {.id = "on", .address = "BB", .alias = "On", .powered = true},
+  };
   QList<BluetoothDevice> devices{{.id = "keyboard", .adapterId = "on", .alias = "Keyboard"}};
   QList<BluetoothResult> calls;
   void start() override { publish(); }
   void stop() override {}
-  void execute(const QString& id, BluetoothOperation op, const QString& target, const QVariant&) override {
-    calls.append({id, target, op, {}, {}});
+  void execute(const QString& requestId, BluetoothOperation operation, const QString& target,
+               const QVariant& /*value*/) override {
+    calls.append(
+        {.requestId = requestId, .targetId = target, .operation = operation, .errorName = {}, .errorMessage = {}});
   }
-  void respond(const QString& id, bool, const QString&) override { emit agentCanceled(id); }
+  void respond(const QString& requestId, bool /*accept*/, const QString& /*input*/) override {
+    emit agentCanceled(requestId);
+  }
   void requestDefaultAgent() override {}
   void publish() { emit snapshotChanged(adapters, devices, true); }
   void complete(bool success = true) {
@@ -103,7 +110,14 @@ TEST(BluetoothPresentation, DismissalCancelsPairingAndNeverTrustsIncomingAuthori
   ASSERT_TRUE(QTest::qWaitFor([&] { return backend.calls.size() == 2; }));
   backend.complete();
   backend.calls.clear();
-  emit backend.agentRequested({"incoming", "keyboard", BluetoothInteraction::PairingAuthorization, {}, {}, 0});
+  emit backend.agentRequested({
+      .requestId = "incoming",
+      .deviceId = "keyboard",
+      .interaction = BluetoothInteraction::PairingAuthorization,
+      .code = {},
+      .serviceUuid = {},
+      .entered = 0,
+  });
   adapter.respond(true);
   EXPECT_TRUE(backend.calls.isEmpty());
   adapter.action("keyboard", "pair");
@@ -140,7 +154,14 @@ TEST(BluetoothSettingsUi, DeviceDetailsPendingControlsAndPairingDialog) {
   EXPECT_EQ(action->property("text").toString(), "Pair");
   adapter.action("keyboard", "pair");
   ASSERT_TRUE(QTest::qWaitFor([&] { return !action->property("enabled").toBool(); }));
-  emit backend.agentRequested({"prompt", "keyboard", BluetoothInteraction::Confirmation, "000042", {}, 0});
+  emit backend.agentRequested({
+      .requestId = "prompt",
+      .deviceId = "keyboard",
+      .interaction = BluetoothInteraction::Confirmation,
+      .code = "000042",
+      .serviceUuid = {},
+      .entered = 0,
+  });
   auto* accept = page->findChild<QObject*>("bluetoothPairingAccept");
   ASSERT_NE(accept, nullptr);
   EXPECT_TRUE(accept->property("visible").toBool());
@@ -151,7 +172,14 @@ TEST(BluetoothSettingsUi, DeviceDetailsPendingControlsAndPairingDialog) {
 TEST(BluetoothPresentation, CancelingIncomingKeyboardDisplayCancelsBlueZPairing) {
   BluetoothFake backend;
   BluetoothControllerQml adapter(&backend, nullptr);
-  emit backend.agentRequested({"display", "keyboard", BluetoothInteraction::PasskeyDisplay, "000042", {}, 0});
+  emit backend.agentRequested({
+      .requestId = "display",
+      .deviceId = "keyboard",
+      .interaction = BluetoothInteraction::PasskeyDisplay,
+      .code = "000042",
+      .serviceUuid = {},
+      .entered = 0,
+  });
   adapter.cancelPairing();
   ASSERT_TRUE(QTest::qWaitFor([&] { return backend.calls.size() == 1; }));
   EXPECT_EQ(backend.calls.last().operation, BluetoothOperation::CancelPairing);

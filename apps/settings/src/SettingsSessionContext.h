@@ -14,7 +14,7 @@ class SettingsSessionContext : public QObject {
   explicit SettingsSessionContext(QObject* parent = nullptr);
   explicit SettingsSessionContext(const QProcessEnvironment& environment, QObject* parent = nullptr);
   [[nodiscard]] QString compositor() const;
-  Q_INVOKABLE bool isApplicable(const QString& property) const;
+  Q_INVOKABLE [[nodiscard]] bool isApplicable(const QString& property) const;
 
  private:
   const QString compositor_;

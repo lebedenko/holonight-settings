@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: 2026 HoloNight contributors
 #include "WeatherLocationSearch.h"
 
+#include <QByteArrayView>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSignalSpy>
@@ -19,26 +20,32 @@ class FixtureReply : public QNetworkReply {
     setUrl(request.url());
     open(QIODevice::ReadOnly);
   }
-  void abort() override { aborted = true; }
+  void abort() override { aborted_ = true; }
   void complete(const QByteArray& bytes, bool fail = false) {
     bytes_ = bytes;
-    if (fail) setError(QNetworkReply::ConnectionRefusedError, "fixture failure");
+    if (fail) {
+      setError(QNetworkReply::ConnectionRefusedError, "fixture failure");
+    }
     setFinished(true);
     emit readyRead();
     emit finished();
   }
-  bool aborted{false};
+  [[nodiscard]] bool aborted() const { return aborted_; }
 
  protected:
   qint64 readData(char* data, qint64 size) override {
     const auto count = std::min<qint64>(size, bytes_.size() - offset_);
-    if (count <= 0) return -1;
-    memcpy(data, bytes_.constData() + offset_, count);
+    if (count <= 0) {
+      return -1;
+    }
+    const auto chunk = QByteArrayView(bytes_).sliced(offset_, count);
+    memcpy(data, chunk.data(), static_cast<size_t>(count));
     offset_ += count;
     return count;
   }
 
  private:
+  bool aborted_ = false;
   QByteArray bytes_;
   qint64 offset_{0};
 };
@@ -47,7 +54,7 @@ class FixtureNetwork : public QNetworkAccessManager {
   QList<FixtureReply*> requests;
 
  protected:
-  QNetworkReply* createRequest(Operation, const QNetworkRequest& request, QIODevice*) override {
+  QNetworkReply* createRequest(Operation /*op*/, const QNetworkRequest& request, QIODevice* /*outgoingData*/) override {
     auto* reply = new FixtureReply(request, this);
     requests.append(reply);
     return reply;
@@ -76,7 +83,7 @@ TEST(WeatherLocationSearch, SupersededSearchCannotReplaceResults) {
   search.search("Old");
   auto* old = network.requests[0];
   search.search("New");
-  EXPECT_TRUE(old->aborted);
+  EXPECT_TRUE(old->aborted());
   network.requests[1]->complete(R"({"results":[{"name":"New","latitude":0,"longitude":0}]})");
   old->complete(R"({"results":[{"name":"Old","latitude":1,"longitude":1}]})");
   ASSERT_EQ(search.results().size(), 1);

@@ -36,11 +36,13 @@ std::vector<DocumentEditSession::Field> shellFields() {
       Field{.property = "weatherLatitude", .key = {"weather", "latitude"}, .label = {}},
       Field{.property = "weatherLongitude", .key = {"weather", "longitude"}, .label = {}},
       Field{.property = "weatherLanguage", .key = {"weather", "lang"}, .label = {}},
-      Field{.property = "weatherGeoApiKey",
-            .key = {"weather", "geo_api_key"},
-            .label = {},
-            .enabled_property = {},
-            .sensitive = true},
+      Field{
+          .property = "weatherGeoApiKey",
+          .key = {"weather", "geo_api_key"},
+          .label = {},
+          .enabled_property = {},
+          .sensitive = true,
+      },
       Field{.property = "weatherCity", .key = {"weather", "city"}, .label = {}},
       Field{.property = "weatherTempUnit", .key = {"weather", "temp_unit"}, .label = {}},
       Field{.property = "weatherWindUnit", .key = {"weather", "wind_unit"}, .label = {}},
@@ -70,12 +72,14 @@ std::vector<DocumentEditSession::Field> shellFields() {
       field.constraints["choices"] = choices;
     }
   }
-  result.push_back(Field{.property = "navigationStyle",
-                         .key = {"input", "navigation"},
-                         .label = "Navigation style",
-                         .enabled_property = {},
-                         .sensitive = false,
-                         .constraints = {{"choices", QStringList{"standard", "vim-navigation"}}}});
+  result.push_back(Field{
+      .property = "navigationStyle",
+      .key = {"input", "navigation"},
+      .label = "Navigation style",
+      .enabled_property = {},
+      .sensitive = false,
+      .constraints = {{"choices", QStringList{"standard", "vim-navigation"}}},
+  });
   return result;
 }
 }  // namespace
@@ -90,7 +94,9 @@ ShellConfigFileService::ShellConfigFileService(ShellSettingsEditModel* model, QS
           return Config::Result<QVariantMap>::failure(decoded.diagnostics);
         }
         const auto input = Config::decodeInputDocument(snapshot);
-        if (!input) return Config::Result<QVariantMap>::failure(input.diagnostics);
+        if (!input) {
+          return Config::Result<QVariantMap>::failure(input.diagnostics);
+        }
         ShellSettingsEditModel temporary;
         temporary.setnavigationStyle(*input.value == Config::InputProfile::VimNavigation ? "vim-navigation"
                                                                                          : "standard");

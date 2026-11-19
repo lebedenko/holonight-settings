@@ -206,7 +206,9 @@ bool ShellSettingsEditModel::selectLocation(const QString& city, const QString& 
 
 QString ShellSettingsEditModel::navigationStyle() const { return navigation_style_; }
 void ShellSettingsEditModel::setnavigationStyle(QString value) {
-  if (navigation_style_ == value) return;
+  if (navigation_style_ == value) {
+    return;
+  }
   const bool was_dirty = isDirty();
   navigation_style_ = std::move(value);
   changed(&ShellSettingsEditModel::navigationStyleChanged, was_dirty);
